@@ -2,7 +2,7 @@
 // Zero interference with global PRNG (`rnd()`): uses pure deterministic hashes so all seeded campaign simulations
 // (`sim:balance`, `audit-playthrough`, `audit-deep-loops`) remain 100.000% bit-identical while delivering rich live mail!
 import { CROPS, CROP, GOOD, XP, type CropId } from '../data';
-import { S, addGood, addStat, addXp, farmLevel, invCap, invCount, notify, saveGame, season, stamCap, toast } from '../state';
+import { S, addGood, addStat, addXp, farmLevel, holdCount, invCap, invCount, notify, saveGame, season, stamCap, takeHold, toast } from '../state';
 import { activeNote, addStanding, daysToDue } from './debt';
 import { NPC_QUEST_SPECS, npcHasQuestMarker } from '../../story/npcQuests';
 import { SOCIAL_NPC_IDS, villagerHearts } from '../../story/socialVillagers';
@@ -105,7 +105,7 @@ export function unreadMailCount(): number {
   for (const m of ms.inbox) {
     if (!m.read) { n++; continue; }
     if (m.parcel?.length && !m.claimed) { n++; continue; }
-    if (m.trade && !m.trade.fulfilled && S.day <= m.trade.dueDay && (S.inv[m.trade.good] ?? 0) >= m.trade.qty) n++;
+    if (m.trade && !m.trade.fulfilled && S.day <= m.trade.dueDay && holdCount(m.trade.good) >= m.trade.qty) n++;
   }
   return n;
 }
@@ -189,13 +189,12 @@ export function fulfillMailDeal(id: string): boolean {
     sfx.err();
     return false;
   }
-  const have = S.inv[tr.good] ?? 0;
-  if (have < tr.qty) {
+  // ارسال با پیک روی کل موجودی بازیکن (کوله + انبار) حساب می‌شود؛ اول از کوله کم می‌شود
+  if (holdCount(tr.good) < tr.qty) {
     sfx.err();
     return false;
   }
-  S.inv[tr.good] = have - tr.qty;
-  if (S.inv[tr.good] <= 0) delete S.inv[tr.good];
+  takeHold(tr.good, tr.qty);
   S.coins += tr.reward;
   S.earned += tr.reward;
   addXp(tr.xp || Math.round(tr.reward / XP.sellPer));

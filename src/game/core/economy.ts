@@ -62,6 +62,20 @@ export function srcHave(id: string): number {
 }
 /** مثل saleValue ولی با سقفِ منبعِ انتخابیِ فروش در بازار */
 export const saleValueSel = (id: string, n: number): number => priceSum(id, n, srcHave(id));
+/** کل موجودی یک کالا نزد بازیکن (کوله + انبار) — مبنای همهٔ مسیرهای تحویل/اهدا/هدیه */
+export const holdCount = (id: string): number => Math.floor(S.pack[id] ?? 0) + Math.floor(S.inv[id] ?? 0);
+/** کم‌کردن n عدد از کالا؛ اول از کوله، بعد از انبار — مقدار واقعیِ کم‌شده را برمی‌گرداند */
+export function takeHold(id: string, n: number): number {
+  n = Math.max(0, Math.floor(n));
+  let taken = 0;
+  const p = Math.min(Math.floor(S.pack[id] ?? 0), n);
+  if (p > 0) { S.pack[id] -= p; if (S.pack[id] <= 0) delete S.pack[id]; taken = p; }
+  if (taken < n) {
+    const b = Math.min(Math.floor(S.inv[id] ?? 0), n - taken);
+    if (b > 0) { S.inv[id] -= b; if (S.inv[id] <= 0) delete S.inv[id]; taken += b; }
+  }
+  return taken;
+}
 /** هزینهٔ واقعی و دقیق خرید بستهٔ nتایی بذر با احتساب رشد تقاضای بذر (بدون تغییر وضعیت) */
 export function seedPackPrice(id: CropId, n: number): number {
   let d = S.sdem[id] ?? 1;

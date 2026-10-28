@@ -1,7 +1,7 @@
 // Villager Social Affinity (0..5 Hearts), Daily Gifts, Dialogue Choices & 3-Tier Market Contracts Board
 // Compliance: Inside src/story/, zero emojis, zero raw ASCII digits inside Persian strings.
 import { CROPS, GOOD, CONTRACT_DAYS, CONTRACT_DEPOSIT_MIN, CONTRACT_DEPOSIT_RATE, type GoodId } from '../game/data';
-import { S, UI, addStat, addXp, farmLevel, notify, pay, saveGame, season, stamCap, toast, type MarketContract } from '../game/state';
+import { S, UI, addStat, addXp, farmLevel, holdCount, notify, pay, saveGame, season, stamCap, takeHold, toast, type MarketContract } from '../game/state';
 import { addStanding } from '../game/core/debt';
 import { CFG } from '../game/settings';
 import { GT } from '../strings/gameText';
@@ -41,12 +41,12 @@ export function addAffinity(who: SocialNpcId, delta: number) {
 export function findBestGiftInBag(who: SocialNpcId): GoodId | null {
   const prof = VILLAGER_PROFILES.find((v) => v.who === who);
   if (!prof) return null;
-  for (const g of prof.favorites) {
-    if ((S.inv[g] ?? 0) > 0) return g;
-  }
-  for (const k of Object.keys(S.inv) as GoodId[]) {
-    if (k !== 'feed' && k !== 'fingerling' && (S.inv[k] ?? 0) > 0) return k;
-  }
+  // هدیه از چیزی است که همراه خودت داری: اول کولهٔ پشتی، بعد انبار
+  const has = (g: GoodId) => holdCount(g) > 0;
+  const usable = (k: string): k is GoodId => k !== 'feed' && k !== 'fingerling' && has(k as GoodId);
+  for (const g of prof.favorites) if (has(g)) return g;
+  const keys = [...Object.keys(S.pack), ...Object.keys(S.inv)];
+  for (const k of keys) if (usable(k)) return k;
   return null;
 }
 
@@ -54,15 +54,14 @@ export function giftVillager(who: SocialNpcId, preferredGood?: GoodId): boolean 
   if (!canGiftVillagerToday(who)) { sfx.err(); return false; }
   const prof = VILLAGER_PROFILES.find((v) => v.who === who);
   if (!prof) return false;
-  const item = preferredGood && (S.inv[preferredGood] ?? 0) > 0 ? preferredGood : findBestGiftInBag(who);
+  const item = preferredGood && holdCount(preferredGood) > 0 ? preferredGood : findBestGiftInBag(who);
   if (!item) {
     sfx.err();
     toast('heart', WX.giftNoneInBag);
     return false;
   }
   const loved = prof.favorites.includes(item);
-  S.inv[item] = (S.inv[item] ?? 0) - 1;
-  if (S.inv[item] <= 0) delete S.inv[item];
+  takeHold(item, 1);
   S.affinity ??= {};
   S.giftedDay ??= {};
   S.giftedDay[who] = S.day;

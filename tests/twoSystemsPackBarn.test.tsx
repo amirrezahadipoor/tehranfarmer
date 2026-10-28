@@ -4,10 +4,11 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { installDom } from './helpers/dom';
 import {
-  S, UI, canAct, doAct, invCap, invCount, packCap, packCount, resetGame,
-  startDebt, transferPackToBarn, addPack, setSimBatchMode, harvestPond, harvestHoney,
-  sellAll, sellGood, srcHave,
+  S, UI, canAct, doAct, deliverContract, fulfillMailDeal, holdCount, invCap, invCount, packCap, packCount, resetGame,
+  rollMailTradeOffer, sellAll, sellGood, srcHave, startDebt, transferPackToBarn, addPack, setSimBatchMode, harvestPond, harvestHoney,
 } from '../src/game/state';
+import { giftVillager, findBestGiftInBag } from '../src/story/socialVillagers';
+import { ROYAL_DECREES, fulfillRoyalDecree } from '../src/game/core/frontier';
 import { Modals } from '../src/ui/Modals';
 import { GT } from '../src/strings/gameText';
 import { GT_EN } from '../src/strings/en';
@@ -106,6 +107,65 @@ describe('دو سیستم کولهٔ پشتی و انبار', () => {
     expect(S.pack.carrot).toBe(1);
     expect(S.inv.carrot).toBe(barnBefore - 2);
     S.sellFrom = 'both';
+  });
+
+  it('قرارداد بازار از کوله هم تحویل می‌گیرد — ناقص، هیچ‌چیز کم نمی‌شود', () => {
+    S.contract = { good: 'wheat', qty: 6, deposit: 100, reward: 500, dueDay: S.day + 9 };
+    S.pack = { wheat: 4 };
+    S.inv = { wheat: 5 };
+    expect(holdCount('wheat')).toBe(9);
+    expect(deliverContract()).toBe(true);
+    expect(S.pack.wheat ?? 0).toBe(0); // اول از کولهٔ پشتی کم شد (کلید صفر حذف می‌شود)
+    expect(S.inv.wheat).toBe(3);       // ۴ از کوله + ۲ از انبار = ۶ تحویل شد
+    expect(S.contract).toBeNull();
+    expect(holdCount('wheat')).toBe(3);
+
+    S.contract = { good: 'wheat', qty: 6, deposit: 0, reward: 500, dueDay: S.day + 9 };
+    S.pack = { wheat: 2 };
+    S.inv = { wheat: 1 };
+    const c0 = S.coins;
+    expect(deliverContract()).toBe(false); // اتمیک: نه کوله، نه انبار دست می‌خورند
+    expect(S.pack.wheat).toBe(2);
+    expect(S.inv.wheat).toBe(1);
+    expect(S.coins).toBe(c0);
+    S.contract = null;
+  });
+
+  it('سفارش پستی عمده با کالای موجود در کوله ارسال می‌شود', () => {
+    const entry = rollMailTradeOffer(true);
+    expect(entry?.trade).toBeTruthy();
+    const tr = entry!.trade!;
+    S.pack = { [tr.good]: tr.qty };
+    S.inv = {};
+    const c0 = S.coins;
+    expect(fulfillMailDeal(entry!.id)).toBe(true);
+    expect(S.coins).toBeGreaterThanOrEqual(c0 + tr.reward); // افزایش XP ممکن است پاداش سطح هم بدهد
+    expect(S.pack[tr.good] ?? 0).toBe(0);
+  });
+
+  it('فرمان شاهی کالای کوله را می‌پذیرد', () => {
+    S.xp = 5_000_000;
+    S.pack = { potato: 6, egg: 5, herb: 3 };
+    S.inv = {};
+    const c0 = S.coins;
+    expect(fulfillRoyalDecree(ROYAL_DECREES[0].id)).toBe(true);
+    expect(S.pack.potato ?? 0).toBe(0);
+    expect(S.pack.egg ?? 0).toBe(0);
+    expect(S.pack.herb ?? 0).toBe(0);
+    expect(S.coins).toBeGreaterThan(c0);
+  });
+
+  it('هدیهٔ روستاییان از کوله انتخاب و کم می‌شود', () => {
+    S.pack = { saffron: 1 };
+    S.inv = {};
+    expect(findBestGiftInBag('grandma')).toBe('saffron');
+    expect(giftVillager('grandma', 'saffron')).toBe(true);
+    expect(S.pack.saffron ?? 0).toBe(0);
+    expect(S.affinity?.grandma ?? 0).toBeGreaterThan(0);
+    S.pack = {};
+    S.inv = {};
+    expect(findBestGiftInBag('grandma')).toBeNull();
+    expect(giftVillager('grandma')).toBe(false);
   });
 
   it('مودال بازار کلید انتخاب منبع فروش را نشان می‌دهد', () => {

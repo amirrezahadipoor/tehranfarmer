@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CROP, GOOD, fa } from '../game/data';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { S, UI, notify } from '../game/state';
+import { S, UI, holdCount, notify } from '../game/state';
 import {
   claimMailParcel, ensureMailState, fulfillMailDeal, mailItemLabel,
   markAllMailRead, markMailRead, syncMailboxState, togglePinMail,
@@ -44,7 +44,7 @@ function grantText(g: MailItemGrant): string {
 
 function hasPendingAction(m: MailEntry): boolean {
   if (m.parcel?.length && !m.claimed) return true;
-  if (m.trade && !m.trade.fulfilled && S.day <= m.trade.dueDay && (S.inv[m.trade.good] ?? 0) >= m.trade.qty) return true;
+  if (m.trade && !m.trade.fulfilled && S.day <= m.trade.dueDay && holdCount(m.trade.good) >= m.trade.qty) return true;
   return false;
 }
 
@@ -192,7 +192,7 @@ export function MailboxModal() {
               const meta = SENDER_META[active.sender];
               const txt = renderMailTemplate(active, mailItemLabel);
               const tr = active.trade;
-              const haveQty = tr ? (S.inv[tr.good] ?? 0) : 0;
+              const haveQty = tr ? holdCount(tr.good) : 0;
               const expired = tr ? S.day > tr.dueDay : false;
               return (
                 <div

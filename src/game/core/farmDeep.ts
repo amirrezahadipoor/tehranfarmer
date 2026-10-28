@@ -6,7 +6,7 @@ import {
   SARA2_CONTRACT_MULT, WELL_BONUS_CAN, WELL_LV_REQ, WELL_PRICES, WELL_WATER_RETENTION, XP,
   type AnimalKind,
 } from '../data';
-import { S, addStat, addXp, enqueueBuild, farmLevel, notify, pay, saveGame, season, toast, type Plot } from '../state';
+import { S, addStat, addXp, enqueueBuild, farmLevel, holdCount, notify, pay, saveGame, season, takeHold, toast, type Plot } from '../state';
 import { sfx } from '../sound';
 import { fa } from '../../strings/fa';
 import { GT } from '../../strings/gameText';
@@ -125,13 +125,12 @@ export function signContract(): boolean {
 export function deliverContract(): boolean {
   const c = S.contract;
   if (!c) return false;
-  const have = S.inv[c.good] ?? 0;
-  if (have < c.qty) {
+  // تحویل از کولهٔ پشتی هم ممکن است (سهم قرارداد در «فروش همه» در هر دو انبار محفوظ می‌ماند)
+  if (holdCount(c.good) < c.qty) {
     sfx.err();
     return false;
   }
-  S.inv[c.good] = have - c.qty;
-  if (S.inv[c.good] <= 0) delete S.inv[c.good];
+  takeHold(c.good, c.qty);
   S.coins += c.reward;
   S.earned += c.reward - c.deposit;
   addXp((c.reward - c.deposit) / XP.sellPer);

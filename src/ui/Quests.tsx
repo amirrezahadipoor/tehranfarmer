@@ -1,7 +1,7 @@
 // ===== تابلوی کوئست‌های اصلی فصل، مأموریت‌های روزانه/هفتگی و طومار رازهای پنهان =====
 import { GOOD } from '../game/data';
 import { cmd } from '../game/engine';
-import { S, UI, claimAllReadyQuests, deliverContract, notify, readyQuestCount } from '../game/state';
+import { S, UI, claimAllReadyQuests, deliverContract, holdCount, notify, readyQuestCount } from '../game/state';
 import { claim, ensureQuests, isClaimed, questDone, questLabelOf, questProgress, type QuestGoal } from '../story/dailyQuests';
 import { chapterChecklist, questOf, questProgress as storyQuestProgress } from '../story/quests';
 import { SECRETS, discoveredSecretCount } from '../story/secrets';
@@ -197,13 +197,13 @@ export function Quests() {
         {S.contract ? (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white/80 p-2 text-xs font-extrabold">
             <div>
-              <div>{UT.contractTitle}: <span dir="ltr">{fa(S.inv[S.contract.good] ?? 0)}/{fa(S.contract.qty)}</span> {GOOD[S.contract.good]?.fa ?? S.contract.good}</div>
+              <div>{UT.contractTitle}: <span dir="ltr">{fa(holdCount(S.contract.good))}/{fa(S.contract.qty)}</span> {GOOD[S.contract.good]?.fa ?? S.contract.good}</div>
               <div className="opacity-75">{UT.contractDue}{fa(S.contract.dueDay)} — {UT.contractReward}{fa(S.contract.reward)}</div>
             </div>
             <button
               type="button"
               className="btn g press !px-3 !py-1 text-xs font-black"
-              disabled={(S.inv[S.contract.good] ?? 0) < S.contract.qty}
+              disabled={holdCount(S.contract.good) < S.contract.qty}
               onClick={() => deliverContract()}
             >
               {UT.contractDeliver}

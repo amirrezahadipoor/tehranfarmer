@@ -8,7 +8,7 @@ import {
 import {
   S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract,
   effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
-  isNight, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond,
+  isNight, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond, holdCount,
 } from '../game/state';
 import { sfx } from '../game/sound';
 import { Bar, Coin, Ic, Modal, Trend } from './parts';
@@ -280,11 +280,11 @@ function Market() {
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-xs font-extrabold">
-              <div>{UT.contractTitle}: <span dir="ltr">{fa(S.inv[active.good] ?? 0)}/{fa(active.qty)}</span> {GOOD[active.good]?.fa ?? active.good}</div>
+              <div>{UT.contractTitle}: <span dir="ltr">{fa(holdCount(active.good))}/{fa(active.qty)}</span> {GOOD[active.good]?.fa ?? active.good}</div>
               <div className="opacity-75">{UT.contractDue}{fa(active.dueDay)} — {UT.contractReward}{fa(active.reward)}</div>
               <div className="text-[.68rem] text-green-800">{UT.contractReservedNote}</div>
             </div>
-            <button className="btn g press !px-2.5 !py-1 text-xs font-black" disabled={(S.inv[active.good] ?? 0) < active.qty} onClick={() => { deliverContract(); }}>
+            <button className="btn g press !px-2.5 !py-1 text-xs font-black" disabled={holdCount(active.good) < active.qty} onClick={() => { deliverContract(); }}>
               {UT.contractDeliver}
             </button>
           </div>

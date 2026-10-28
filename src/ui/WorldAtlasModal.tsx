@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GOOD, fa } from '../game/data';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { S, UI, farmLevel, notify } from '../game/state';
+import { S, UI, farmLevel, holdCount, notify } from '../game/state';
 import {
   ROYAL_DECREES, activeCharter, charterRequiredChapter, chooseVillageCharter,
   currentRegionalShock, decreeWeekKey, ensureFrontier, fulfillRoyalDecree, hasMonocultureSaturation, isTownFestivalActive,
@@ -102,7 +102,7 @@ export function WorldAtlasModal() {
             {ROYAL_DECREES.map((dec) => {
               const claimed = !!f.decreeClaimed[decreeWeekKey(dec.id)];
               const unlocked = farmLevel() >= dec.minLv;
-              const ready = unlocked && !claimed && dec.items.every((it) => (S.inv[it.good] ?? 0) >= it.qty);
+              const ready = unlocked && !claimed && dec.items.every((it) => holdCount(it.good) >= it.qty);
               return (
                 <div key={dec.id} className="paper flex flex-wrap items-center justify-between gap-2 p-2.5 text-xs font-extrabold">
                   <div className="space-y-1">
@@ -110,7 +110,7 @@ export function WorldAtlasModal() {
                     <div className="flex flex-wrap gap-1.5">
                       {dec.items.map((it) => (
                         <span key={it.good} className="rounded bg-[#f4e7c8] px-2 py-0.5">
-                          {GOOD[it.good]?.fa ?? it.good}: {fa(S.inv[it.good] ?? 0)}/{fa(it.qty)}
+                          {GOOD[it.good]?.fa ?? it.good}: {fa(holdCount(it.good))}/{fa(it.qty)}
                         </span>
                       ))}
                     </div>

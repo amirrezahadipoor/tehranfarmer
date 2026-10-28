@@ -1,7 +1,7 @@
 // ===== Frontier Expansion Core: Multi-Layer Cavern & Forest, 8-Region Portals, Charters, Fair & Late-Game Shocks =====
 import { CROP, CROPS, GOOD, HEART_BOND_2, KAVEH2_PRICE_MULT, machineMkPrice, type GemId, type MachineId } from '../data';
 import { rnd } from '../rng';
-import { S, addStat, addXp, farmLevel, grantGoodWithMailOverflow, notify, saveGame, season, stamCap, toast } from '../state';
+import { S, addStat, addXp, farmLevel, grantGoodWithMailOverflow, holdCount, notify, saveGame, season, stamCap, takeHold, toast } from '../state';
 import { addStanding } from './debt';
 import { sfx } from '../sound';
 import { CFG } from '../settings';
@@ -302,12 +302,9 @@ export function fulfillRoyalDecree(id: string): boolean {
   const wk = decreeWeekKey(id);
   if (f.decreeClaimed[wk]) { sfx.err(); return false; }
   for (const req of def.items) {
-    if ((S.inv[req.good] ?? 0) < req.qty) { sfx.err(); return false; }
+    if (holdCount(req.good) < req.qty) { sfx.err(); return false; } // کولهٔ پشتی هم به‌شمار می‌آید
   }
-  for (const req of def.items) {
-    S.inv[req.good] -= req.qty;
-    if (S.inv[req.good] <= 0) delete S.inv[req.good];
-  }
+  for (const req of def.items) takeHold(req.good, req.qty);
   const mult = (activeCharter('bazaar') === 'caravan' ? 1.18 : 1) * (activeCharter('bank') === 'council' ? 1.15 : 1);
   const gold = Math.round(def.coins * mult);
   f.decreeClaimed[wk] = true;
