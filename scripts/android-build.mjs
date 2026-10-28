@@ -56,6 +56,11 @@ if (fs.existsSync(outDir)) {
 
 console.log(`[3/4] اجرای Gradle (${task})...`);
 const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
+// مقاوم‌سازی: اگر بیت اجرا در سیستم‌عامل یا در کلون گیت‌هاب از دست رفته باشد (EACCES)،
+// خودمان مجوز اجرا را می‌دهیم تا بیلد CI شکست نخورد.
+if (process.platform !== 'win32') {
+  try { fs.chmodSync(path.resolve(rootDir, 'android/gradlew'), 0o755); } catch { /* بی‌صدا */ }
+}
 const gradleArgs = mode === 'release' ? ['--no-daemon', task, '-x', 'lintVitalRelease', '-x', 'lintVitalAnalyzeRelease'] : ['--no-daemon', task];
 execFileSync(gradlew, gradleArgs, { cwd: path.resolve(rootDir, 'android'), stdio: 'inherit', env });
 
