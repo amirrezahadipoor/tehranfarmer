@@ -34,3 +34,6 @@ test-results/
 e2e/__screenshots__/
 artifacts/*.png
 
+
+# پوشهٔ تولیدی Capacitor: در بیلد ساخته می‌شود (Capacitor 8 آن را از قالب خود می‌سازد)
+android/capacitor-cordova-android-plugins/
