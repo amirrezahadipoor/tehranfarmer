@@ -5,8 +5,7 @@ import {
   S, UI, buyAnimal, buyGh, buyHive, buyMachine, buyPen, buyPond, buyRod, buyScarecrow,
   buySeed, buySilo, buyUpgrade, buyWell, buyWorker, exportSaveJson, floorCoins, harvestHoney,
   harvestPond, importSaveJson, invCap, payDebt, resetGame, restoreBackupSlot, saveGame,
-  sellAll, signContract, startDebt, stashDeposit, stockPond,
-} from '../src/game/state';
+  sellAll, signContract, startDebt, stashDeposit, stockPond, clearToasts, forceBackupRotation} from '../src/game/state';
 import { NOTES } from '../src/story/debtData';
 import { advanceNode, maybeStartPrologue, pendingNode } from '../src/story/engine';
 import { ensureQuests } from '../src/story/dailyQuests';
@@ -30,7 +29,7 @@ const ASCII_DIGIT = /[0-9]/;
 // ============================================================================
 export function runLoop1ActionAndToastFuzzer(report: Reporter) {
   const captureAction = (where: string, fn: () => void) => {
-    UI.toasts = [];
+    clearToasts();
     fn();
     for (const t of UI.toasts) {
       if (ASCII_DIGIT.test(t.text)) {
@@ -100,7 +99,7 @@ export function runLoop1ActionAndToastFuzzer(report: Reporter) {
   if (!S.ponds[0].stocked) {
     report('L1-FULL-BAG-DESTROYS-POND', 'ponds.ts:harvestPond', 'وقتی انبار پر است، کلیک روی صید استخر ماهی تمام ماهی‌های پرورش‌یافته را نابود کرد و ۰ ماهی به بازیکن داد!');
   }
-  UI.toasts = [];
+  clearToasts();
   harvestHoney(false);
   if (UI.toasts.some((t) => t.text.includes('+0') || t.text.includes('+۰'))) {
     report('L1-FULL-BAG-ZERO-HONEY-TOAST', 'ponds.ts:harvestHoney', `وقتی انبار پر است، برداشت عسل به جای اخطار «انبار پر است» اعلان «${UI.toasts[0]?.text}» نشان داد!`);
@@ -183,7 +182,7 @@ export function runLoop2EconomyAndLedgerTruthBot(report: Reporter) {
       const m = priceSlice.match(/<span[^>]*>([۰-۹٬,]+)<\/span>/);
       const shown5 = m ? fromFaDigits(m[1]) : 5750;
       S.coins = shown5;
-      UI.toasts = [];
+      clearToasts();
       buySeed('pistachio', 5);
       if ((S.seeds.pistachio ?? 0) !== 5 || UI.toasts.length > 0) {
         report('L2-SEED5-PRICE-LIE', 'Modals.tsx:SeedShop / economy.ts:buySeed', `دکمهٔ ۵ بذر پسته قیمت ${shown5} سکه نشان داد اما با دقیقاً ${shown5} سکه فقط ${S.seeds.pistachio ?? 0} بذر خرید و خطای «${UI.toasts[0]?.text ?? ''}» داد!`);
@@ -363,8 +362,11 @@ export function runLoop5MultiSeedSaveAndAllModalVisibleTextBot(report: Reporter)
   buyMachine('tractor');
   triggerEvent('festival');
   ensureQuests(true);
+  // رفع C-5: چرخش پشتیبان را قطعی می‌کنیم تا نتیجهٔ ممیزی در CI و روی ماشین محلی یکسان باشد.
+  forceBackupRotation();
   saveGame();
   S.day += 1;
+  forceBackupRotation();
   saveGame(); // ایجاد اسلات پشتیبان ۱ و ۲
 
   const checkVisiblePersianHtml = (where: string, html: string) => {

@@ -12,9 +12,16 @@ import { expect, test } from '@playwright/test';
  * ۳) تست کامل سفر به رودخانه و زنبورستان، تریگر دیدار اول هر دو ناحیه، و وضعیت پایان‌بازی + افتتاح موزه و دریافت جایزهٔ تندیس جهانگیر در مرورگر زنده!
  */
 test('ربات استودیویی مرورگر (AAA): تریگرهای زنده + ممیزی پیکسلی ۷۹ صحنه در فارسی/انگلیسی و فونت ۱۲۰٪ موبایل/عمودی/دسکتاپ + پایان‌بازی', async ({ page }) => {
-  test.setTimeout(120_000);
+  // ۷۹ صحنه × ۳ پروفایل × ۲ زبان + پیمایش کامل؛ روی CI کندتر است
+  test.setTimeout(300_000);
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/');
+  // این اسپک به ابزار کارگردان صحنه (بیلد مخصوص E2E) نیاز دارد؛ تا آماده‌شدنش صبر می‌کنیم.
+  await page.waitForFunction(
+    () => Boolean((window as unknown as { __cinemaDebug?: unknown }).__cinemaDebug || (window as unknown as { __gameApi?: unknown }).__gameApi),
+    null,
+    { timeout: 25_000 },
+  );
 
   // ۱. شروع بازی نو از صفحهٔ عنوان و رد پرولوگ
   await page.locator('button').first().click();
@@ -157,6 +164,10 @@ test('ربات استودیویی مرورگر (AAA): تریگرهای زنده 
 
   // تست دکمه‌های ناوبری سریع موبایل به رودخانه و زنبورستان و فعال شدن تریگر معرفی هر ناحیه!
   await page.setViewportSize({ width: 360, height: 740 });
+  // رفع U-2: در نمای عمودی وب، ابتدا صفحهٔ «گوشی را افقی بگیر» نمایش داده می‌شود؛
+  // بازیکن می‌تواند با دکمهٔ «ادامه با همین حالت» وارد شود. آزمون هم همان مسیر واقعی را می‌رود.
+  const portraitAck = page.getByRole('button', { name: 'ادامه با همین حالت' });
+  if (await portraitAck.isVisible().catch(() => false)) await portraitAck.click();
   await page.getByRole('button', { name: 'سفر به رودخانه' }).click();
   await expect(page.locator('[data-scene-id="area-intro-river"]')).toBeVisible({ timeout: 5000 });
   await page.locator('button:has-text("رد کردن صحنه")').click();

@@ -26,6 +26,34 @@ button, [role="button"], .btn, [data-tap], select, label { touch-action: manipul
 .btn > * { pointer-events: none; }
 .ft { font-family: 'Lalezar', 'Vazirmatn', sans-serif; font-weight: 400; }
 
+/* ===== رفع V-2: ارقام پولی/آماری با قلم تیتر Lalezar به‌هم می‌ریختند =====
+   Lalezar ارقام فارسی و جداکنندهٔ هزارگان (U+066C ٬) را ندارد؛ «۱۵٬۰۰۰» به «۱۵هزار» یا
+   «۱۵،،۰۰» تبدیل می‌شد. حالا هر عنصر عددی (.ft) ارقامش را با Vazirmatn رندر می‌کند
+   (unicode-range فقط ارقام و جداکننده‌ها) و متن فارسی همان قلم تیتر می‌ماند. */
+@font-face {
+  font-family: 'Vazirmatn Numerals';
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./assets/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  unicode-range: U+0030-0039, U+0660-0669, U+066B-066C, U+002C, U+002E, U+002F, U+003A, U+0025, U+060C, U+2212, U+002B;
+}
+.ft { font-family: 'Lalezar', 'Vazirmatn Numerals', 'Vazirmatn', sans-serif; }
+.ft bdi, .ft .num, .ft [dir="ltr"] { font-family: 'Vazirmatn Numerals', 'Vazirmatn', sans-serif; }
+
+/* ===== رفع V-1: کف مطلق خوانایی =====
+   روی نمایشگرهای کوچک (۶۴۰×۳۶۰ و گوشی‌های ۹۱۵×۴۱۲) ریشهٔ rem تا ۹.۵px پایین می‌آمد و
+   متن‌های text-xs (۰.۷۵rem) به ۷px می‌رسیدند. این قاعده یک کف واقعی ۱۱px برای متن‌های
+   ریزِ HUD/مودال‌ها می‌گذارد؛ ارتفاع لمسی دکمه‌ها از قبل با min-height ۴۸px تضمین شده است. */
+.text-xs, .text-\[0\.6rem\], .text-\[0\.62rem\], .text-\[0\.64rem\], .text-\[0\.65rem\],
+.text-\[0\.66rem\], .text-\[0\.68rem\], .text-\[0\.7rem\], .text-\[0\.72rem\], .text-\[0\.75rem\] {
+  font-size: max(11px, 0.7rem);
+  line-height: 1.25;
+}
+/* سنجهٔ گارد: هر متن ریزِ داخل مودال/نوار وضعیت هم کف ۱۱px دارد */
+@media (max-width: 1200px), (max-height: 700px) {
+  .paper .text-xs, .paper .ft, .paper .btn { letter-spacing: 0; }
+}
+
 .paper {
   background: #fff4d8 repeating-linear-gradient(45deg, rgba(160,110,60,.07) 0 .35rem, transparent .35rem .7rem);
   border: .2rem solid #503426;

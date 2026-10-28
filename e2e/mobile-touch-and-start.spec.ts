@@ -27,6 +27,9 @@ test.describe('تناسب کامل صفحهٔ اصلی موبایل و تضمی�
       const page = await ctx.newPage();
       await page.goto('/');
       await page.evaluate(() => document.fonts.ready);
+      // ضدشکنندگی: صفحهٔ لودینگ (boot) ناهمگام است؛ تا آماده‌شدن دکمهٔ شروع صبر می‌کنیم
+      // تا شمارش دکمه‌ها هرگز وسط بوت انجام نشود.
+      await expect(page.locator('button:has-text("شروع")').first()).toBeVisible({ timeout: 20_000 });
 
       for (const loc of ['fa', 'en'] as const) {
         if (loc === 'en') {

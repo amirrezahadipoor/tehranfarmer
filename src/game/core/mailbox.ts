@@ -11,7 +11,11 @@ import {
   MAIL_UI, type MailEntry, type MailItemGrant, type MailSenderId, type MailState,
 } from '../../strings/mailText';
 
-const MAX_MAIL_ARCHIVE = 48;
+// رفع C-6: سقف سخت روی صندوق (۴۰ نامه) و روی کلیدهای ارسال‌شده (۳۰۰ کلید).
+// اندازه‌گیری ممیزی: با ۱۰۴۰ نامه، سِیو روی روز ۱۲۰۰ به ~۳۰۷KB می‌رسید که برای
+// گوشی‌های ضعیف و حافظهٔ محدود وب‌ویو خطرناک است.
+const MAX_MAIL_ARCHIVE = 40;
+const MAX_SENT_KEYS = 300;
 
 let suppressMailToast = false;
 export function setMailSilentMode(silent: boolean) {
@@ -34,15 +38,38 @@ export function ensureMailState(): MailState {
 }
 
 function pruneMailArchive(ms: MailState) {
-  if (ms.inbox.length <= MAX_MAIL_ARCHIVE) return;
-  for (let i = ms.inbox.length - 1; i >= 0 && ms.inbox.length > MAX_MAIL_ARCHIVE; i--) {
-    const m = ms.inbox[i];
+  const removable = (m: MailEntry, allowUnread: boolean) => {
     const hasUnclaimed = Boolean(m.parcel?.length && !m.claimed);
     const hasOpenDeal = Boolean(m.trade && !m.trade.fulfilled && S.day <= m.trade.dueDay);
-    if (m.read && !m.pinned && !hasUnclaimed && !hasOpenDeal) {
-      ms.inbox.splice(i, 1);
-    }
+    if (m.pinned || hasUnclaimed || hasOpenDeal) return false;
+    return allowUnread || m.read;
+  };
+  // مرحلهٔ ۱: نامه‌های خوانده‌شده (قدیمی‌ترین اول)
+  for (let i = ms.inbox.length - 1; i >= 0 && ms.inbox.length > MAX_MAIL_ARCHIVE; i--) {
+    if (removable(ms.inbox[i], false)) ms.inbox.splice(i, 1);
   }
+  // مرحلهٔ ۲ (سقف سخت): اگر هنوز بالای سقف است، نامه‌های خوانده‌نشدهٔ بی‌محتوا هم حذف می‌شوند
+  // تا صندوق هیچ‌گاه از MAX_MAIL_ARCHIVE بزرگ‌تر نشود و رشد سِیو بی‌پایان نباشد.
+  for (let i = ms.inbox.length - 1; i >= 0 && ms.inbox.length > MAX_MAIL_ARCHIVE; i--) {
+    if (removable(ms.inbox[i], true)) ms.inbox.splice(i, 1);
+  }
+  if (ms.inbox.length > MAX_MAIL_ARCHIVE) {
+    // بدترین حالت (همه سنجاق‌شده): قدیمی‌ترین‌ها را با حفظ سنجاق حذف نکن، فقط ببُر.
+    ms.inbox.splice(0, ms.inbox.length - MAX_MAIL_ARCHIVE);
+  }
+}
+
+/** رفع C-6: کلیدهای ارسال‌شده (sentKeys) با گذشت بازی به هزاران کلید می‌رسیدند */
+function pruneSentKeys(ms: MailState) {
+  const keys = Object.keys(ms.sentKeys ?? {});
+  if (keys.length <= MAX_SENT_KEYS) return;
+  // کلیدها الگوی «...-<day>» دارند؛ قدیمی‌ترین‌ها (کوچک‌ترین روز) اول حذف می‌شوند
+  const dayOf = (k: string) => {
+    const m = /-(\d+)$/.exec(k);
+    return m ? Number(m[1]) : 0;
+  };
+  keys.sort((a, b) => dayOf(a) - dayOf(b));
+  for (const k of keys.slice(0, keys.length - MAX_SENT_KEYS)) delete ms.sentKeys[k];
 }
 
 /** Idempotently pushes a letter into `S.mail.inbox` keyed by `dedupeKey` */
@@ -63,6 +90,7 @@ export function deliverMail(
   };
   ms.inbox.unshift(full);
   pruneMailArchive(ms);
+  pruneSentKeys(ms);
   if (announce && !suppressMailToast) {
     toast('mail', MAIL_UI.newMailToast);
   }

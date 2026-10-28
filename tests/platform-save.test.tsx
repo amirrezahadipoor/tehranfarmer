@@ -284,12 +284,17 @@ describe('فاز ۹ — جداسازی کامل تنظیمات از سِیو و 
     expect(fs.readFileSync('docs/RELEASE-CHECKLIST.md', 'utf8')).toContain('apksigner verify');
   });
 
-  it('تمامی ۱۱۸ تسک نقشهٔ راه (۱۱ فاز کامل) تیک خورده‌اند و سقف ۶۰۰ خط ماژول‌ها رعایت شده است (P10-10)', () => {
+  it('همهٔ تسک‌های نقشهٔ راه (۱۱۸ تسک اصلی + تسک‌های فاز ۱۹) تیک خورده‌اند و سقف ۶۰۰ خط ماژول‌ها رعایت شده است (P10-10)', () => {
     const roadmap = fs.readFileSync('ROADMAP.md', 'utf8');
     const unchecked = [...roadmap.matchAll(/^- \[ \] (P\d+-\d+)/gm)];
     const checked = [...roadmap.matchAll(/^- \[x\] (P\d+-\d+)/gm)];
+    const mainTasks = checked.filter((m) => Number(m[1].split('-')[0].slice(1)) <= 18);
+    const auditTasks = checked.filter((m) => m[1].startsWith('P19-'));
     expect(unchecked.length).toBe(0);
-    expect(checked.length).toBe(118);
+    expect(mainTasks.length).toBe(118);
+    // فاز ۱۹ = رفع ایرادهای ممیزی ۲۰۲۶-۱۰-۲۸
+    expect(auditTasks.length).toBeGreaterThanOrEqual(18);
+    expect(checked.length).toBe(mainTasks.length + auditTasks.length);
   });
 
   it('پل بومی Capacitor 8 (native-bridge همگام بدون Promise/.then/.catch) هرگز کرش نمی‌کند', async () => {

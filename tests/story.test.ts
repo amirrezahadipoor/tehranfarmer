@@ -75,11 +75,32 @@ describe('موتور داستان', () => {
     expect(S.story.pending).toBeNull();
   });
 
-  it('پرولوگ کوتاه در سه صحنه و پنج گفتار کامل می‌شود', () => {
-    const chain = [NODES.p1, NODES.p4, NODES.p7];
-    expect(chain.map((n) => n.next)).toEqual(['p4', 'p7', null]);
-    expect(chain.reduce((sum, n) => sum + n.lines.length, 0)).toBe(5);
-    for (const n of chain) expect(EN_LINES[n.id]).toHaveLength(n.lines.length);
+  it('زنجیرهٔ کامل پرولوگ p1…p7 بدون هیچ گرهٔ یتیم اجرا می‌شود (پوشش C-1)', () => {
+    // رگرسیون C-1: قبلاً p1 → p4 و p4 → p7 بود و p2/p3/p5/p6 هرگز پخش نمی‌شدند.
+    const chain = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
+    for (let i = 0; i < chain.length - 1; i++) {
+      expect(NODES[chain[i]].next, `گرهٔ بعدی ${chain[i]}`).toBe(chain[i + 1]);
+    }
+    expect(NODES.p7.next).toBeNull();
+    const lines = chain.reduce((sum, id) => sum + NODES[id].lines.length, 0);
+    expect(lines).toBe(16);
+    for (const id of chain) expect(EN_LINES[id]).toHaveLength(NODES[id].lines.length);
+  });
+
+  it('هیچ گرهٔ پرولوگ (p1…p6) در بازی واقعی از صف نمی‌افتد', () => {
+    maybeStartPrologue();
+    let guard = 0;
+    let node = pendingNode()!;
+    const visited: string[] = [node.id];
+    while (node.next && guard++ < 20) {
+      const res = advanceNode(node);
+      if (!res.next) break;
+      node = res.next;
+      visited.push(node.id);
+    }
+    expect(visited).toEqual(['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']);
+    advanceNode(node);
+    for (const id of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']) expect(S.story.seen[id]).toBe(true);
   });
 
   it('اثر گره واقعاً روی سِیو اعمال می‌شود', () => {

@@ -1,7 +1,7 @@
 // ===== بدهی، شرخر، اعتبار، قلک و مترسک =====
 // همهٔ اعداد از src/story/debtData.ts می‌آید؛ اینجا فقط منطق است.
 import { CROP, HEART_BOND_2, HEART_BOND_5, JAHANGIR2_INT_MULT, JAHANGIR5_RAID_MULT, SHEEPDOG_RAID_MULT } from '../data';
-import { S, addGood, farmLevel, notify, saveGame, stamCap, toast, troughCap } from '../state';
+import { S, addGood, farmLevel, forceBackupRotation, notify, saveGame, stamCap, toast, troughCap } from '../state';
 import { sfx } from '../sound';
 import { rnd, randRange, chance } from '../rng';
 import { triggerCutscene } from '../../story/engine';
@@ -111,6 +111,9 @@ export const scarecrowPrice = (): number => {
 // ===== آغاز بدهی (پایان پرولوگ) =====
 export function startDebt(noteIdx = 0) {
   const n = NOTES[clamp(noteIdx, 0, NOTE_COUNT - 1)];
+  // رفع C-5: با هر سند جدید، چرخش اسلات پشتیبان اجباری می‌شود تا سِیو «قبل از سند» همیشه
+  // در دسترس باشد (مستقل از فاصلهٔ زمانی دیوار و محیط اجرا -> نتیجهٔ قطعی در CI).
+  forceBackupRotation();
   S.debt = {
     noteIdx: n.idx,
     remaining: n.amount,
@@ -362,6 +365,8 @@ export function processRaid(): VisitResult {
 export function processDebtDay() {
   const d = debt();
   if (!d) return;
+  // رفع C-5: پایان هر روز بازی = یک نقطهٔ چرخش پشتیبان قطعی (نه وابسته به ساعت دیوار)
+  forceBackupRotation();
   checkStoryQuests();
   if (S.story.postgame) {
     d.pendingVisit = null;

@@ -224,19 +224,25 @@ describe('ممیزی کامل ۲۴ ویژگی مصوب توسعهٔ جهان (#�
     expect(ARTISAN_RECIPES.length).toBeGreaterThanOrEqual(14);
   });
 
-  it('حذف صریح و قطعی مورد #۲۴: هیچ میانبر صفحه‌کلید دسکتاپ (WASD / Arrow / 1-9 / Space) در کد بازی ثبت نشده است', () => {
+  it('مورد #۲۴ (اصلاح‌شده پس از ممیزی/C-4): هیچ میانبر حرکتی WASD / Arrow / 1-9 / Space وجود ندارد و کل شنونده‌های صفحه‌کلید دقیقاً دو تای مستند هستند', () => {
+    // رفع C-4: ادعای قبلی «صفر شنوندهٔ صفحه‌کلید» با «معاف‌کردن نام فایل» نوشته شده بود و
+    // در نتیجه دو شنوندهٔ واقعی (Esc در androidNav.ts و F9 در SceneDebugMenu.tsx) را پنهان می‌کرد.
+    // حالا قاعده «همهٔ فایل‌ها» است و تعداد شنونده‌ها دقیقاً assert می‌شود.
     const srcFiles = walkSrcFiles(path.resolve(__dirname, '../src'));
     expect(srcFiles.length).toBeGreaterThan(40);
+    const listeners: string[] = [];
     for (const file of srcFiles) {
       const code = fs.readFileSync(file, 'utf8');
-      const base = path.basename(file);
-      if (base === 'App.tsx' || base === 'androidNav.ts' || base === 'SceneDebugMenu.tsx') {
-        expect(code).not.toMatch(/Arrow(Up|Down|Left|Right)|Key[WASD]|Digit[0-9]|['"]Space['"]/);
-      } else {
-        expect(code, `نباید شنوندهٔ صفحه‌کلید دسکتاپ در ${file} باشد`).not.toMatch(/addEventListener\(\s*['"](keydown|keyup|keypress)['"]/);
+      if (/addEventListener\(\s*['"](keydown|keyup|keypress)['"]/.test(code)) {
+        listeners.push(path.relative(path.resolve(__dirname, '../src'), file));
       }
-      expect(code, `نباید window.onkey* در ${file} باشد`).not.toMatch(/window\.onkey(down|up|press)\s*=/);
+      // هیچ میانبر حرکتی/عددی/فاصله در هیچ فایلی مجاز نیست
+      expect(code, `میانبر حرکتی در ${file} ممنوع است`).not.toMatch(/Arrow(Up|Down|Left|Right)|Key[WASD]|Digit[0-9]|['"]Space['"]/);
+      expect(code, `window.onkey* در ${file} ممنوع است`).not.toMatch(/window\.onkey(down|up|press)\s*=/);
     }
+    // رفع N-6: شنوندهٔ F9 فقط در بیلد توسعه باقی می‌ماند (در production کل ماژول حذف می‌شود)
+    expect(listeners.sort()).toEqual(['game/androidNav.ts', 'ui/SceneDebugMenu.tsx']);
+    expect(fs.readFileSync(path.resolve(__dirname, '../src/App.tsx'), 'utf8')).toContain('DEV_TOOLS');
   });
 
   it('مورد #۲۵: ذخیره/بازیابی کامل JSON برای تمام داده‌های جدید + رندر تمیز دوزبانه (FA بدون عدد لاتین + EN)', () => {

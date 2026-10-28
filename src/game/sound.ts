@@ -1,3 +1,4 @@
+import { nativeImpact } from './nativeHaptics';
 // ===== موتور صدای ارگانیک مبتنی بر نمونهٔ صوتی واقعی (.mp3 استودیویی کم‌حجم درون‌خطی + دیکد یک‌بارهٔ AudioBuffer + بازخورد لمسی) =====
 // همهٔ ۱۶ فایل صوتی واقعی (.mp3 با حجم مجموع ~۳۰ کیلوبایت) در تک‌فایل آفلاین اینلاین می‌شوند:
 //   ۱) صفر صدای گوش‌خراش مربعی/اره‌ای — صدای واقعی چوب، خاک، آب، سکه، کاغذ نامه، گیتار آکوستیک و سنتور
@@ -254,6 +255,9 @@ export const ambient = {
 export function haptic(kind: 'light' | 'medium' | 'heavy' = 'light'): number {
   if (!CFG.haptics || bgAudioPaused) return 0;
   const ms = kind === 'heavy' ? 35 : kind === 'medium' ? 18 : 8;
+  // رفع U-3: اول پلاگین بومی @capacitor/haptics (اندروید/iOS)، بعد fallback به vibrate وب
+  const style = kind === 'heavy' ? 'HEAVY' : kind === 'medium' ? 'MEDIUM' : 'LIGHT';
+  if (nativeImpact(style)) return ms;
   try {
     if (
       typeof navigator !== 'undefined'

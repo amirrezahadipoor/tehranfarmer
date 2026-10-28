@@ -7,7 +7,12 @@ import { sfx } from '../game/sound';
 import { GT } from '../strings/gameText';
 import { UT } from '../strings/uiText';
 import { CINEMA_UI } from '../strings/cinemaLocales';
-import { openSceneDirector } from './SceneDebugMenu';
+import { DEV_TOOLS } from '../strings/version';
+import { clearErrorLog, exportErrorLogJson, getErrorLog } from '../game/errorLog';
+// رفع N-6: گالری کارگردان صحنه فقط در بیلد توسعه‌دهنده لود می‌شود.
+const openSceneDirector = DEV_TOOLS
+  ? () => { void import('./SceneDebugMenu').then((m) => m.openSceneDirector()); }
+  : null;
 
 export function SettingsPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -78,13 +83,15 @@ export function SettingsPanel() {
         >
           <span>{UT.setReset}</span>
         </button>
-        <button
-          type="button"
-          className="btn p press !px-2.5 !py-0.5 text-xs font-black"
-          onClick={() => { sfx.tap(); openSceneDirector(); }}
-        >
-          <span>{CINEMA_UI[CFG.locale].directorBtn}</span>
-        </button>
+        {openSceneDirector && (
+          <button
+            type="button"
+            className="btn p press !px-2.5 !py-0.5 text-xs font-black"
+            onClick={() => { sfx.tap(); openSceneDirector(); }}
+          >
+            <span>{CINEMA_UI[CFG.locale].directorBtn}</span>
+          </button>
+        )}
         <button
           type="button"
           data-lang-toggle="1"
@@ -94,6 +101,40 @@ export function SettingsPanel() {
         >
           <span>{CINEMA_UI[CFG.locale === 'en' ? 'en' : 'fa'].langToggle}</span>
         </button>
+      </div>
+      {/* رفع C-8: گزارش خطاهای محلی — برای پشتیبانی کاربران بدون هیچ ارسال شبکه */}
+      <div className="mt-3 rounded-lg border-2 border-[#503426] bg-[#fff9eb] p-2 text-xs font-black" data-error-log="1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>{UT.errLogTitle}</span>
+          <span className="ft">{fa(getErrorLog().length)}</span>
+        </div>
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            className="btn b press !px-2.5 !py-0.5 text-xs font-black"
+            onClick={() => {
+              try {
+                const blob = new Blob([exportErrorLogJson()], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'mazrae-rangi-errors.json';
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch { /* بی‌صدا */ }
+              sfx.tap();
+            }}
+          >
+            <span>{UT.errLogExport}</span>
+          </button>
+          <button
+            type="button"
+            className="btn r press !px-2.5 !py-0.5 text-xs font-black"
+            onClick={() => { clearErrorLog(); sfx.tap(); notify(); }}
+          >
+            <span>{UT.errLogClear}</span>
+          </button>
+        </div>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs font-black">
         <button

@@ -3,6 +3,12 @@ import { CFG } from '../game/settings';
 const locText = (fa: string, en: string) => (CFG.locale === 'en' ? en : fa);
 
 declare const __APP_VERSION__: string;
+declare const __DEV_TOOLS__: boolean;
+/**
+ * رفع N-6: ابزارهای توسعه (گالری کارگردان صحنه با F9، هندل‌های __cinemaDebug) فقط در بیلد
+ * داخلی/تستی وجود دارند. در بیلد production این مقدار false است و Vite کل ماژول را حذف می‌کند.
+ */
+export const DEV_TOOLS = typeof __DEV_TOOLS__ !== 'undefined' ? Boolean(__DEV_TOOLS__) : false;
 const RAW_APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '10.0.0';
 export function formatVersion(v: string = RAW_APP_VERSION): string {
   return CFG.locale === 'en'
@@ -12,6 +18,16 @@ export function formatVersion(v: string = RAW_APP_VERSION): string {
 export const APP_VERSION = RAW_APP_VERSION;
 export const CHANGELOG: { v: string; note: string }[] = [
   {
+    get v() { return locText('۱۰٫۰٫۱', '10.0.1'); },
+    get note() {
+      return locText(
+        'رفع ایرادهای ممیزی، افزایش خوانایی، صف اعلان و ابزار ساخت APK در CI',
+        'Audit fixes, larger legible text, queued toasts and in-CI APK build',
+      );
+    },
+  },
+
+{
     get v() { return locText('۱۰٫۰٫۰', '10.0.0'); },
     get note() {
       return locText(

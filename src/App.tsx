@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { cmd, startEngine } from './game/engine';
 import { S, UI, hasSave, loadGame, notify, resetGame as resetGameFn, saveGame, useGame } from './game/state';
 import { Hud } from './ui/Hud';
 import { Modals } from './ui/Modals';
 import { Ic } from './ui/parts';
 import { Cutscene, VisitGate } from './ui/Cutscene';
-import { SceneDebugMenu } from './ui/SceneDebugMenu';
+import { DEV_TOOLS } from './strings/version';
+// رفع N-6: در بیلد production این ماژول اصلاً بارگذاری نمی‌شود (import تنبل + شرط ثابت بیلد).
+const SceneDebugMenu = DEV_TOOLS
+  ? lazy(() => import('./ui/SceneDebugMenu').then((m) => ({ default: m.SceneDebugMenu })))
+  : null;
 import { clearSceneQueue, maybeStartPrologue, pendingNode, skipActiveCutscene } from './story/engine';
 import { cinema, endSceneStage } from './game/cinemaStage';
 import { fa } from './strings/fa';
@@ -72,6 +76,18 @@ function SpeakerIcon({ on }: { on: boolean }) {
 }
 
 let portraitHintDone = false;
+// رفع U-2/V-3: در وب، حالت عمودی تا وقتی بازیکن صریحاً «ادامه با همین حالت» را نزند
+// با یک صفحهٔ تمام‌صفحهٔ محترمانه مدیریت می‌شود (در اندروید قفل افقی فعال است).
+let portraitAck = false;
+const PORTRAIT_ACK_KEY = 'mazrae-rangi-portrait-ack-v1';
+function portraitAcknowledged(): boolean {
+  if (portraitAck) return true;
+  try { return localStorage.getItem(PORTRAIT_ACK_KEY) === '1'; } catch { return false; }
+}
+function acknowledgePortrait() {
+  portraitAck = true;
+  try { localStorage.setItem(PORTRAIT_ACK_KEY, '1'); } catch { /* بی‌صدا */ }
+}
 
 function Start() {
   const saved = hasSave();
@@ -333,7 +349,7 @@ export default function App() {
   }, [bootReady]);
   const inCinema = Boolean(pendingNode()) || cinema.active;
   useEffect(() => {
-    if (!UI.started || !UI.portrait || inCinema || portraitHintDone) return;
+    if (!UI.started || !UI.portrait || inCinema || portraitHintDone || !portraitAcknowledged()) return;
     const t = window.setTimeout(() => { portraitHintDone = true; notify(); }, 4200);
     return () => window.clearTimeout(t);
   }, [UI.started, UI.portrait, inCinema]);
@@ -347,10 +363,29 @@ export default function App() {
       <Modals />
       {UI.started && <VisitGate />}
       {UI.started && <Cutscene />}
-      <SceneDebugMenu />
+      {SceneDebugMenu && (
+        <Suspense fallback={null}>
+          <SceneDebugMenu />
+        </Suspense>
+      )}
       {!bootReady && <BootLoader pct={bootProg.pct} label={bootProg.label} fadingOut={bootFading} />}
       {bootReady && !UI.started && <Start />}
-      {UI.started && UI.portrait && !inCinema && !UI.modal && !portraitHintDone && (
+      {UI.started && UI.portrait && !portraitAcknowledged() && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[#2b1a10]/92 px-6 text-center" role="dialog" aria-modal="true" aria-label={UT.u186}>
+          <svg viewBox="0 0 120 120" className="h-24 w-24 rotate-90" aria-hidden="true">
+            <rect x="34" y="10" width="52" height="100" rx="9" fill="#ffd93b" stroke="#503426" strokeWidth="5" />
+            <rect x="42" y="24" width="36" height="70" rx="4" fill="#fff4d8" stroke="#503426" strokeWidth="3" />
+            <circle cx="60" cy="102" r="5" fill="#503426" />
+          </svg>
+          <h2 className="ft text-2xl text-[#fff4d8]">{UT.u186}</h2>
+          <p className="max-w-[24rem] text-sm font-bold text-[#f3e4c6]">{UT.u187}</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button className="btn g press px-4" onClick={() => { acknowledgePortrait(); notify(); }}>{UT.u188}</button>
+            <button className="btn b press px-4" onClick={() => { portraitHintDone = true; notify(); }}>{UT.u189}</button>
+          </div>
+        </div>
+      )}
+      {UI.started && UI.portrait && portraitAcknowledged() && !inCinema && !UI.modal && !portraitHintDone && (
         <button
           className="paper-dark pointer-events-auto fixed left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 px-3 py-1"
           style={{ bottom: 'max(14.5rem, 196px)' }}

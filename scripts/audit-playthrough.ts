@@ -4,8 +4,7 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { installDom } from '../tests/helpers/dom';
 import {
-  S, UI, advance, resetGame, tickBuilds, visitMuseum,
-} from '../src/game/state';
+  S, UI, advance, resetGame, tickBuilds, visitMuseum, clearToasts } from '../src/game/state';
 import { CROPS, GH_PRICE, HIVE_MAX, POND_MAX, SILO_PRICE } from '../src/game/data';
 import { NOTES, TOTAL_DEBT } from '../src/story/debtData';
 import {
@@ -196,7 +195,7 @@ function auditTriggersAndMechanics() {
     S.inv = {};
     S.gh = 0;
     for (const p of S.plots) { p.st = 0; p.crop = null; p.dead = false; p.ripe = false; }
-    UI.toasts = [];
+    clearToasts();
     advance(1);
     const giftedCrop = Object.entries(S.seeds).find(([, v]) => (v ?? 0) > 0)?.[0];
     const cropDef = CROPS.find((c) => c.id === giftedCrop);

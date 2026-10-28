@@ -1,31 +1,10 @@
-name: check
-on:
-  push:
-    branches: [main]
-  pull_request:
+# این گردش‌کار با «CI» ادغام شد (رفع N-2): به‌جای سه اجرای تکراری از npm run check،
+# فقط یک گردش‌کار CI + یک گردش‌کار Android APK وجود دارد.
+# این فایل عمداً بدون تریگر است و صرفاً برای سازگاری لینک‌های قدیمی باقی مانده است.
+name: check (ادغام‌شده در CI)
+on: workflow_dispatch
 jobs:
-  check:
+  note:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci || npm install
-      - run: npm run check
-      - run: STRICT=1 RUNS=3 npm run sim:balance
-      - run: STRICT=1 RUNS=2 npm run sim:story
-      - run: npx playwright install --with-deps chromium
-      - name: Visual tests
-        run: npm run test:visual
-        continue-on-error: true
-      - uses: actions/upload-artifact@v4
-        if: always()
-        continue-on-error: true
-        with:
-          name: visual-screenshots
-          path: |
-            e2e/__screenshots__/
-            test-results/
-          retention-days: 7
+      - run: echo "این گردش‌کار در «CI» ادغام شده است. از تب Actions → CI استفاده کنید."

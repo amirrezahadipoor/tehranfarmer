@@ -1,7 +1,7 @@
 {
   "name": "mazrae-rangi",
   "private": true,
-  "version": "10.0.0",
+  "version": "10.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,11 +21,13 @@
     "android:release": "node scripts/android-build.mjs release",
     "android:assets": "node scripts/generate-android-assets.mjs",
     "android:verify": "node scripts/verify-apk.mjs",
-    "test:visual": "playwright test",
+    "test:visual": "npm run build:e2e && playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "lint:magic": "node scripts/lint-magic.mjs",
     "privacy:audit": "node scripts/privacy-audit.mjs",
-    "audit:agents": "node scripts/agents-audit.mjs"
+    "audit:agents": "node scripts/agents-audit.mjs",
+    "build:e2e": "node scripts/e2e-build.mjs",
+    "version:bump": "node scripts/version-bump.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.2",

@@ -1,3 +1,4 @@
+import { bindToastHost, toast } from './toasts';
 import { useSyncExternalStore } from 'react';
 import { CFG } from './settings';
 import { nativeRemoveItem, nativeSetItem } from './nativeStorage';
@@ -193,14 +194,32 @@ function isValidSaveText(raw: string | null): raw is string {
 /** فاصلهٔ حداقلی بین دو چرخش پشتیبان (ms): پشتیبان‌ها «سیوهای چندده دقیقه‌ای» هستند نه دو ذخیرهٔ آخر */
 export const BACKUP_INTERVAL_MS = 10 * 60 * 1000;
 let lastRotateAt = 0;
+/**
+ * رفع C-5: در محیط‌های بدون زمان واقعی (شبیه‌ساز/ربات ممیزی/CI) ساعت دیوار ممکن بود
+ * بین دو اجرا فاصلهٔ کم داشته باشد و چرخش اسلات پشتیبان انجام نشود؛ نتیجه: ممیزی
+ * یک‌بار ۴ و یک‌بار ۵ ایراد می‌داد. حالا رویدادهای مهم (پایان روز/فصل، شروع بدهی)
+ * می‌توانند چرخش را اجباری کنند تا نتیجه همیشه قطعی باشد.
+ */
+export function forceBackupRotation() { lastRotateAt = 0; }
 /** قفل ذخیره: وقتی سِیوِ موجود خوانده نشده، تا تصمیم بازیکن (ادامه/جدید) هیچ ذخیره‌ای سیوهای قبلی را بازنویسی نمی‌کند */
 let saveLocked = false;
 export function isSaveLocked() { return saveLocked; }
 export function setSaveLocked(on: boolean) { saveLocked = on; }
 
 let saveFailToastAt = 0;
+/** آیا حافظهٔ محلی در این محیط در دسترس است؟ (Node/شبیه‌ساز/وب‌ویوِ محدود: خیر) */
+export function storageAvailable(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage !== null && typeof localStorage.setItem === 'function';
+  } catch {
+    return false;
+  }
+}
 function reportSaveFailure(where: string, err: unknown) {
   setLastError(`save-failed:${where}:${String((err as Error)?.message ?? err)}`, 'runtime');
+  // رفع C-3: اگر محیط ذخیره‌سازی ندارد (شبیه‌ساز، محیط تست، وب‌ویوی محدود)
+  // فقط گزارش محلی ثبت می‌شود و هیچ پیام ترسناکی به بازیکن نشان داده نمی‌شود.
+  if (!storageAvailable()) return;
   const now = Date.now();
   if (now - saveFailToastAt > 15000) {
     saveFailToastAt = now;
@@ -387,26 +406,10 @@ export const season = () => Math.floor((S.day - 1) / 7) % 4;
 bindSeason(season);
 export const year = () => Math.floor((S.day - 1) / 28) + 1;
 
-let tid = 1;
-let toastClearTimer: ReturnType<typeof setTimeout> | null = null;
-export function toast(icon: string, text: string) {
-  const t: Toast = { id: tid++, icon, text, locale: CFG.locale };
-  // چند رویداد هم‌زمان نباید یک پیام یکسان را روی صفحه تکرار کنند.
-  const unique = UI.toasts.filter((q) => q.icon !== icon || q.text !== text || q.locale !== CFG.locale);
-  UI.toasts = [...unique.slice(-1), t];
-  notify();
-  if (toastClearTimer) clearTimeout(toastClearTimer);
-  toastClearTimer = setTimeout(() => {
-    toastClearTimer = null;
-    if (UI.toasts.length) {
-      UI.toasts = [];
-      notify();
-    }
-  }, 2400);
-  if (typeof toastClearTimer === 'object' && toastClearTimer !== null && 'unref' in toastClearTimer) {
-    toastClearTimer.unref();
-  }
-}
+
+// صف اعلان‌ها در ماژول جدا (رفع C-2) — این‌جا فقط به وضعیت بازی وصل می‌شود.
+bindToastHost({ get toasts() { return UI.toasts; }, set toasts(v) { UI.toasts = v; }, notify, locale: () => CFG.locale });
+export { MAX_TOASTS, TOAST_MS, clearToasts, toast } from './toasts';
 
 // ===== سطح، تجربه و ابزارها =====
 // ===== مؤلفه‌های دستگاه‌ها =====

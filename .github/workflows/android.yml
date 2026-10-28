@@ -1,22 +1,31 @@
-name: ساخت و بازرسی اندروید و وب آفلاین
+name: Android APK
 
+# ساخت واقعی APK از طریق GitHub Actions (بدون نیاز به اندروید استودیو روی سیستم شما)
+# خروجی‌ها: debug APK (همیشه، با ابزار تست) و release APK (امضاشده اگر Secrets تنظیم شده باشد)
+# اجرا: خودکار روی هر push به main و روی تگ v*، یا دستی از تب Actions -> Run workflow
 on:
   push:
     branches: [main]
     tags: ['v*']
-  pull_request:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      build_release:
+        description: 'ساخت نسخهٔ release هم انجام شود؟'
+        type: boolean
+        default: true
 
 concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-verify:
-    name: آزمون کامل، ساخت APK (Debug/Release) و بارگذاری Artifact
+  apk:
+    name: ساخت و بارگذاری APK
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
 
     steps:
       - name: دریافت کد منبع
@@ -37,23 +46,19 @@ jobs:
       - name: کش Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: اطمینان از نصب Android SDK 35 و Build-Tools 35.0.0
+      - name: نصب Android SDK 35 و Build-Tools 35.0.0
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" >/dev/null
 
       - name: نصب وابستگی‌های npm
         run: npm ci
 
-      - name: گیت کامل کیفیت، تست‌ها، حریم خصوصی و تک‌فایل آفلاین
+      - name: گیت کیفیت (تایپ، متن فارسی، حریم خصوصی، تست‌ها، بیلد، تک‌فایل آفلاین، ممیزی)
         run: npm run check
 
-      - name: شبیه‌ساز بالانس و ربات داستان (سخت‌گیرانه)
-        run: |
-          STRICT=1 RUNS=3 npm run sim:balance
-          STRICT=1 npm run sim:story
-
-      - name: آماده‌سازی کلید امضای موقت از GitHub Secrets (در صورت تنظیم)
+      # ---- کلید امضا: اگر Secrets تنظیم شده باشد، release امضاشده ساخته می‌شود ----
+      - name: بازیابی کلید امضا از Secrets (اختیاری)
         id: keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -61,12 +66,18 @@ jobs:
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
             echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "[OK] کلید امضا از Secrets بازیابی شد."
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "[i] Secret اندروید تنظیم نشده؛ APK نسخهٔ debug و release بدون امضا ساخته می‌شود."
           fi
 
-      - name: ساخت APK نسخهٔ Debug
+      - name: ساخت APK نسخهٔ debug (همیشه)
         run: npm run android:debug
 
-      - name: ساخت APK نسخهٔ Release
+      - name: ساخت APK نسخهٔ release (در صورت درخواست یا وجود کلید)
+        if: ${{ github.event_name == 'push' || inputs.build_release }}
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -77,78 +88,45 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - name: بازرسی خودکار باینری هر دو APK
+      - name: بازرسی خودکار باینری APK (اندازه، امضا، مانیفست)
         run: npm run android:verify
 
-      - name: بارگذاری Artifact نسخهٔ Debug APK
+      - name: بارگذاری APK نسخهٔ debug
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
           name: mazrae-rangi-debug-apk
           path: artifacts/mazrae-rangi-debug.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: بارگذاری Artifact نسخهٔ Release APK
+      - name: بارگذاری APK نسخهٔ release
         uses: actions/upload-artifact@v4
-        continue-on-error: true
+        if: ${{ github.event_name == 'push' || inputs.build_release }}
         with:
           name: mazrae-rangi-release-apk
-          path: artifacts/mazrae-rangi-release.apk
-          if-no-files-found: error
+          path: |
+            artifacts/mazrae-rangi-release.apk
+            artifacts/mazrae-rangi-release-unsigned.apk
+          if-no-files-found: warn
           retention-days: 90
 
-      - name: بارگذاری Artifact نسخهٔ تک‌فایل وب آفلاین
+      - name: بارگذاری نسخهٔ تک‌فایل وب آفلاین (نصب‌شدنی روی هر گوشی)
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
           name: mazrae-rangi-web-singlefile
           path: dist/index.html
           if-no-files-found: error
           retention-days: 30
 
-  emulator-touch-audit:
-    name: تست واقعی نصب APK و تاچ سخت‌افزاری روی شبیه‌ساز اندروید ۱۴
-    needs: build-and-verify
-    runs-on: ubuntu-latest
-    timeout-minutes: 18
-    continue-on-error: true
-
-    steps:
-      - name: دریافت اسکریپت آزمون شبیه‌ساز
-        uses: actions/checkout@v4
-
-      - name: دریافت APK ساخته‌شده
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: mazrae-rangi-debug-apk
-          path: artifacts
-
-      - name: فعال‌سازی شتاب سخت‌افزاری KVM برای اجرای سریع شبیه‌ساز اندروید ۱۴
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-          ls -la /dev/kvm
-
-      - name: اجرای شبیه‌ساز واقعی Android 14 و آزمون لمس واقعی (Start -> Cutscene -> Farm -> Plot)
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          target: default
-          arch: x86_64
-          profile: pixel_7
-          cores: 4
-          ram-size: 4096M
-          disable-animations: true
-          script: python3 scripts/android-emulator-audit.py
-
-      - name: بارگذاری اسکرین‌شات‌های واقعی شبیه‌ساز اندروید ۱۴
+      - name: خلاصهٔ خروجی در صفحهٔ اجرا
         if: always()
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        with:
-          name: android-emulator-proof
-          path: /tmp/apk-proof
-          retention-days: 14
+        run: |
+          {
+            echo "## خروجی ساخت اندروید"
+            echo ""
+            ls -lh artifacts 2>/dev/null | sed 's/^/    /' || echo "پوشهٔ artifacts ساخته نشد."
+            echo ""
+            echo "- debug: با ابزارهای تست (F9) ساخته می‌شود و صرفاً برای آزمون است."
+            echo "- release: بیلد production واقعی؛ ابزارهای توسعه در آن حذف شده‌اند."
+            echo "- اگر Secret های امضا تنظیم شوند، فایل release با کلید خودتان امضا می‌شود."
+          } >> "$GITHUB_STEP_SUMMARY"

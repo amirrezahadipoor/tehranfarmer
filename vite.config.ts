@@ -50,7 +50,14 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
   },
   esbuild: { legalComments: 'none', drop: ['debugger'] },
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    // رفع N-6: پنجرهٔ توسعه‌دهنده/گالری کارگردان صحنه فقط در بیلد داخلی در دسترس است.
+    // بیلد پیش‌فرض (production) آن را به false تبدیل می‌کند تا کل ماژول از بسته حذف شود.
+    __DEV_TOOLS__: JSON.stringify(
+      process.env.VITE_DEV_TOOLS === '1' || process.env.VITE_E2E_ASSETS === '1',
+    ),
+  },
   plugins: [react(), tailwindcss(), viteSingleFile({ removeViteModuleLoader: true }), packInlineModule()],
   resolve: {
     alias: {
