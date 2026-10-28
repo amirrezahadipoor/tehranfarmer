@@ -2,7 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  workers: 1,
+  // ۳ worker: اسپک سنگین صحنه‌ها به سه تست پروفایل شکسته شده و موازی اجرا می‌شود
+  workers: process.env.CI ? 2 : 3,
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
   timeout: 60_000,
   expect: {

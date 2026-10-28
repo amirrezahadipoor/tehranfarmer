@@ -174,7 +174,8 @@ test('بازطراحی کامل جاده‌های خروجی، حذف کامل �
         const active = document.querySelector('button[data-nav][disabled]');
         return active?.getAttribute('data-nav') ?? '';
       });
-    }, { timeout: 3600 }).toBe(ex.to);
+      // رانرهای CI کندترند و کلیک روی تابلو یک صحنهٔ کات‌سین هم باز می‌کند؛ سقف بالاتر
+    }, { timeout: 20_000 }).toBe(ex.to);
 
     await page.waitForTimeout(360);
     await skipIfCutscene(page);
