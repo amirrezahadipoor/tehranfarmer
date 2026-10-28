@@ -179,7 +179,7 @@ export const FT = {
   get fairBoothPrizes() { return en() ? 'Prize Stall' : 'غرفهٔ جوایز'; },
   get fairOpenBell() { return en() ? 'Ring Town Festival Bell (Start Fair!)' : 'نواختن زنگ جشن میدان شهر (برپایی غرفه‌ها!)'; },
   get fairTokens() { return en() ? 'Festival Tokens' : 'ژتون جشنواره'; },
-  get judgeHint() { return en() ? 'Pick up to 3 different items from your Barn! High base price + distinct categories (Crop / Artisan / Ranch / Forest & Cave) score huge bonus points!' : 'تا ۳ کالای متفاوت از انبارت بچین! تنوع رده‌ها (زراعی / کارگاهی / دام / جنگل و غار) + ارزش بالا امتیاز داوران را منفجر می‌کند!'; },
+  get judgeHint() { return en() ? 'Pick up to 3 different items from your backpack & barn (1 of each is handed to the judges)! High base price + distinct categories (Crop / Artisan / Ranch / Forest & Cave) score huge bonus points!' : 'تا ۳ کالای متفاوت از کوله و انبارت بچین (هر قلم به داوران تحویل داده می‌شود)! تنوع رده‌ها (زراعی / کارگاهی / دام / جنگل و غار) + ارزش بالا امتیاز داوران را منفجر می‌کند!'; },
   get judgeSubmit() { return en() ? 'Present Basket to Village Judges' : 'داوری سبد در حضور بزرگان دهکده'; },
   get stirHint() { return en() ? 'Hold button to stoke the copper cauldron flame — keep heat marker inside the moving gold zone!' : 'دکمهٔ «دمیدن به آتش» را نگه دار و رها کن تا نشانگر دما داخل محدودهٔ طلایی بماند!'; },
   get stirStart() { return en() ? 'Light Copper Cauldron!' : 'روشن کردن دیگ جشنواره!'; },

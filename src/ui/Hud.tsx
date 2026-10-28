@@ -1,6 +1,7 @@
 import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
 import { hasSkill } from '../game/core/rpgSystems';
+import { tutToolBlocked, tutToolHi } from '../game/tutorial';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
 import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, sleepToMorning, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
@@ -427,6 +428,7 @@ function Toolbar() {
           <button
             key={t.k}
             onClick={() => {
+              if (tutToolBlocked(t.k)) { sfx.err(); return; } // حین آموزش فقط ابزار همان گام انتخاب می‌شود
               sfx.tap();
               if (t.k === 'plant') UI.seedTray = UI.tool === 'plant' ? !UI.seedTray : true;
               else UI.seedTray = false;
@@ -434,6 +436,7 @@ function Toolbar() {
             }}
             className={'press relative flex min-h-[48px] min-w-[48px] flex-col items-center justify-center rounded-xl border-[.18rem] px-1 pb-0.5 '
               + (UI.portrait ? 'w-[3.2rem] ' : 'w-[3.45rem] md:w-[4.15rem] ')
+              + (tutToolHi(t.k) ? 'animate-pulse !border-amber-500 ring-[.22rem] ring-amber-400 ' : '')
               + (on ? 'border-[#503426] bg-[#ffd93b] -translate-y-1.5 shadow-[0_.22rem_0_rgba(80,52,38,.7)]' : 'border-transparent')}
           >
             <Ic n={t.ic} s={UI.portrait ? (on ? 2.5 : 2.2) : (on ? 3 : 2.6)} />

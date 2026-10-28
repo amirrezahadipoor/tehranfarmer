@@ -240,9 +240,16 @@ export function newDay() {
   }
   if (S.workers > 0) {
     const wageMult = hasSkill('trade-3') ? 0.7 : 1;
-    const wage = Math.round(WORKER_WAGE * S.workers * wageMult);
+    const unit = Math.round(WORKER_WAGE * wageMult);
+    const wage = unit * S.workers;
     if (S.coins >= wage) S.coins -= wage;
-    else { S.workers = 0; toast('worker', GT.g163); }
+    else {
+      // اخراج نرم: فقط به اندازهٔ کسری — سهمِ پرداخت‌شده می‌ماند، بقیه می‌روند (نردبان قیمت حفظ است)
+      const keep = Math.min(S.workers, Math.floor(S.coins / unit));
+      S.coins -= unit * keep;
+      S.workers = keep;
+      toast('worker', GT.g163);
+    }
   }
   for (const g of GOODS) {
     const d = S.dem[g.id] ?? 1;

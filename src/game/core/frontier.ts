@@ -491,8 +491,10 @@ export function ringTownFestivalBell(): boolean {
 export function judgeFestivalSubmission(itemIds: string[]): { score: number; rank: 1 | 2 | 3; coins: number; tokens: number } | null {
   const f = ensureFrontier();
   if (f.fairPlayed.judge === S.day) { sfx.err(); toast('star', FT.fairDoneToday); return null; }
-  const valid = itemIds.filter((id, i) => id && GOOD[id] && (S.inv[id] ?? 0) > 0 && itemIds.indexOf(id) === i).slice(0, 3);
+  // تصمیم طراحی: قلم‌های داوری «تقدیم» می‌شوند (مصرف از کوله اول، بعد انبار) و کل موجودی بازیکن به‌شمار می‌آید
+  const valid = itemIds.filter((id, i) => id && GOOD[id] && holdCount(id) > 0 && itemIds.indexOf(id) === i).slice(0, 3);
   if (!valid.length) { sfx.err(); return null; }
+  for (const id of valid) takeHold(id, 1);
   let valSum = 0;
   const cats = new Set<string>();
   for (const id of valid) {

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { cmd, startEngine } from './game/engine';
 import { S, UI, hasSave, loadGame, notify, resetGame as resetGameFn, saveGame, useGame } from './game/state';
 import { Hud } from './ui/Hud';
+import { TutorialOverlay } from './ui/TutorialOverlay';
 import { Modals } from './ui/Modals';
 import { Ic } from './ui/parts';
 import { Cutscene, VisitGate } from './ui/Cutscene';
@@ -363,6 +364,7 @@ export default function App() {
       <div className="contents" inert={bgInert}>
         {bootReady && <canvas ref={ref} className="absolute inset-0 h-full w-full" />}
         {UI.started && !inCinema && <Hud />}
+        {UI.started && !inCinema && <TutorialOverlay />}
       </div>
       <Modals />
       {UI.started && <VisitGate />}

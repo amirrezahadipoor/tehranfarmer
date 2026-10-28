@@ -343,6 +343,7 @@ export const UT_EN = {
   museumTitlePre: 'Heritage Museum (Unlocks on Farm Freedom)',
   uPack: 'Backpack',
   uToBarn: 'Empty backpack',
+  uTutSkip: 'Skip tutorial',
   uSellFrom: 'Sell from:',
   uSrcPack: 'Backpack',
   uSrcBarn: 'Barn',

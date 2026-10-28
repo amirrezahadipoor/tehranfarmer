@@ -8,7 +8,7 @@ import {
   rollMailTradeOffer, sellAll, sellGood, srcHave, startDebt, transferPackToBarn, addPack, setSimBatchMode, harvestPond, harvestHoney,
 } from '../src/game/state';
 import { giftVillager, findBestGiftInBag } from '../src/story/socialVillagers';
-import { ROYAL_DECREES, fulfillRoyalDecree } from '../src/game/core/frontier';
+import { ROYAL_DECREES, fulfillRoyalDecree, judgeFestivalSubmission } from '../src/game/core/frontier';
 import { Modals } from '../src/ui/Modals';
 import { GT } from '../src/strings/gameText';
 import { GT_EN } from '../src/strings/en';
@@ -168,8 +168,19 @@ describe('دو سیستم کولهٔ پشتی و انبار', () => {
     expect(giftVillager('grandma')).toBe(false);
   });
 
-  it('مودال بازار کلید انتخاب منبع فروش را نشان می‌دهد', () => {
-    UI.modal = 'market';
+  it('داوری جشنواره: از کوله هم شمرده می‌شود و هر قلم تحویل داوران (مصرف) می‌شود', () => {
+    S.pack = { saffron: 2, cheese: 2, turquoise: 1 };
+    S.inv = {};
+    const r = judgeFestivalSubmission(['saffron', 'cheese', 'turquoise']);
+    expect(r).not.toBeNull();
+    expect(r!.rank).toBe(1);
+    expect(S.pack.saffron).toBe(1);    // ۱ قلم تحویل داوران
+    expect(S.pack.cheese).toBe(1);
+    expect(S.pack.turquoise ?? 0).toBe(0);
+    expect(judgeFestivalSubmission(['saffron'])).toBeNull(); // در همان روز یک بار
+  });
+
+  it('مودال بازار کلید انتخاب منبع فروش را نشان می‌دهد', () => {    UI.modal = 'market';
     const html = renderToString(<Modals />);
     UI.modal = null;
     expect(html).toContain('data-market-sellfrom');

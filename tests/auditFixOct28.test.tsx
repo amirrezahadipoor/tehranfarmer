@@ -84,6 +84,21 @@ describe('بازبینی ریزبینانهٔ ۲۸ اکتبر — رفع باگ�
     expect(S.coins).toBe(1_000_000 - 25_000);
   });
 
+  it('کسری حقوق: اخراج فقط به اندازهٔ کسری — سهم پرداختی می‌ماند و نردبان حفظ می‌شود', () => {
+    S.workers = 5;
+    S.workersHired = 5;
+    S.coins = 250; // فقط ۴ حقوق (۲۴۰) از ۵ نفر جور می‌شود
+    newDay();
+    expect(S.workers).toBe(4); // یک نفر رفت، نه همه
+    expect(S.coins).toBe(10);
+    expect(S.workersHired).toBe(5); // مالکیت اشتراک‌ها برای باز استخدام رایگان
+
+    S.coins = 0;
+    newDay();
+    expect(S.workers).toBe(0); // صفر سکه = همه می‌روند (رفتار قبلی برای صفر)
+    expect(S.workersHired).toBe(5);
+  });
+
   it('UI کود پهپاد: بدون مهارت crop-2 همان ۰٪ واقعی، با مهارت درصد دقیق جدول', () => {
     S.skills = {};
     expect(liveMachineStat('drone', 1)).toBe(`${faPct(0)} ${WX.statFertSave}`);

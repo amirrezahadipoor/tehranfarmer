@@ -346,6 +346,7 @@ export const UT_FA = {
   museumTitlePre: "موزهٔ میراث مزرعه (بازگشایی با آزادی مزرعه)",
   uPack: "کوله پشتی",
   uToBarn: "تخلیهٔ کوله",
+  uTutSkip: "رد کردن آموزش",
   uSellFrom: "فروش از:",
   uSrcPack: "کوله",
   uSrcBarn: "انبار",

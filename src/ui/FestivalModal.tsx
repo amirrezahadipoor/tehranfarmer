@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GOOD, fa } from '../game/data';
-import { S, UI, notify } from '../game/state';
+import { S, UI, holdCount, notify } from '../game/state';
 import { faPct } from '../strings/fa';
 import {
   completeFestivalContest, ensureFrontier, isTownFestivalActive,
@@ -70,8 +70,11 @@ export function FestivalModal() {
     return () => cancelAnimationFrame(raf);
   }, [tab]);
 
-  const invEntries = Object.entries(S.inv).filter(([id, n]) => n > 0 && GOOD[id]);
-  const validPicked = picked.filter((id) => (S.inv[id] ?? 0) > 0);
+  // سبد داوری از کل موجودی بازیکن (کوله + انبار) چیده می‌شود — هر قلم تحویل داوران و مصرف می‌شود
+  const mergedHold: Record<string, number> = { ...S.inv };
+  for (const [id, n] of Object.entries(S.pack)) mergedHold[id] = (mergedHold[id] ?? 0) + n;
+  const invEntries = Object.entries(mergedHold).filter(([id, n]) => n > 0 && GOOD[id]);
+  const validPicked = picked.filter((id) => holdCount(id) > 0);
   const fairLive = isTownFestivalActive();
 
   const togglePick = (id: string) => {

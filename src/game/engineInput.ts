@@ -12,6 +12,7 @@ import type { AR, Task, Walker } from './engineRender';
 import { sfx } from './sound';
 import { talkToSharkhar, talkToTownNpc } from '../story/engine';
 import { checkSecretTriggers } from '../story/secrets';
+import { tutOnPlotAction, tutTapOk } from './tutorial';
 import { fishCast } from './worldVisuals';
 import { GT } from '../strings/gameText';
 import { FT } from '../strings/frontierText';
@@ -68,10 +69,13 @@ export function createSceneTapRouter(d: SceneInputDeps) {
       if (!first && i === d.getDragLast()) return;
       d.setDragLast(i);
       if (!isUnlocked(i, S.lv.land)) { if (first) d.reasonToast('locked'); return; }
+      if (!tutTapOk(i)) { if (first) sfx.err(); return; } // آموزش روز اول: فقط کرت هدف با ابزار درست
       if (UI.tool === 'hand') {
         const pl = S.plots[i];
         if (pl && pl.st === 2 && pl.ripe && !pl.dead) {
-          UI.info = null; d.enqueuePlot('harvest', i); if (first) notify();
+          UI.info = null;
+          if (d.enqueuePlot('harvest', i)) tutOnPlotAction(i);
+          if (first) notify();
           return;
         }
         if (first) {
@@ -81,7 +85,7 @@ export function createSceneTapRouter(d: SceneInputDeps) {
           UI.info = UI.info?.plot === i ? null : { plot: i, x: sp.x, y: sp.y };
           UI.seedTray = false; notify();
         }
-      } else { UI.info = null; d.enqueuePlot(UI.tool, i); if (first) notify(); }
+      } else { UI.info = null; if (d.enqueuePlot(UI.tool, i)) tutOnPlotAction(i); if (first) notify(); }
       return;
     }
     if (!first) return;

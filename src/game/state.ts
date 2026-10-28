@@ -71,7 +71,7 @@ export interface Save {
   /** سطح چاه و آبیاری قطره‌ای ۰..۳ */
   wellLv: number;
   /** قرارداد فعال فروش در بازار */
-  contract: MarketContract | null;
+  contract: MarketContract | null; tut?: { step: number; active: boolean; done: boolean }; // آموزش تعاملی روز اول (بدون متن)
   /** آیا تندیس/موزهٔ پایان‌بازی دیده شده */
   museumVisited: boolean;
   /** رازهای پنهان کشف‌شده */
@@ -164,7 +164,7 @@ function fresh(): Save {
     quests: { day: 0, week: 0, daily: [], weekly: null, claimed: {}, base: {} },
     event: null,
     wellLv: 0,
-    contract: null,
+    contract: null, tut: { step: 0, active: false, done: false },
     museumVisited: false,
     secrets: {},
   };
@@ -282,7 +282,7 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.quests = S.quests ?? fresh().quests;
   S.event = hydrateEvent(S.event);
   S.wellLv = S.wellLv ?? 0;
-  S.contract = S.contract ?? null;
+  S.contract = S.contract ?? null; S.tut = S.tut ?? { step: 4, active: false, done: true }; // سیوهای کهنه آموزش نمی‌بینند
   S.museumVisited = S.museumVisited ?? false;
   S.secrets = S.secrets ?? {};
   S.farmSeeds = S.farmSeeds ?? {};
