@@ -18,6 +18,10 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     headless: true,
     locale: 'fa-IR',
+    // هیچ کلیک/تعاملی نباید برای همیشه منتظر بماند: سقف۳۰ ثانیه، تا اگر عنصری ظاهر نشد
+    // خطا دقیقاً همان عنصر را نشان دهد (تست جریان کامل بازی در CI بی‌صدا گیر می‌کرد).
+    actionTimeout: 30_000,
+    navigationTimeout: 30_000,
     launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
       : {},

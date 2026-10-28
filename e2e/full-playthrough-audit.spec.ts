@@ -127,8 +127,15 @@ for (const mob of [{ w: 360, h: 740 }, { w: 800, h: 360 }]) {
 await page.setViewportSize({ width: 360, height: 740 });
 // رفع U-2: در نمای عمودی وب، ابتدا صفحهٔ «گوشی را افقی بگیر» نمایش داده می‌شود؛
 // بازیکن می‌تواند با دکمهٔ «ادامه با همین حالت» وارد شود. آزمون هم همان مسیر واقعی را می‌رود.
+// (قبلاً یک isVisibleِ بدون صبر بود: اگر دیالوگ هنوز mount نشده بود، جا می‌ماند و
+//  زیر CI برای همیشه روی کلیک ناوبری قفل می‌کرد — علت مزمنِ شکست CIها.)
 const portraitAck = page.getByRole('button', { name: 'ادامه با همین حالت' });
-if (await portraitAck.isVisible().catch(() => false)) await portraitAck.click();
+try {
+  await portraitAck.waitFor({ state: 'visible', timeout: 5_000 });
+  await portraitAck.click();
+} catch {
+  // درگاهی ظاهر نشد — حالت عمودی از قبل پذیرفته شده؛ ادامه می‌دهیم
+}
 // در پروفایل انگلیسی، نام دکمه‌ها انگلیسی است؛ پس با data-nav پایدار انتخاب می‌کنیم.
 await page.locator('[data-nav="river"]').click();
 await expect(page.locator('[data-scene-id="area-intro-river"]')).toBeVisible({ timeout: 20_000 });
