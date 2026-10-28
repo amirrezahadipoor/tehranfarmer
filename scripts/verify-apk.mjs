@@ -137,7 +137,13 @@ for (const apk of apks) {
       process.exit(1);
     }
     const badging = execFileSync(aapt2, ['dump', 'badging', apk], { encoding: 'utf8' });
-    for (const needle of ["name='ir.mazraerangi.game'", "versionCode='1000'", "versionName='10.0.0'", "targetSdkVersion:'35'", "application-label:'مزرعه رنگی'"]) {
+    // نسخه از منبع حقیقت واحد خوانده می‌شود (package.json) تا با هر version:bump هم‌گام بماند (رفع C-9).
+    const pkgVersion = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')).version;
+    const versionCode = String(
+      pkgVersion.split('.').reduce((acc, n) => acc * 10 + Number(n), 0) /* 10.0.1 -> 1001 */,
+    );
+    const packageId = "name='ir.mazraerangi.game'";
+    for (const needle of [packageId, `versionCode='${versionCode}'`, `versionName='${pkgVersion}'`, "targetSdkVersion:'35'", "application-label:'مزرعه رنگی'"]) {
       if (!badging.includes(needle)) {
         console.error(`[ERR] مشخصهٔ ${needle} در خروجی aapt2 برای ${path.basename(apk)} یافت نشد`);
         process.exit(1);
