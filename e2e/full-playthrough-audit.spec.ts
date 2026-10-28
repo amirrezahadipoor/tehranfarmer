@@ -38,7 +38,9 @@ const PROFILES = [
 
 // ---------------------------------------------------------------- ۱) جریان واقعی بازی
 test('جریان واقعی بازی: شروع نو، رد پرولوگ، بذرفروشی، بازار و پایان‌بازی', async ({ page }) => {
-  test.setTimeout(300_000);
+  // رانرهای CI حدود ۳ برابر کندترند و این جریان با کلیک واقعی و فریم واقعی جلو می‌رود؛
+  // سقف ۳۰۰ ثانیه مزمن بود (سه شکست پیاپی در CI) — زیر CI سقف را دو برابر می‌کنیم.
+  test.setTimeout(process.env.CI ? 600_000 : 300_000);
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/');
   // شروع «بازی نو»: پاک‌کردن سِیوِ احتمالی مرورگر تا جریان واقعی از روز ۱ آزموده شود
@@ -188,7 +190,7 @@ await expect(page.getByRole('button', { name: /یادبود دریافت شد/ }
 // ---------------------------------------------------------------- ۲) ممیزی پیکسلی هر پروفایل
 for (const prof of PROFILES) {
   test(`ممیزی پیکسلی تمام صحنه‌ها — ${prof.label} (${prof.w}x${prof.h}، فونت ${prof.font}، زبان ${prof.lang})`, async ({ page }) => {
-    test.setTimeout(420_000);
+    test.setTimeout(process.env.CI ? 600_000 : 420_000);
     await page.setViewportSize({ width: prof.w, height: prof.h });
     await page.goto('/');
     await page.waitForFunction(() => Boolean((window as unknown as { __cinemaDebug?: unknown }).__cinemaDebug), null, { timeout: 25_000 });
