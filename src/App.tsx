@@ -5,9 +5,10 @@ import { Hud } from './ui/Hud';
 import { Modals } from './ui/Modals';
 import { Ic } from './ui/parts';
 import { Cutscene, VisitGate } from './ui/Cutscene';
-import { DEV_TOOLS } from './strings/version';
+declare const __DEV_TOOLS__: boolean;
 // رفع N-6: در بیلد production این ماژول اصلاً بارگذاری نمی‌شود (import تنبل + شرط ثابت بیلد).
-const SceneDebugMenu = DEV_TOOLS
+// شرط خام روی define تا در بیلد نهایی false شود و کل dynamic import حذف شود.
+const SceneDebugMenu = __DEV_TOOLS__
   ? lazy(() => import('./ui/SceneDebugMenu').then((m) => ({ default: m.SceneDebugMenu })))
   : null;
 import { clearSceneQueue, maybeStartPrologue, pendingNode, skipActiveCutscene } from './story/engine';
@@ -314,23 +315,26 @@ export default function App() {
     if (!bootReady || !ref.current) return;
     const stop = startEngine(ref.current);
     const stopBack = installAndroidBackHandler();
-    (window as unknown as { __gameApi?: unknown }).__gameApi = {
-      openModal: (m: typeof UI.modal) => { UI.modal = m; notify(); },
-      setEnv: (patch: { scene?: typeof UI.scene; day?: number; hour?: number; weather?: number; postgame?: boolean; land?: number; soil?: number; coins?: number; infoIdx?: number | null }) => {
-        if (cinema.active || S.story.pending) { UI.afterModal = null; UI.afterTalkNpc = null; clearSceneQueue(); skipActiveCutscene(); endSceneStage(); }
-        if (patch.scene) { cmd.resetMotion(); UI.modal = null; UI.afterModal = null; UI.afterTalkNpc = null; UI.scene = patch.scene; }
-        if (typeof patch.day === 'number') S.day = patch.day;
-        if (typeof patch.hour === 'number') S.hour = patch.hour;
-        if (typeof patch.weather === 'number') S.weather = patch.weather as 0 | 1 | 2 | 3;
-        if (typeof patch.postgame === 'boolean') S.story.postgame = patch.postgame;
-        if (typeof patch.land === 'number') S.lv.land = patch.land;
-        if (typeof patch.soil === 'number') S.lv.soil = patch.soil;
-        if (typeof patch.coins === 'number') S.coins = patch.coins;
-        if (patch.infoIdx !== undefined) UI.info = patch.infoIdx === null ? null : { plot: patch.infoIdx, x: 120, y: 120 };
-        notify();
-      },
-      summary: () => ({ coins: S.coins, day: S.day, hour: S.hour, scene: UI.scene, modal: UI.modal, stageMoved: cinema.totalDistanceMoved, secrets: Object.keys(S.secrets ?? {}).length }),
-    };
+    // ابزارهای دیباگ رانتایم فقط در بیلد داخلی/تستی — شرط خام روی define تا در بیلد نهایی کلاً حذف شود
+    if (__DEV_TOOLS__) {
+      (window as unknown as { __gameApi?: unknown }).__gameApi = {
+        openModal: (m: typeof UI.modal) => { UI.modal = m; notify(); },
+        setEnv: (patch: { scene?: typeof UI.scene; day?: number; hour?: number; weather?: number; postgame?: boolean; land?: number; soil?: number; coins?: number; infoIdx?: number | null }) => {
+          if (cinema.active || S.story.pending) { UI.afterModal = null; UI.afterTalkNpc = null; clearSceneQueue(); skipActiveCutscene(); endSceneStage(); }
+          if (patch.scene) { cmd.resetMotion(); UI.modal = null; UI.afterModal = null; UI.afterTalkNpc = null; UI.scene = patch.scene; }
+          if (typeof patch.day === 'number') S.day = patch.day;
+          if (typeof patch.hour === 'number') S.hour = patch.hour;
+          if (typeof patch.weather === 'number') S.weather = patch.weather as 0 | 1 | 2 | 3;
+          if (typeof patch.postgame === 'boolean') S.story.postgame = patch.postgame;
+          if (typeof patch.land === 'number') S.lv.land = patch.land;
+          if (typeof patch.soil === 'number') S.lv.soil = patch.soil;
+          if (typeof patch.coins === 'number') S.coins = patch.coins;
+          if (patch.infoIdx !== undefined) UI.info = patch.infoIdx === null ? null : { plot: patch.infoIdx, x: 120, y: 120 };
+          notify();
+        },
+        summary: () => ({ coins: S.coins, day: S.day, hour: S.hour, scene: UI.scene, modal: UI.modal, stageMoved: cinema.totalDistanceMoved, secrets: Object.keys(S.secrets ?? {}).length }),
+      };
+    }
     const onHide = () => {
       if (UI.started) saveGame();
       suspendAudioForBackground();

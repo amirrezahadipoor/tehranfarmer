@@ -9,7 +9,8 @@ let cur = null;
 for (const line of lines) {
   const h = line.match(/^##\s+(فاز\s+[۰-۹0-9]+.*)$/);
   if (h) { cur = { title: h[1].trim(), total: 0, done: 0 }; phases.push(cur); continue; }
-  const t = line.match(/^- \[( |x)\]\s+(P[0-9]+(?:-RR-[0-9]+)?-[0-9]+)/);
+  // شمارش همهٔ شناسه‌های تسک با خط تیره (P، W، Q، T، X و …) — نه فقط پیشوند P تا جدول فازهای جدید صفر/صفر نماند
+  const t = line.match(/^- \[( |x)\]\s+([A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+)\b/);
   if (t && cur) { cur.total++; if (t[1] === 'x') cur.done++; }
 }
 const total = phases.reduce((a, p) => a + p.total, 0);

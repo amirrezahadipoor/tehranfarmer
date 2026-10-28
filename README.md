@@ -10,7 +10,7 @@ npm run check                      # گیت کامل: tsc + lint:fa + lint:magic
 STRICT=1 RUNS=3 npm run sim:balance # شبیه‌ساز بالانس اقتصادی در ۹ سناریو (۳ دشواری × ۳ استراتژی)
 STRICT=1 npm run sim:story         # ربات تکمیل خودکار داستان از پرولوگ تا جشن پایانی
 npm run test:visual                # آزمون‌های تصویری Playwright روی پروفایل‌های نمایشگر و مودال‌ها
-npm run roadmap:progress           # به‌روزرسانی جدول پیشرفت ROADMAP.md (۱۱۸/۱۱۸ — ۱۰۰٪)
+npm run roadmap:progress           # به‌روزرسانی جدول پیشرفت ROADMAP.md (۱۶۴/۱۶۴ — ۱۰۰٪)
 ```
 
 ## ساخت بستهٔ نصبی اندروید (`APK`)
@@ -25,7 +25,7 @@ npm run android:verify             # بازرسی باینری APK، نسخه و
 ## اسناد مرجع پروژه
 | سند | شرح |
 |---|---|
-| [`ROADMAP.md`](ROADMAP.md) | نقشهٔ راه ۱۱ فاز و ۱۱۸ تسک پیاده‌سازی‌شده (با ممیزی مستمر QA) |
+| [`ROADMAP.md`](ROADMAP.md) | نقشهٔ راه ۲۰ فاز و ۱۶۴ تسک پیاده‌سازی‌شده (با ممیزی مستمر QA) |
 | [`STORY.md`](STORY.md) | فیلم‌نامه، شخصیت‌ها، فصل‌ها و پایان‌بندی‌ها |
 | [`DECISIONS.md`](DECISIONS.md) | تصمیم‌های معماری و دلایل فنی |
 | [`PRIVACY.md`](PRIVACY.md) | سیاست حریم خصوصی (گردآوری صفر داده و صفر مجوز شبکه) |

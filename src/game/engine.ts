@@ -1,4 +1,5 @@
 import { ANIMALS, FISH_STAM, HOE_SPEED, PORTAL_TRAVEL_HOURS, XP, MACHINES, MK_SPEED, type AnimalKind, type CropId, type MachineId } from './data';
+declare const __DEV_TOOLS__: boolean;
 import {
   PAL_BUILDER, PAL_JAHANGIR, PAL_NPC, PAL_PLAYER, PAL_WORKERS, makeFarmer, poseFarmer, type AnimalRig, type FarmerRig, type Pal,
 } from './rig';
@@ -421,7 +422,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     framesRendered,
     viewport: { scale: sc, tx, ty },
   });
-  (window as unknown as { __inspectEngine?: typeof cmd.inspectEngine }).__inspectEngine = cmd.inspectEngine;
+  if (__DEV_TOOLS__) (window as unknown as { __inspectEngine?: typeof cmd.inspectEngine }).__inspectEngine = cmd.inspectEngine;
 
   function frame(now: number) {
     if (bgPaused) { raf = 0; return; }

@@ -8,7 +8,8 @@ declare const __DEV_TOOLS__: boolean;
  * رفع N-6: ابزارهای توسعه (گالری کارگردان صحنه با F9، هندل‌های __cinemaDebug) فقط در بیلد
  * داخلی/تستی وجود دارند. در بیلد production این مقدار false است و Vite کل ماژول را حذف می‌کند.
  */
-export const DEV_TOOLS = typeof __DEV_TOOLS__ !== 'undefined' ? Boolean(__DEV_TOOLS__) : false;
+// شرط خام (بدون نگهبان typeof) تا define آن را به ثابت true/false بدل کند و باندلر بتواند شاخه‌های مرده را در بیلد نهایی کاملاً حذف کند.
+export const DEV_TOOLS = __DEV_TOOLS__;
 const RAW_APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '10.0.0';
 export function formatVersion(v: string = RAW_APP_VERSION): string {
   return CFG.locale === 'en'

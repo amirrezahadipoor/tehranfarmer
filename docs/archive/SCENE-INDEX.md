@@ -92,7 +92,7 @@ Total Live Staged Cutscenes: **79** (zero plain dialogue boxes anywhere in the c
 | 79 | `quest-done-q6` | quest | `farm` | Major (30-90s) | Once (Saved) | , ,  | Completing Main Chapter Quest Q6 (`checkStoryQuests()`) | chapter >= 6; quest metric >= target | seen:quest-done-q6 |
 
 ## Procedural Animations & Visual Effects Implemented in Engine
-- **12-Bone Procedural Rig Acting (`src/game/farmerRig.ts` + `src/game/cinemaStage.ts`):** `idle`, `walk`, `talk`, `wave`, `cheer`, `point`, `bow`, `recoil`, `shiver`, `sit`, `swing` across real `farmer`, `jahangir`, and all `TOWN_ACTORS` (`turan`, `mash_ali`, `golpari`, `asghar`, `ostad_reza`, `narges`, plus temporary cast walkers `grandma` & `salar`).
+- **12-Bone Procedural Rig Acting (`src/game/rig.ts` + `src/game/cinemaStage.ts`):** `idle`, `walk`, `talk`, `wave`, `cheer`, `point`, `bow`, `recoil`, `shiver`, `sit`, `swing` across real `farmer`, `jahangir`, and all `TOWN_ACTORS` (`turan`, `mash_ali`, `golpari`, `asghar`, `ostad_reza`, `narges`, plus temporary cast walkers `grandma` & `salar`).
 - **Procedural Physics & Squash/Stretch (`src/game/cinemaStage.ts`):** Parabolic jump arcs (`vy` + gravity), idle breathing bobbing, hit-impact squash-and-stretch (`sx/sy`), shivering tremors, and sinusoidal hand-prop scale pulsing.
 - **Live Lip-Sync & Blinking (`src/game/cinemaArt.ts`):** Real-time mouth-flap vowel opening synced to typewriter voice blips plus natural eye-blink cycles drawn directly over the actor head bone in world coordinates.
 - **Hand-Drawn Comic Emote Bubbles (`src/game/cinemaArt.ts`):** Pop-spring comic callouts (`!`, `?`, `heart`, `anger`, `sweat`, `music`, `dots`, `star`, `coin`) with zero emoji.

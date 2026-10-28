@@ -61,7 +61,8 @@ export function Hud() {
   const farm = !!farmId;
   const ownedFarm = farmId ? isEstateOwned(farmId, S.lv.land) : false;
   const eu = ESTATE_UI[CFG.locale === 'en' ? 'en' : 'fa'];
-  const nightNow = S.hour >= 19 || S.hour < 5.5;
+  // منبع واحد شب: همان isNight موتور بازی (NIGHT_START_H=19.5 / NIGHT_END_H=5.5) تا آیکون HUD هرگز از منطق بازی جلو نزند
+  const nightNow = isNight();
   return (
     <>
       {/* نوار یکپارچهٔ بالای صفحه: چیدمان انعطاف‌پذیر، کم‌ارتفاع (آزاد بودن کامل سقف خانه و مزرعه) و صفر برخورد در هر عرض صفحه */}

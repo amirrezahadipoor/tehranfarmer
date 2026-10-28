@@ -65,8 +65,12 @@ export function buyWorker() {
   if (S.workers >= WORKER_MAX) return;
   const req = WORKER_LV[S.workers];
   if (req > farmLevel()) { sfx.err(); toast('lock', (GT.g3 + fa(req) + GT.g4)); return; }
-  if (!pay(WORKER_PRICES[S.workers])) return;
+  // استخدام مجدد کارگرانی که قبلاً خریداری شده‌اند (اشتراک از دست رفته در کسری حقوق) رایگان است؛
+  // نردبان قیمت فقط هنگام فراتر رفتن از بیشینهٔ تاکنونی اعمال می‌شود تا یک شب کسری حقوق ۲۸۱٬۹۰۰ سکه نسوزاند.
+  const rehire = (S.workersHired ?? 0) > S.workers;
+  if (!rehire && !pay(WORKER_PRICES[S.workers])) return;
   S.workers = Math.min(WORKER_MAX, S.workers + 1);
+  S.workersHired = Math.max(S.workersHired ?? 0, S.workers);
   addStat('builds', 1);
   addXp(XP.buildBase);
   toast('worker', GT.workerArrived);
@@ -161,7 +165,7 @@ export function completeBuild(id: number) {
     }
     case 'pond': S.ponds.push({ id: S.nextId++, stocked: false, grow: 0, feed: 0 }); break;
     case 'hive': S.hives++; break;
-    case 'worker': S.workers = Math.min(WORKER_MAX, S.workers + 1); break;
+    case 'worker': S.workers = Math.min(WORKER_MAX, S.workers + 1); S.workersHired = Math.max(S.workersHired ?? 0, S.workers); break;
     case 'pen': S.pens[j.key as AnimalKind] = 1; break;
     case 'penup': S.pens[j.key as AnimalKind] = Math.min(3, (S.pens[j.key as AnimalKind] ?? 0) + 1); break;
     case 'gh': S.gh = Math.min(GH_PRICE.length, S.gh + 1); break;

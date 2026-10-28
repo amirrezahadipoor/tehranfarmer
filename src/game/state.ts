@@ -5,7 +5,7 @@ import { nativeRemoveItem, nativeSetItem } from './nativeStorage';
 import { setLastError } from './errorLog';
 import {
   COLS, CROP, CROPS, GOODS, HOE_COST, MACHINES, MK_FERTADD,
-  MK_FERTSOIL, MK_HARVEST, MK_SEEDSAVE, ROWS, SOIL_BONUS, ghCovers, WORKER_MAX,
+  MK_FERTSAVE, MK_FERTSOIL, MK_HARVEST, MK_SEEDSAVE, ROWS, SOIL_BONUS, ghCovers, WORKER_MAX,
   XP, isUnlocked,
   type AnimalKind, type BuildJob, type CropId, type MachineId, type PondS,
 } from './data';
@@ -43,7 +43,7 @@ export interface Save {
   valleyPlots: Plot[];
   inv: Record<string, number>; seeds: Record<string, number>; fert: number; can: number; rod: number;
   lv: { hoe: number; can: number; bag: number; stam: number; land: number; soil: number };
-  animals: AnimalS[]; trough: number; workers: number; dem: Record<string, number>; sdem: Record<string, number>;
+  animals: AnimalS[]; trough: number; workers: number; workersHired?: number; dem: Record<string, number>; sdem: Record<string, number>;
   weather: number; nextId: number; earned: number;
   cityVisits: number;
   machines: Partial<Record<MachineId, number>>;
@@ -154,7 +154,7 @@ function fresh(): Save {
       { id: 1, kind: 'chicken', ready: 0, hue: 0, sex: 'f', grown: 0 },
       { id: 2, kind: 'chicken', ready: 0, hue: 1, sex: 'm', grown: 0 },
     ],
-    trough: 0, workers: 0, dem, sdem, weather: 0, nextId: 3, earned: 0,
+    trough: 0, workers: 0, workersHired: 0, dem, sdem, weather: 0, nextId: 3, earned: 0,
     cityVisits: 0, machines: {}, auto: {}, ponds: [], hives: 0, honeyAcc: 0, builds: [],
     pens: { chicken: 1 }, gh: 0, silo: 0, nests: [],
     xp: 0, stats: {}, ach: {},
@@ -276,6 +276,7 @@ function applyParsedSave(rawObj: unknown): boolean {
     if (typeof S.machines[k2] !== 'number') S.machines[k2] = S.machines[k2] ? 1 : 0;
   }
   S.workers = Math.min(WORKER_MAX, Math.max(0, S.workers ?? 0));
+  S.workersHired = Math.min(WORKER_MAX, Math.max(S.workersHired ?? 0, S.workers));
   S.quests = S.quests ?? fresh().quests;
   S.event = hydrateEvent(S.event);
   S.wellLv = S.wellLv ?? 0;
@@ -539,7 +540,8 @@ export function doAct(kind: string, i: number, worker = false, seed?: CropId, si
     case 'water': if (!worker && S.can > 0) S.can--; p.water = 1; p.dry = 0; if (!silent) sfx.water(); break;
     case 'fert':
       if (S.fert <= 0) return {};
-      if (!S.skills?.['crop-2'] || ((S.day + i) % 4) >= mkOf('drone')) S.fert--;
+      // صرفه‌جویی کود پهپاد: فقط با مهارت crop-2 و دقیقاً با همان درصد جدول (۲۰/۵۰/۷۵) — هم مسیر دستی و هم خودکار
+      if (!S.skills?.['crop-2'] || rnd() >= (MK_FERTSAVE[mkOf('drone')] ?? 0)) S.fert--;
       p.fert = Math.min(1, p.fert + fertAddAmt());
       if (!silent) sfx.pop();
       break;

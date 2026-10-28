@@ -185,7 +185,7 @@ export function Estate() {
           {buildingNow('worker', 'worker') ? <BuildingBadge kind="worker" keyName="worker" />
             : S.workers >= WORKER_MAX ? <Ic n="check" s={2.4} />
             : WORKER_LV[S.workers] > lv() ? <Lock req={WORKER_LV[S.workers]} />
-            : <BuyBtn n={UT.u179} price={WORKER_PRICES[S.workers]} onClick={buyWorker} />}
+            : <BuyBtn n={UT.u179} price={(S.workersHired ?? 0) > S.workers ? 0 : WORKER_PRICES[S.workers]} onClick={buyWorker} />}
         </div>
       </div>
       {l.land < LAND_PRICES.length && (

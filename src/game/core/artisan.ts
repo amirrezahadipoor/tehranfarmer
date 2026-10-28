@@ -31,7 +31,7 @@ export const ARTISAN_RECIPES: ArtisanRecipe[] = [
   {
     id: 'homestead-feed', icon: 'feed',
     get name() { return UT.recFeedName; }, get sub() { return UT.recFeedSub; },
-    inputs: [['wheat', 2]], mult: 0, staminaGain: 0, standingGain: 0, feedOut: 5, xp: 10,
+    inputs: [['wheat', 2]], mult: 0, staminaGain: 0, standingGain: 0, feedOut: 7, xp: 10,
   },
   {
     id: 'village-bread', icon: 'wheat',
@@ -116,7 +116,8 @@ export function artisanRewardCoins(rec: ArtisanRecipe): number {
   let raw = 0;
   for (const [id, q] of rec.inputs) raw += goodPrice(id) * q;
   const skillBoost = S.skills?.['trade-2'] ? 1.15 : 1;
-  const netMult = Math.min(1.68, rec.mult) * skillBoost;
+  // سقف بازدهٔ فرآوری: دستورهای ردهٔ بالا (mult ≥ ۲) تا ۱٫۸ و بقیه تا ۱٫۶۸ — تفکیک رده‌ها بدون تورم‌زایی
+  const netMult = Math.min(rec.mult >= 2 ? 1.8 : 1.68, rec.mult) * skillBoost;
   return Math.max(10, Math.round(raw * netMult));
 }
 

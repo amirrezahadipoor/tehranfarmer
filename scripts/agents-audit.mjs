@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ممیزی جامع قواعد سخت AGENTS.md برای بازبینی نهایی انتشار (P10-10)
+// ممیزی جامع قواعد سخت کد (خطوط ماژول، فونت‌ها، تیک‌های ROADMAP) برای بازبینی نهایی انتشار (P10-10)
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -57,11 +57,11 @@ if (!manifest.includes('android:allowBackup="false"')) {
 }
 const roadmap = fs.readFileSync('ROADMAP.md', 'utf8');
 const unchecked = [...roadmap.matchAll(/^- \[ \] (P\d+-\d+)/gm)].map((m) => m[1]);
-const checked = [...roadmap.matchAll(/^- \[x\] (P\d+-\d+)/gm)].map((m) => m[1]);
+const checked = [...roadmap.matchAll(/^- \[x\] ([A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+)/gm)].map((m) => m[1]);
 if (unchecked.length > 0) errors.push(`تسک‌های تیک‌نخورده در ROADMAP.md: ${unchecked.join(', ')}`);
 
 if (errors.length) {
   for (const e of errors) console.error(`[ERR] ${e}`);
   process.exit(1);
 }
-console.log(`[OK] ممیزی جامع AGENTS.md سبز است (${srcTs.length} ماژول، بیشینه=${maxLines} خط، فونت‌ها=${fonts.length}، نقشهٔ راه=${checked.length}/${checked.length})`);
+console.log(`[OK] ممیزی جامع قواعد سخت کد سبز است (${srcTs.length} ماژول، بیشینه=${maxLines} خط، فونت‌ها=${fonts.length}، نقشهٔ راه=${checked.length}/${checked.length})`);

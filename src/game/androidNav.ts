@@ -1,6 +1,7 @@
 // ===== مدیریت دکمهٔ سخت‌افزاری/ژست Back اندروید و کلید Escape دسکتاپ (P10-04) =====
 // ترتیب اولویت: صحنهٔ سینمایی -> پنجرهٔ تأیید -> بستن مودال -> بستن کارت اطلاعات کرت -> سینی بذر -> بازگشت به مزرعه -> تأیید خروج
-import { S, UI, clearVisit, notify, saveGame } from './state';
+import { S, UI, clearVisit, notify, saveGame, advance } from './state';
+import { PORTAL_TRAVEL_HOURS } from './data';
 import { sfx } from './sound';
 import { cinema, endSceneStage } from './cinemaStage';
 import { skipActiveCutscene } from '../story/engine';
@@ -68,6 +69,8 @@ export function handleHardwareBack(): BackOutcome {
   if (UI.scene !== 'farm') {
     UI.scene = 'farm';
     UI.info = null;
+    // بازگشت با دکمه Back مثل سفر از لبهٔ نقشه زمان می‌برد — یک رفتار واحد برای هر دو مسیر بازگشت
+    if (UI.started) advance(PORTAL_TRAVEL_HOURS);
     sfx.tap();
     notify();
     return 'returned-farm';

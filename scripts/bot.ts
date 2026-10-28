@@ -488,10 +488,22 @@ function runLoop(policy: Policy, maxDays: number): SimMetrics {
   return m;
 }
 
-export function runSim(policy: Policy, maxDays: number, seed: number, startDebtNow = true): SimMetrics {
+export interface RunSimOpts {
+  /**
+   * قطب «قفل بذر» رشد مزارع ماهواره‌ای: با فعال شدن، دشت/دره به‌جای مسیر کُند خودکار
+   * از مسیر سریع (قفل بذر مشخص) رشد می‌کنند. فقط برای سنجش دیاگنوستیک هر دو قطب در sim-balance.
+   */
+  satelliteLocks?: boolean;
+}
+
+export function runSim(policy: Policy, maxDays: number, seed: number, startDebtNow = true, opts?: RunSimOpts): SimMetrics {
   resetGame();
   setSeed(seed);
   UI.started = true;
+  if (opts?.satelliteLocks) {
+    // قفل‌های سازگار با تخصص هر مزرعه — رفتار کاشت بات را تغییر نمی‌دهند، فقط مسیر رشد را روشن می‌کنند
+    S.farmSeeds = { farm: 'wheat', north: 'wheat', valley: 'grape' };
+  }
   if (startDebtNow) {
     startDebt(0);
     S.story.chapter = 1;

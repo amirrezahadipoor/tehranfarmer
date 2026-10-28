@@ -119,6 +119,8 @@ export function migrateSave(raw: unknown): Raw | null {
   d.hives = Math.max(0, num(d.hives, 0));
   d.honeyAcc = Math.max(0, num(d.honeyAcc, 0));
   d.workers = Math.min(WORKER_MAX, Math.max(0, num(d.workers, 0)));
+  // بیشینهٔ ساختمان‌های کارگری خریداری‌شده هرگز کمتر از کارگران فعال نمی‌شود (باز استخدام رایگان پس از کسری حقوق)
+  d.workersHired = Math.min(WORKER_MAX, Math.max(num(d.workersHired, 0), num(d.workers, 0)));
   // ناهمخوانی طول کرت‌ها در سِیوِ نسخهٔ فعلی یعنی خرابی؛ رد می‌شود تا مزرعهٔ بازیکن بی‌صدا خالی نشود
   const layoutOk = (arr: unknown, n: number) => Array.isArray(arr) && arr.length === n;
   // فقط سِیوهای ذخیره‌شده با نسخهٔ فعلی سخت‌گیرانه بررسی می‌شوند؛ سِیوهای قدیمی‌تر طبق مهاجرت قبلی ترمیم می‌شوند

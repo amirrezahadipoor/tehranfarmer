@@ -9,7 +9,7 @@ import { close, grid, Wallet } from './shopKit';
 import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
 
-function liveMachineStat(id: MachineId, mk: number): string {
+export function liveMachineStat(id: MachineId, mk: number): string {
   if (mk <= 0) return WX.machExclusiveTag;
   switch (id) {
     case 'harvester':
@@ -20,8 +20,11 @@ function liveMachineStat(id: MachineId, mk: number): string {
       return `-${faPct(Math.round((1 - MK_THIRST[mk]) * 100))} — +${faPct(Math.round((MK_GROW[mk] - 1) * 100))} ${WX.statWater}`;
     case 'tractor':
       return mk >= 3 ? WX.statSoilFloor : `+${faPct(mk * 6)} ${WX.statSoilAdd}`;
-    case 'drone':
-      return `${faPct(Math.round(MK_FERTSAVE[mk] * 100))} ${WX.statFertSave}`;
+    case 'drone': {
+      // صرفه‌جویی کود فقط با مهارت crop-2 فعال می‌شود (همان قاعدهٔ کد) — بدون مهارت، همان ۰٪ وعده داده می‌شود
+      const save = S.skills?.['crop-2'] ? (MK_FERTSAVE[mk] ?? 0) : 0;
+      return `${faPct(Math.round(save * 100))} ${WX.statFertSave}`;
+    }
     case 'feeder':
       return `-${faPct(Math.round((1 - MK_EAT[mk]) * 100))} ${WX.statFeedSave}`;
     case 'collector':
@@ -87,6 +90,18 @@ export function AutoPanelModal() {
             );
           })}
         </div>
+        {(() => {
+          const slowAuto = (['north', 'valley'] as const).filter(
+            (fid) => isEstateOwned(fid, S.lv.land) && (S.farmSeeds?.[fid] ?? 'auto') === 'auto',
+          );
+          if (slowAuto.length === 0) return null;
+          return (
+            <div className="mt-1.5 rounded-xl border border-amber-400/70 bg-amber-50/90 p-2 text-[.7rem] font-extrabold leading-5 text-amber-900">
+              <div>{WX.autoSlowWarn}</div>
+              <div className="mt-0.5 opacity-90">{WX.autoSeasonNote}</div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Crew Priority Focus & Machine Synergy */}

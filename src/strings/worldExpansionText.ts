@@ -32,7 +32,17 @@ export const WX = {
   get crewCrops() { return en() ? '3-Farm Crops' : 'فقط کشت ۳ مزرعه'; },
   get crewRanch() { return en() ? 'Ranch, Bees & Fish' : 'دام، عسل و ماهی'; },
   get seedPlanTitle() { return en() ? 'Per-Estate Target Seed Assignment (Workers & Seeder)' : 'تعیین بذر هدف مستقل برای هر مزرعه (کارگران و کاشت‌کار)'; },
-  get seedAutoBest() { return en() ? 'Smart Best Profit' : 'هوشمند (سودآورترین فصل)'; },
+    get seedAutoBest() { return en() ? 'Smart Best Profit' : 'هوشمند (سودآورترین فصل)'; },
+  get autoSlowWarn() {
+    return en()
+      ? 'Smart-auto warning: on Northern Meadow / Sunlit Valley, the smart-auto setting grows crops several times slower. To keep full speed, lock a target seed for the estate (or hand-plant).'
+      : 'هشدار هوشمند: در دشت شمالی و باغ‌دره، حالت «هوشمند» رشد گیاهان را چند برابر کُند می‌کند؛ برای حفظ سرعت کامل، برای هر مزرعه بذر هدف را قفل کنید (یا خودتان بکارید).';
+  },
+  get autoSeasonNote() {
+    return en()
+      ? 'Reminder: out-of-season crops sleep until their season returns, and 36 hours without water kills a thirsty crop — check season and water before planting.'
+      : 'یادآور: گیاه خارج از فصل می‌خوابد و تا بازگشت فصلش رشد نمی‌کند؛ بی‌آبی ۳۶ ساعته هم محصول تشنه را از بین می‌برد — پیش از کاشت، فصل و آب را بررسی کنید.';
+  },
   get machExclusiveTag() { return en() ? 'Machine Exclusive Power' : 'قدرت انحصاری ماشین'; },
   get perkSprinkler() { return en() ? 'Multi-plot misting · -14/-26/-38% thirst · +0/+10/+20% faster crop growth & Drought Shield (MK3)' : 'مه‌پاشی خودکار ۳ مزرعه · کاهش مصرف آب · تا +۲۰٪ رشد سریع‌تر گیاه و سپر ضدخشکسالی'; },
   get perkTractor() { return en() ? 'Multi-row deep plow · +6/+12/+20% soil fertility · 45% minimum soil floor after harvest (MK3)' : 'شخم عمیق چندردیفه · تقویت خودکار خاک · حفظ کف حاصلخیزی خاک پس از برداشت (مدل ۳)'; },

@@ -28,7 +28,7 @@ import { FestivalModal } from './FestivalModal';
 import { WorldAtlasModal } from './WorldAtlasModal';
 import { currentRegionalShock, hasMonocultureSaturation } from '../game/core/frontier';
 import { FT } from '../strings/frontierText';
-import { bestEstateForCrop } from '../game/estates';
+import { bestEstateForCrop, estateGrowthRate } from '../game/estates';
 import { offerContractBoard, signBoardContract } from '../story/socialVillagers';
 import { WX } from '../strings/worldExpansionText';
 import { SettingsPanel } from './SettingsPanel';
@@ -39,6 +39,11 @@ import { exitNativeApp } from '../game/androidNav';
 import { maybeStartPrologue } from '../story/engine';
 
 
+
+/** مدت پایهٔ رشد یک بذر به روزِ بازی، بدون کود و ماشین، روی مزرعهٔ اصلی — با همان فرمول effectivePlotDailyRate (قیمت ۰٫۹ روزِ قدیمی ۲٫۴ برابر کمتر بود) */
+export function seedDurationDays(c: { days: number }): number {
+  return Math.round((c.days / (DAY_RATE * estateGrowthRate('farm', 0) * (0.83 + 0.44 * 0))) * 10) / 10;
+}
 
 export function Modals() {
   return (
@@ -128,7 +133,7 @@ function SeedShop() {
               {locked ? <Lock req={c.lv} /> : (
                 <>
                   <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-extrabold">
-                    <span>{fa(Math.round((c.days * 10) / DAY_RATE) / 10)}{UT.u39}</span>
+                    <span>{fa(seedDurationDays(c))}{UT.u39}</span>
                     <span className="flex items-center gap-0.5"><Ic n={c.id} s={1.2} /> <Coin v={c.price} s={1} /></span>
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-1 text-[.68rem] font-extrabold text-[#5c3b24]">
