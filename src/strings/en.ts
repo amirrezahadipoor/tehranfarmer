@@ -343,6 +343,10 @@ export const UT_EN = {
   museumTitlePre: 'Heritage Museum (Unlocks on Farm Freedom)',
   uPack: 'Backpack',
   uToBarn: 'Empty backpack',
+  uSellFrom: 'Sell from:',
+  uSrcPack: 'Backpack',
+  uSrcBarn: 'Barn',
+  uSrcBoth: 'Both',
 } as const;
 
 export const GT_EN = {
@@ -392,6 +396,7 @@ export const GT_EN = {
   gPack: 'Backpack',
   gPackFull: 'Your backpack is full!',
   gPackMoved: 'Backpack emptied into the barn',
+  gPackPartial: 'Moved what fit — the rest is still in your backpack',
   g44: 'You already own a fishing rod!',
   g45: 'Requires Level ',
   g46: '',

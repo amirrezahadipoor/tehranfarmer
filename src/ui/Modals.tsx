@@ -8,7 +8,7 @@ import {
 import {
   S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract,
   effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
-  isNight, resetGame, saleValue, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, stockPond,
+  isNight, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond,
 } from '../game/state';
 import { sfx } from '../game/sound';
 import { Bar, Coin, Ic, Modal, Trend } from './parts';
@@ -191,8 +191,8 @@ function Market() {
   let total = 0;
   for (const g of rows) {
     const keep = S.contract && S.contract.good === g.id ? S.contract.qty : 0;
-    const sellable = Math.max(0, (S.inv[g.id] ?? 0) - keep);
-    total += saleValue(g.id, sellable);
+    const sellable = Math.max(0, srcHave(g.id) - keep);
+    total += saleValueSel(g.id, sellable);
   }
   const hotGoods = [...rows].sort((a, b) => goodRatio(b.id) - goodRatio(a.id)).slice(0, 3);
   const shock = currentRegionalShock();
@@ -201,6 +201,23 @@ function Market() {
   const active = S.contract;
   return (
     <Modal title={UT.u84} icon="market" onClose={close} coins={<Wallet />}>
+      {/* انتخاب منبع فروش: کولهٔ پشتی یا انبار یا هر دو */}
+      <div className="mb-2 flex items-center gap-1.5" data-market-sellfrom="1">
+        <span className="whitespace-nowrap text-xs font-black opacity-75">{UT.uSellFrom}</span>
+        <div className="flex flex-1 gap-1">
+          {(['pack', 'barn', 'both'] as const).map((k) => (
+            <button
+              key={k}
+              aria-pressed={S.sellFrom === k}
+              data-sell-src={k}
+              className={'btn press flex-1 !py-1.5 text-xs font-black ' + (S.sellFrom === k ? 'g' : 'y opacity-70')}
+              onClick={() => { S.sellFrom = k; saveGame(); notify(); sfx.tap(); }}
+            >
+              {k === 'pack' ? UT.uSrcPack : k === 'barn' ? UT.uSrcBarn : UT.uSrcBoth}
+            </button>
+          ))}
+        </div>
+      </div>
       <button className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { sellAll(); }}>
         <Ic n="cart" s={2.4} /><span className="ft text-xl">{UT.u85}</span><Coin v={total} s={1.8} cls="text-xl" />
       </button>
@@ -217,7 +234,7 @@ function Market() {
       </div>
       <div className={grid}>
         {rows.map((g) => {
-          const q = S.inv[g.id] ?? 0;
+          const q = srcHave(g.id);
           const offSeason = !!CROP[g.id] && !CROP[g.id].seasons.includes(season());
           return (
             <div key={g.id} className={'paper flex flex-col items-center gap-1 p-2 ' + (q ? '' : 'opacity-60')}>

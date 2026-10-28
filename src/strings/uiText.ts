@@ -346,6 +346,10 @@ export const UT_FA = {
   museumTitlePre: "موزهٔ میراث مزرعه (بازگشایی با آزادی مزرعه)",
   uPack: "کوله پشتی",
   uToBarn: "تخلیهٔ کوله",
+  uSellFrom: "فروش از:",
+  uSrcPack: "کوله",
+  uSrcBarn: "انبار",
+  uSrcBoth: "هر دو",
 } as const;
 
 export const UT: Record<keyof typeof UT_FA, string> = new Proxy(UT_FA as Record<keyof typeof UT_FA, string>, {

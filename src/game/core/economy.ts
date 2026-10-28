@@ -40,18 +40,28 @@ export const goodPrice = (id: string) => Math.max(1, Math.round((GOOD[id]?.base 
 export const goodRatio = (id: string) => goodPrice(id) / GOOD[id].base;
 export const seedPrice = (id: CropId) => Math.max(1, Math.round(CROP[id].seed * (S.sdem[id] ?? 1)));
 /** ارزش واقعی و دقیق فروش n واحد کالا با احتساب افت تدریجی تقاضا (بدون تغییر وضعیت) */
-export function saleValue(id: string, n: number): number {
+function priceSum(id: string, n: number, cap: number): number {
   let d = S.dem[id] ?? 1;
   const decay = effectiveDemandDecay();
   const sMult = skillGoodMult(id);
   let sum = 0;
-  const count = Math.min(n, S.inv[id] ?? 0);
+  const count = Math.max(0, Math.min(n, cap));
   for (let i = 0; i < count; i++) {
     sum += Math.max(1, Math.round((GOOD[id]?.base ?? 1) * seasonMult(id) * d * sMult));
     d = Math.max(DEMAND_FLOOR, d * decay);
   }
   return sum;
 }
+export const saleValue = (id: string, n: number): number => priceSum(id, n, S.inv[id] ?? 0);
+/** تعداد موجودی کالا در منبعِ انتخابیِ فروش (کوله / انبار / هر دو) */
+export function srcHave(id: string): number {
+  const s = S.sellFrom ?? 'both';
+  const p = Math.floor(S.pack[id] ?? 0);
+  const b = Math.floor(S.inv[id] ?? 0);
+  return s === 'pack' ? p : s === 'barn' ? b : p + b;
+}
+/** مثل saleValue ولی با سقفِ منبعِ انتخابیِ فروش در بازار */
+export const saleValueSel = (id: string, n: number): number => priceSum(id, n, srcHave(id));
 /** هزینهٔ واقعی و دقیق خرید بستهٔ nتایی بذر با احتساب رشد تقاضای بذر (بدون تغییر وضعیت) */
 export function seedPackPrice(id: CropId, n: number): number {
   let d = S.sdem[id] ?? 1;
@@ -108,21 +118,42 @@ export function addGood(id: string, n: number): number {
   return add;
 }
 export function sellGood(id: string, n: number): number {
-  const have = Math.floor(S.inv[id] ?? 0);
+  const s = S.sellFrom ?? 'both';
+  const pHave = Math.floor(S.pack[id] ?? 0);
+  const bHave = Math.floor(S.inv[id] ?? 0);
+  const have = s === 'pack' ? pHave : s === 'barn' ? bHave : pHave + bHave;
   n = Number.isFinite(n) ? Math.min(Math.floor(n), have) : 0;
   if (n <= 0) return 0;
   const decay = effectiveDemandDecay();
   let sum = 0;
   for (let i = 0; i < n; i++) { sum += goodPrice(id); S.dem[id] = Math.max(DEMAND_FLOOR, (S.dem[id] ?? 1) * decay); }
   recordMarketSaleVolume(id, n);
-  S.inv[id] -= n; if (S.inv[id] <= 0) delete S.inv[id];
+  let left = n;
+  if (s !== 'barn' && left > 0 && pHave > 0) {
+    const take = Math.min(pHave, left);
+    S.pack[id] -= take; if (S.pack[id] <= 0) delete S.pack[id];
+    left -= take;
+  }
+  if (left > 0 && s !== 'pack') { S.inv[id] -= left; if (S.inv[id] <= 0) delete S.inv[id]; }
   S.coins += sum; S.earned += sum;
   addXp(sum / XP.sellPer);
   sfx.coin(); saveGame(); notify();
   return sum;
 }
 export function sellAll(): number {
-  transferPackToBarn(); // «فروش همه» کولهٔ بازیکن را هم می‌فروشد (انبار پُر؛ مابقی در کوله می‌ماند)
+  const s = S.sellFrom ?? 'both';
+  if (s === 'pack') {
+    let tp = 0;
+    for (const id of Object.keys(S.pack)) {
+      if (id !== 'feed' && id !== 'fingerling' && GOOD[id]) {
+        const keep = S.contract && S.contract.good === id ? S.contract.qty : 0;
+        const qty = Math.max(0, Math.floor(S.pack[id] ?? 0) - keep);
+        if (qty > 0) tp += sellGood(id, qty);
+      }
+    }
+    return tp;
+  }
+  if (s === 'both') transferPackToBarn(); // حالت «هر دو»: رفتار پیشین بی‌تغییر (بات/شبیه‌ساز)
   let t = 0;
   for (const id of Object.keys(S.inv)) {
     if (id !== 'feed' && id !== 'fingerling' && GOOD[id]) {

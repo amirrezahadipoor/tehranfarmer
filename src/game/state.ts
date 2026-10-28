@@ -42,7 +42,7 @@ export interface Save {
   northPlots: Plot[];
   valleyPlots: Plot[];
   inv: Record<string, number>; seeds: Record<string, number>; fert: number; can: number; rod: number;
-  pack: Record<string, number>; // کولهٔ پشتی بازیکن — حمل از زمین/آبگیر تا تخلیه در انبار
+  pack: Record<string, number>; sellFrom: 'pack' | 'barn' | 'both'; // کولهٔ پشتی بازیکن و منبع پیش‌فرض فروش بازار
   lv: { hoe: number; can: number; bag: number; stam: number; land: number; soil: number; barn: number };
   animals: AnimalS[]; trough: number; workers: number; workersHired?: number; dem: Record<string, number>; sdem: Record<string, number>;
   weather: number; nextId: number; earned: number;
@@ -149,7 +149,7 @@ function fresh(): Save {
     plots: Array.from({ length: COLS * ROWS }, newPlot),
     northPlots: Array.from({ length: NORTH_PLOTS_COUNT }, newPlot),
     valleyPlots: Array.from({ length: VALLEY_PLOTS_COUNT }, newPlot),
-    inv: {}, pack: {}, seeds: { wheat: 8, carrot: 4 }, fert: 0, can: 8, rod: 0,
+    inv: {}, pack: {}, sellFrom: 'both', seeds: { wheat: 8, carrot: 4 }, fert: 0, can: 8, rod: 0,
     lv: { hoe: 0, can: 0, bag: 0, stam: 0, land: 0, soil: 0, barn: 0 },
     animals: [
       { id: 1, kind: 'chicken', ready: 0, hue: 0, sex: 'f', grown: 0 },
@@ -270,7 +270,7 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.machines = S.machines ?? {}; S.auto = S.auto ?? {};
   S.ponds = S.ponds ?? []; S.hives = S.hives ?? 0; S.honeyAcc = S.honeyAcc ?? 0;
   S.builds = S.builds ?? []; S.cityVisits = S.cityVisits ?? 0; S.rod = S.rod ?? 0;
-  S.pens = S.pens ?? {}; S.gh = S.gh ?? 0; S.silo = S.silo ?? 0; S.nests = S.nests ?? []; S.pack = S.pack ?? {};
+  S.pens = S.pens ?? {}; S.gh = S.gh ?? 0; S.silo = S.silo ?? 0; S.nests = S.nests ?? []; S.pack = S.pack ?? {}; S.sellFrom = S.sellFrom ?? 'both';
   for (const a of S.animals) if (!S.pens[a.kind]) S.pens[a.kind] = 1;
   S.xp = S.xp ?? 0; S.stats = S.stats ?? {}; S.ach = S.ach ?? {};
   S.lv = S.lv ?? fresh().lv; S.lv.soil = S.lv.soil ?? 0; S.lv.barn = S.lv.barn ?? 0;

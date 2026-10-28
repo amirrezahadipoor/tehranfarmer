@@ -6,8 +6,9 @@ import { installDom } from './helpers/dom';
 import {
   S, UI, canAct, doAct, invCap, invCount, packCap, packCount, resetGame,
   startDebt, transferPackToBarn, addPack, setSimBatchMode, harvestPond, harvestHoney,
+  sellAll, sellGood, srcHave,
 } from '../src/game/state';
-import { sellAll } from '../src/game/core/economy';
+import { Modals } from '../src/ui/Modals';
 import { GT } from '../src/strings/gameText';
 import { GT_EN } from '../src/strings/en';
 import { loadSettings } from '../src/game/settings';
@@ -29,7 +30,7 @@ const ripeWheat = (i: number) => {
 
 describe('دو سیستم کولهٔ پشتی و انبار', () => {
   it('ظرفیت‌ها جداست، برداشت بازیکن به کوله می‌رود و تخلیه به انبار کار می‌کند', () => {
-    expect(packCap()).toBe(24);  // PACK_CAP[0]
+    expect(packCap()).toBe(80);  // PACK_CAP[0]
     expect(invCap()).toBe(40);   // BARN_CAP — منحنی قدیمی کیف برای ثبات بات
     expect(packCount()).toBe(0);
 
@@ -57,10 +58,65 @@ describe('دو سیستم کولهٔ پشتی و انبار', () => {
     expect(invCount()).toBe(15);
     S.lv.barn = 2;
     expect(invCap()).toBe(160);
-    expect(packCap()).toBe(24);
+    expect(packCap()).toBe(80);
     S.lv.bag = 2;
-    expect(packCap()).toBe(96);
+    expect(packCap()).toBe(320);
     expect(invCap()).toBe(160);
+  });
+
+  it('منبع فروش در بازار: کوله / انبار / هر دو مستقل عمل می‌کنند', () => {
+    expect(S.sellFrom).toBe('both'); // پیش‌فرض برای بات و رفتار قدیمی
+    S.pack = { wheat: 10 };
+    S.inv = { wheat: 20, carrot: 5 };
+
+    S.sellFrom = 'pack';
+    expect(srcHave('wheat')).toBe(10);
+    expect(sellAll()).toBeGreaterThan(0);
+    expect(S.pack.wheat ?? 0).toBe(0);   // کوله خالی شد
+    expect(S.inv.wheat).toBe(20);        // انبار دست‌نخورده ماند
+    expect(S.inv.carrot).toBe(5);
+
+    S.pack = { wheat: 10 };
+    S.sellFrom = 'barn';
+    expect(sellAll()).toBeGreaterThan(0);
+    expect(S.pack.wheat).toBe(10);       // کوله دست‌نخورده ماند
+    expect(S.inv.wheat ?? 0).toBe(0);
+    expect(S.inv.carrot ?? 0).toBe(0);
+
+    S.sellFrom = 'both';
+    S.pack = { wheat: 10 };
+    S.inv = { wheat: 20 };
+    S.contract = { good: 'wheat', qty: 6, deposit: 100, reward: 500, dueDay: S.day + 9 };
+    expect(sellAll()).toBeGreaterThan(0);
+    expect(S.pack.wheat ?? 0).toBe(0);
+    expect(S.inv.wheat).toBe(6); // سهم قرارداد در هر دو حالت محفوظ ماند
+    S.contract = null;
+  });
+
+  it('فروش تکی در بازار از منبع انتخابی کم می‌شود', () => {
+    S.pack = { carrot: 4 };
+    S.inv = { carrot: 9 };
+    S.sellFrom = 'pack';
+    const barnBefore = S.inv.carrot;
+    expect(sellGood('carrot', 3)).toBeGreaterThan(0);
+    expect(S.pack.carrot).toBe(1);
+    expect(S.inv.carrot).toBe(barnBefore);
+    S.sellFrom = 'barn';
+    expect(sellGood('carrot', 2)).toBeGreaterThan(0);
+    expect(S.pack.carrot).toBe(1);
+    expect(S.inv.carrot).toBe(barnBefore - 2);
+    S.sellFrom = 'both';
+  });
+
+  it('مودال بازار کلید انتخاب منبع فروش را نشان می‌دهد', () => {
+    UI.modal = 'market';
+    const html = renderToString(<Modals />);
+    UI.modal = null;
+    expect(html).toContain('data-market-sellfrom');
+    expect(html).toContain('data-sell-src="pack"');
+    expect(html).toContain('data-sell-src="barn"');
+    expect(html).toContain('data-sell-src="both"');
+    expect(html).toContain('فروش از');
   });
 
   it('کارگر به انبار می‌برد؛ صید و عسل با کولهٔ پر بلوکه و مسیر شبیه‌ساز به انبار می‌رود', () => {

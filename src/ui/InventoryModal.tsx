@@ -37,7 +37,7 @@ export function InventoryModal() {
             data-pack-to-barn="1"
             onClick={() => {
               const mv = transferPackToBarn();
-              toast('house', mv > 0 ? GT.gPackMoved : GT.g43);
+              toast('house', mv <= 0 ? GT.g43 : packCount() > 0 ? GT.gPackPartial : GT.gPackMoved);
               if (mv > 0) { saveGame(); notify(); }
             }}
           >
