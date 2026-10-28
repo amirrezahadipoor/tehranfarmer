@@ -1,14 +1,17 @@
-// ===== انبار مزرعه + پاتیل و آسیاب فرآوری روستایی =====
+// ===== انبار مزرعه + کولهٔ پشتی بازیکن + پاتیل و آسیاب فرآوری روستایی =====
 import { CROPS, GOOD, GOODS, fa } from '../game/data';
 import {
   ARTISAN_RECIPES, S, artisanMaxBatches, artisanRewardCoins, craftArtisan, invCap, invCount,
+  notify, packCap, packCount, saveGame, toast, transferPackToBarn,
 } from '../game/state';
 import { Coin, Ic, Modal } from './parts';
 import { close, grid, Wallet } from './shopKit';
+import { GT } from '../strings/gameText';
 import { UT } from '../strings/uiText';
 
 export function InventoryModal() {
   const goods = GOODS.filter((g) => (S.inv[g.id] ?? 0) > 0);
+  const packGoods = GOODS.filter((g) => (S.pack[g.id] ?? 0) > 0);
   const seeds = CROPS.filter((c) => (S.seeds[c.id] ?? 0) > 0);
   const Cell = ({ ic, q, name }: { ic: string; q: number; name: string }) => (
     <div className="paper flex flex-col items-center p-1.5">
@@ -22,8 +25,38 @@ export function InventoryModal() {
 
   return (
     <Modal title={UT.u133} icon="bag" onClose={close} coins={<Wallet />}>
+      {/* کولهٔ پشتی بازیکن — پر از برداشت، اینجا به انبار تخلیه می‌شود */}
+      <div className="paper mb-2 p-2" data-pack-section="1">
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <Ic n="bag" s={2} />
+          <span className="ft text-lg">{UT.uPack}</span>
+          <span className="text-xs font-black" dir="ltr">{fa(packCount())}/{fa(packCap())}</span>
+          <button
+            className="btn g press ms-auto !px-2 !py-1 text-xs font-black"
+            disabled={packCount() === 0}
+            data-pack-to-barn="1"
+            onClick={() => {
+              const mv = transferPackToBarn();
+              toast('house', mv > 0 ? GT.gPackMoved : GT.g43);
+              if (mv > 0) { saveGame(); notify(); }
+            }}
+          >
+            {UT.uToBarn}
+          </button>
+        </div>
+        <div className="bar !h-3">
+          <i style={{ width: `${Math.min(100, (packCount() / packCap()) * 100)}%`, background: packCount() >= packCap() ? '#ff7a6a' : '#8fd35a' }} />
+        </div>
+        {packGoods.length > 0 && (
+          <div className="mt-1.5 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
+            {packGoods.map((g) => <Cell key={'p' + g.id} ic={g.id} q={S.pack[g.id]} name={GOOD[g.id].fa} />)}
+          </div>
+        )}
+      </div>
+
       <div className="mb-2 flex items-center gap-2">
-        <Ic n="bag" s={2} />
+        <Ic n="house" s={2} />
+        <span className="ft text-lg">{UT.u133}</span>
         <div className="bar flex-1 !h-4">
           <i style={{ width: `${(invCount() / invCap()) * 100}%`, background: invCount() >= invCap() ? '#ff7a6a' : '#8fd35a' }} />
         </div>

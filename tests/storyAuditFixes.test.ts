@@ -4,7 +4,7 @@ import { renderToString } from 'react-dom/server';
 import { installDom } from './helpers/dom';
 import {
   S, UI, advance, buyMachine, buyRod, buyScarecrow, buySeed, exportSaveJson,
-  harvestHoney, harvestPond, importSaveJson, invCap, payDebt, resetGame,
+  harvestHoney, harvestPond, importSaveJson, payDebt, packCap, resetGame,
   restoreBackupSlot, saleValue, seedPackPrice, sellAll, startDebt, stockPond,
 } from '../src/game/state';
 import { NOTES } from '../src/story/debtData';
@@ -84,9 +84,10 @@ describe('قفل دائمی فیکس‌های ۵ حلقهٔ ممیزی AAA (دا
     expect(S.seeds.pistachio).toBe(5);
     expect(S.coins).toBe(0);
 
-    // صید استخر با انبار پر نباید ماهی‌های استخر را نابود کند
+    // صید استخر با کولهٔ پر (سیستم حمل بازیکن) نباید ماهی‌های استخر را نابود کند
     S.ponds = [{ id: 1, stocked: true, grow: 10, feed: 4 }];
-    S.inv = { wheat: invCap() };
+    S.pack = { wheat: packCap() };
+    S.inv = {};
     expect(harvestPond(0, false)).toBe(0);
     expect(S.ponds[0].stocked).toBe(true);
 

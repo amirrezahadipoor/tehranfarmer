@@ -18,7 +18,7 @@ const profiles: Array<[string, () => void]> = [
   ['تازه‌کار', () => { /* پیش‌فرض */ }],
   ['بدون سکه', () => { S.coins = 0; S.fert = 0; S.inv = {}; }],
   ['آخر بازی', () => {
-    S.coins = 10 ** 7; S.day = 500; S.xp = 5e6; S.lv = { hoe: 5, can: 5, bag: 6, stam: 5, land: 4, soil: 3 };
+    S.coins = 10 ** 7; S.day = 500; S.xp = 5e6; S.lv = { hoe: 5, can: 5, bag: 6, stam: 5, land: 4, soil: 3, barn: 5 };
     S.ponds = [1, 2, 3, 4, 5].map((i) => ({ id: i, stocked: true, grow: 3, feed: 5 }));
     S.hives = 12; S.honeyAcc = 300; S.gh = 2; S.silo = 2;
     S.animals = ['chicken', 'duck', 'sheep', 'goat', 'cow', 'rabbit'].flatMap((k, ki) =>

@@ -1,7 +1,7 @@
 // ===== سیستم‌های تنوع گیم‌پلی و حذف کارهای تکراری: پاتیل فرآوری روستایی، شعاع ضربهٔ ابزار (AoE) و مدیریت یک‌جا =====
 import { POND_GROW_DAYS, XP } from '../data';
 import { ESTATES } from '../estates';
-import { S, UI, activeFarm, addGood, addStat, addXp, checkAch, feedPond, goodPrice, harvestPond, invCap, invCount, notify, saveGame, stamCap, stockPond, toast } from '../state';
+import { S, UI, activeFarm, addGood, addPack, addStat, addXp, checkAch, feedPond, goodPrice, harvestPond, invCap, invCount, notify, saveGame, stamCap, stockPond, toast } from '../state';
 import { addStanding } from './debt';
 import { ensureQuests, isClaimed, questDone, type QuestGoal } from '../../story/dailyQuests';
 import { sfx } from '../sound';
@@ -248,7 +248,8 @@ export function performPlayerPlotSweep(
     let golden = false;
     const goldChance = 0.1 + S.lv.soil * 0.025 + (S.skills?.['crop-2'] ? 0.12 : 0);
     if (kind === 'harvest' && res.crop && (res.qty ?? 0) > 0 && randFn() < goldChance) {
-      const extra = addGood(res.crop, res.qty!);
+      const exA = addPack(res.crop, res.qty!); // پاداش طلایی هم اول به کولهٔ بازیکن
+      const extra = exA + (exA < res.qty! ? addGood(res.crop, res.qty! - exA) : 0);
       S.seeds[res.crop as keyof typeof S.seeds] = (S.seeds[res.crop as keyof typeof S.seeds] ?? 0) + 1;
       addStat('harv', extra);
       addXp(18);

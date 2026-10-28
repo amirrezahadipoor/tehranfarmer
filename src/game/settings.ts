@@ -15,7 +15,7 @@ export const SETTINGS_KEY = 'mazrae-rangi-settings-v1';
 const DEFAULTS: UserSettings = {
   sound: true,
   music: true,
-  haptics: true,
+  haptics: false,
   fontScale: 1,
   reduceMotion: false,
   colorblind: false,

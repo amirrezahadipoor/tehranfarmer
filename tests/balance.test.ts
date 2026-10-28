@@ -23,7 +23,8 @@ describe('کالیبراسیون بالانس اسناد، طول داستان �
     expect(goodRun.postgameDay).not.toBeNull();
     expect(goodRun.noteShare).toHaveLength(NOTES.length);
     for (let i = 0; i < NOTES.length; i++) {
-      expect(goodRun.noteShare[i], `نسبت سند فصل ${i + 1}`).toBeGreaterThanOrEqual(0.35);
+      // کف بازه پس از بند F گزارش رنج: سیل دیگر کود را نمی‌سوزاند → درآمد کمی بالاتر → سهم فصل ۵ حدود ۳۴٪
+      expect(goodRun.noteShare[i], `نسبت سند فصل ${i + 1}`).toBeGreaterThanOrEqual(0.34);
       expect(goodRun.noteShare[i], `نسبت سند فصل ${i + 1}`).toBeLessThanOrEqual(0.45);
     }
   });

@@ -1,6 +1,6 @@
 // ===== ساخت‌وساز، ارتقاها و سفارش‌های نجاری =====
 import {
-  ANIMALS, GH_LV, GH_PRICE, HEART_BOND_2, HIVE_LV, HIVE_MAX, HOE_PRICES, CAN_PRICES, BAG_PRICES, KAVEH2_PRICE_MULT,
+  ANIMALS, GH_LV, GH_PRICE, HEART_BOND_2, HIVE_LV, HIVE_MAX, HOE_PRICES, CAN_PRICES, BAG_PRICES, BARN_PRICES, KAVEH2_PRICE_MULT,
   STAM_PRICES, LAND_PRICES, MACHINES, PEN_BUILD, PEN_UP, POND_LV, POND_MAX, SILO_LV, SILO_PRICE, SOIL_LV, SOIL_PRICES,
   UP_LV, WORKER_LV, WORKER_MAX, WORKER_PRICES, buildDur, hivePrice, pondPrice, machineMkLv, machineMkPrice, XP,
   type AnimalKind, type BuildJob, type MachineId,
@@ -13,11 +13,11 @@ import { ESTATE_LV_REQ } from '../estates';
 import { charterBuildDurMult, charterMachinePriceMult } from './frontier';
 import { triggerCutscene } from '../../story/engine';
 
-export type UpKey = 'hoe' | 'can' | 'bag' | 'stam' | 'land' | 'soil';
+export type UpKey = 'hoe' | 'can' | 'bag' | 'stam' | 'land' | 'soil' | 'barn';
 export function upgradePrice(k: UpKey): number | null {
   if (k === 'land') return S.lv.land >= LAND_PRICES.length ? null : landPrice(S.lv.land);
   if (k === 'soil') return S.lv.soil >= SOIL_PRICES.length ? null : SOIL_PRICES[S.lv.soil];
-  const t = { hoe: HOE_PRICES, can: CAN_PRICES, bag: BAG_PRICES, stam: STAM_PRICES }[k];
+  const t = { hoe: HOE_PRICES, can: CAN_PRICES, bag: BAG_PRICES, barn: BARN_PRICES, stam: STAM_PRICES }[k];
   return t[S.lv[k]] ?? null;
 }
 /** سطح لازم برای ارتقای بعدی */
@@ -44,8 +44,8 @@ export function buyUpgrade(k: UpKey) {
   if (p === null) return;
   const req = upgradeLvReq(k);
   if (req > farmLevel()) { sfx.err(); toast('lock', (GT.g3 + fa(req) + GT.g4)); return; }
-  const names = { hoe: GT.g5, can: GT.g6, bag: GT.g7, stam: GT.g8, land: GT.g9, soil: GT.g10 };
-  const icons = { hoe: 'hoe', can: 'can', bag: 'bag', stam: 'bolt', land: 'land', soil: 'fert' };
+  const names = { hoe: GT.g5, can: GT.g6, bag: GT.gPack, barn: GT.g7, stam: GT.g8, land: GT.g9, soil: GT.g10 };
+  const icons = { hoe: 'hoe', can: 'can', bag: 'bag', barn: 'house', stam: 'bolt', land: 'land', soil: 'fert' };
   enqueueBuild('upgrade', k, GT.g11 + names[k], icons[k], p);
 }
 export function effectiveMachinePrice(id: MachineId, mk: number): number {
@@ -120,7 +120,7 @@ export function orderScarecrow() {
 export function buildJobLabel(j: Pick<BuildJob, 'kind' | 'key' | 'label'>): string {
   switch (j.kind) {
     case 'upgrade': {
-      const names: Record<UpKey, string> = { hoe: GT.g5, can: GT.g6, bag: GT.g7, stam: GT.g8, land: GT.g9, soil: GT.g10 };
+      const names: Record<UpKey, string> = { hoe: GT.g5, can: GT.g6, bag: GT.gPack, barn: GT.g7, stam: GT.g8, land: GT.g9, soil: GT.g10 };
       return names[j.key as UpKey] ? GT.g11 + names[j.key as UpKey] : j.label;
     }
     case 'machine': {

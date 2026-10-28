@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { installDom } from './helpers/dom';
 import App from '../src/App';
-import { S, UI, ensureMailState, invCap, loadGame, resetGame, saveGame, sellGood, buySeed, buyFert, buyFeed, buyFingerling } from '../src/game/state';
+import { S, UI, ensureMailState, invCap, loadGame, packCap, resetGame, saveGame, sellGood, setSimBatchMode, buySeed, buyFert, buyFeed, buyFingerling } from '../src/game/state';
 import { handleHardwareBack } from '../src/game/androidNav';
 import { harvestHoney, harvestPond } from '../src/game/core/ponds';
 import { millAtNorthWindmill } from '../src/game/core/rpgSystems';
@@ -118,26 +118,40 @@ describe('QA Round 2 Deep Audit — Stage 2, Stage 3 & Stage 4 Bugs (RED -> GREE
       .reduce((a, p) => a + p.qty, 0);
     expect(totalFeedAnywhere).toBe(7);
 
+    // سیستم دوسیستمی: کولهٔ بازیکن پُر → صید بلوکه می‌شود و ماهی‌ها سالم در استخر می‌مانند
     S.inv = { potato: cap - 1 };
+    S.pack = { potato: packCap() };
     S.ponds[0] = { id: 1, stocked: true, grow: 99, feed: 3 };
     const mailCountBeforePond = mail.inbox.length;
-    const fishTotal = harvestPond(0);
-    expect(fishTotal).toBeGreaterThanOrEqual(2);
-    const fishSaved = (S.inv.fish ?? 0) + mail.inbox.slice(0, mail.inbox.length - mailCountBeforePond)
-      .flatMap((m) => m.parcel ?? [])
-      .filter((p) => p.id === 'fish')
-      .reduce((a, p) => a + p.qty, 0);
-    expect(fishSaved).toBe(fishTotal);
+    expect(harvestPond(0)).toBe(0);
+    expect(S.ponds[0].stocked).toBe(true);
+    expect(S.inv.fish ?? 0).toBe(0);
 
-    // Full bag (40/40) safely keeps all 4 jars inside hive; 39/40 takes 1 into bag and keeps 3 inside hive (zero honey lost!)
-    S.inv = { potato: cap };
-    S.hives = 2;
-    S.honeyAcc = 4;
-    expect(harvestHoney()).toBe(0);
-    expect(S.honeyAcc).toBe(4);
-    S.inv = { potato: cap - 1 };
-    expect(harvestHoney()).toBe(1);
-    expect((S.inv.honey ?? 0) + S.honeyAcc).toBe(4);
+    // مسیر انبار (کارگر/شبیه‌ساز) هنگام پُر بودن: صفر اتلاف، مابقی به صندوق پست
+    setSimBatchMode(true);
+    try {
+      S.inv = { potato: cap - 1 }; // یک جای خالی تا مکانیزم سرریز به صندوق پست فعال شود
+      const fishTotal = harvestPond(0);
+      expect(fishTotal).toBeGreaterThanOrEqual(2);
+      const fishSaved = (S.inv.fish ?? 0) + mail.inbox.slice(0, mail.inbox.length - mailCountBeforePond)
+        .flatMap((m) => m.parcel ?? [])
+        .filter((p) => p.id === 'fish')
+        .reduce((a, p) => a + p.qty, 0);
+      expect(fishSaved).toBe(fishTotal);
+
+      // عسل: انبار پُر → صفر برداشت و انباشت داخل کندو حفظ می‌شود
+      S.inv = { potato: cap };
+      S.hives = 2;
+      S.honeyAcc = 4;
+      expect(harvestHoney()).toBe(0);
+      expect(S.honeyAcc).toBe(4);
+      S.inv = { potato: cap - 1 };
+      expect(harvestHoney()).toBe(1);
+      expect((S.inv.honey ?? 0) + S.honeyAcc).toBe(4);
+    } finally {
+      setSimBatchMode(false);
+    }
+    S.pack = {};
   });
 
   it('QA2-VIS-01: Persian deed boards & Atlas contain zero BiDi-ambiguous middle dots (`·`) next to digits that render as 540 / 600 / 1/30', () => {

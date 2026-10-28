@@ -46,7 +46,8 @@ describe('Deep 4-Pillar World, Skill Minigames, Branching Charters & Late-Game E
     // Skill precision catch (Perfect 1.85x multiplier) awards real fish & updates inventory cleanly
     const catchRes = catchRegionalFish(1.85);
     expect(catchRes.qty).toBeGreaterThanOrEqual(1);
-    expect((S.inv.fish ?? 0) + (S.inv.roe ?? 0)).toBeGreaterThanOrEqual(1);
+    // دوسیستمی: صید دستی اول به کولهٔ پشتی می‌رود (سپس با تخلیه به انبار)
+    expect((S.inv.fish ?? 0) + (S.inv.roe ?? 0) + (S.pack.fish ?? 0) + (S.pack.roe ?? 0)).toBeGreaterThanOrEqual(1);
 
     // Town Square Seasonal Fair: Ring Bell -> Multi-Category Harvest Judging -> Cauldron & Archery -> Redeem Prize Stall
     expect(ringTownFestivalBell()).toBe(true);

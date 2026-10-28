@@ -1,8 +1,9 @@
-import { CROPS, CROP, LEVEL_CAP, SEASONS, fa, faClock } from '../game/data';
+import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
+import { hasSkill } from '../game/core/rpgSystems';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, invCap, invCount, isNight, notify, ownedFarms, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, sleepToMorning, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
+import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, sleepToMorning, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
 import { MAIL_UI } from '../strings/mailText';
 import { questOf } from '../story/quests';
 import { Bar, Ic } from './parts';
@@ -131,7 +132,7 @@ export function Hud() {
             </button>
             <button aria-label={UT.u133} className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
               <Ic n="bag" s={UI.portrait ? 1.65 : 1.9} />
-              <span className="text-xs font-black" dir="ltr">{fa(invCount())}/{fa(invCap())}</span>
+              <span className="text-xs font-black" dir="ltr">{fa(packCount())}/{fa(packCap())}</span>
             </button>
             {UI.scene === 'river' && (
               <button
@@ -279,6 +280,18 @@ export function Hud() {
         const topHot = Object.entries(S.dem ?? {})
           .filter(([k]) => k !== 'feed' && k !== 'fingerling')
           .sort((a, b) => b[1] - a[1])[0];
+        // هشدارهای صبحگاهی همان روز: تشنگی، حقوق، قسط، باج‌گیری
+        const thirsty = (() => {
+          let n = 0, minH = 99;
+          for (const f of ownedFarms()) for (const p of plotsForFarm(f)) {
+            if (p.crop && !p.dead && p.water <= 0) { n++; minH = Math.min(minH, Math.max(0, Math.ceil(36 - p.dry))); }
+          }
+          return n > 0 ? { n, h: minH } : null;
+        })();
+        const wageNight = S.workers > 0 && S.coins < Math.round(WORKER_WAGE * S.workers * (hasSkill('trade-3') ? 0.7 : 1));
+        const dueIn = daysToDue();
+        const d0 = debt();
+        const raidTip = d0?.lastVisit?.kind === 'raid' && d0.lastVisit.day === S.day;
         return (
           <div
             data-morning-report="1"
@@ -302,6 +315,18 @@ export function Hud() {
                       ? `${WX.hotMarketLabel} ×${faPct(Math.round(topHot[1] * 100))}`
                       : ''}
               </div>
+              {(thirsty || wageNight || (S.debt && dueIn <= 3) || raidTip) && (
+                <div className="mt-0.5 flex flex-col gap-y-0.5 text-[.68rem] font-black">
+                  {thirsty && (
+                    <span className="text-[#c2410c]">!{fa(thirsty.n)}{WX.morningThirsty}{fa(thirsty.h)}{WX.morningThirstyEta}</span>
+                  )}
+                  {raidTip && <span className="text-[#b45309]">{WX.morningRaidTip}</span>}
+                  {wageNight && <span className="text-[#b45309]">!{WX.morningWage}</span>}
+                  {S.debt && dueIn <= 3 && (
+                    <span className="text-[#b91c1c]">!{dueIn === 0 ? WX.morningDue0 : `${WX.morningDue}${fa(dueIn)}${WX.plotDaysUnit}`}</span>
+                  )}
+                </div>
+              )}
             </div>
             <button
               type="button"

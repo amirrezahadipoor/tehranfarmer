@@ -341,6 +341,8 @@ export const UT_EN = {
   seedBagPrefix: 'Seed: ',
   plotsUnit: ' Plots',
   museumTitlePre: 'Heritage Museum (Unlocks on Farm Freedom)',
+  uPack: 'Backpack',
+  uToBarn: 'Empty backpack',
 } as const;
 
 export const GT_EN = {
@@ -387,6 +389,9 @@ export const GT_EN = {
   g41: 'Pocket was light — Jahangir headed back empty-handed.',
   g42: 'Not enough coins',
   g43: 'Barn storage is full!',
+  gPack: 'Backpack',
+  gPackFull: 'Your backpack is full!',
+  gPackMoved: 'Backpack emptied into the barn',
   g44: 'You already own a fishing rod!',
   g45: 'Requires Level ',
   g46: '',
@@ -524,7 +529,7 @@ export const GT_EN = {
   evFestivalTitle: 'Spring Village Festival',
   evFestivalDesc: 'Full stamina & +180 village gift coins!',
   evDroughtTitle: 'Summer Heatwave',
-  evDroughtDesc: 'Faster soil evaporation — keep crops watered today!',
+  evDroughtDesc: '25% of field water evaporated at once — crops need extra water today!',
   evFloodTitle: 'Spring Rain Surge',
   evFloodDesc: 'All plots watered & bonus fingerlings washed in!',
   evGuestTitle: 'City Merchant Visit',

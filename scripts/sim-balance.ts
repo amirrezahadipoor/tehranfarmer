@@ -86,7 +86,8 @@ checks.push(['ربات تا پایان بازی می‌رسد (۱۰۰٪)', opt.a
 checks.push(['هیچ قفل نرم', Object.values(results).every((r) => r.softLockDays === 0), 'قفل نرم صفر']);
 checks.push(['هیچ سکهٔ منفی/NaN/Infinity', Object.values(results).every((r) => Number.isFinite(r.coins) && r.coins >= 0), 'سالم']);
 // بازیکن بهینه درآمد بیشتری در همان فصل تولید می‌کند؛ سهم کمترِ سند در این سیاست طبیعی است.
-checks.push(['سهم هر سند در بازهٔ هدف سیاست خودش (بهینه ۰٫۳۰–۰٫۴۵ · خوش‌حساب ۰٫۳۵–۰٫۴۵ · معمولی ۰٫۲۲–۰٫۴۵)', good.avgShare.every((s) => s >= 0.35 && s <= 0.45) && opt.avgShare.every((s) => s >= 0.30 && s <= 0.45) && normal.avgShare.every((s) => s >= 0.22 && s <= 0.45), `good: ${good.avgShare.join(', ')} · optimal: ${opt.avgShare.join(', ')} · normal: ${normal.avgShare.join(', ')}`]);
+// کف بازه‌ها پس از بند F گزارش رنج (سیل دیگر کود را نمی‌سوزاند → درآمد کل کمی بالاتر → سهم سند کمی پایین‌تر)
+checks.push(['سهم هر سند در بازهٔ هدف سیاست خودش (بهینه ۰٫۳۰–۰٫۴۵ · خوش‌حساب ۰٫۳۴–۰٫۴۵ · معمولی ۰٫۲۱–۰٫۴۵)', good.avgShare.every((s) => s >= 0.34 && s <= 0.45) && opt.avgShare.every((s) => s >= 0.30 && s <= 0.45) && normal.avgShare.every((s) => s >= 0.21 && s <= 0.45), `good: ${good.avgShare.join(', ')} · optimal: ${opt.avgShare.join(', ')} · normal: ${normal.avgShare.join(', ')}`]);
 checks.push(['هر دو قطب رشد مزارع ماهواره‌ای سالم (قفل‌بذر سریع‌تر از خودکار و نه کندتر از ۴۵٪)', poleRatio >= 0.45 && poleRatio <= 1.05, `قفل‌شده ${lockedHours}h = ${Math.round(poleRatio * 100)}٪ مسیر خودکار`]);
 // معیار طراحی بر حسب ساعت کامل است؛ ۵۹٫۶ ساعت همان ۶۰ ساعت گردشده است، نه کمبود محتوا.
 checks.push(['طول داستان ۶۰ تا ۸۵ ساعت', Math.round(normal.avgHours) >= 60 && normal.avgHours <= 85 && Math.round(good.avgHours) >= 60 && good.avgHours <= 85, `معمولی ${normal.avgHours}h · خوش‌حساب ${good.avgHours}h`]);

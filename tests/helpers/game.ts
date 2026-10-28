@@ -2,7 +2,7 @@
 export {
   S, UI, saveGame, loadGame, hasSave, resetGame, notify, advance, newDay, season, year,
   farmLevel, xpProgress, addXp, addStat, doAct, canAct, sellGood, sellAll, buySeed, buyFeed,
-  goodPrice, seedPrice, invCount, invCap, stamCap, troughCap, penCap, penHas, toast, addGood, pay,
+  goodPrice, seedPrice, invCount, invCap, packCount, packCap, transferPackToBarn, stamCap, troughCap, penCap, penHas, toast, addGood, pay,
   stockPond, feedPond, harvestPond, harvestHoney, honeyCap,
   sleepToMorning, enqueueBuild, completeBuild, tickBuilds, feedPond as feedPondFn, buyUpgrade, buyPen, buyAnimal, buyGh, buySilo, buyPond, buyHive,
 } from '../../src/game/state';

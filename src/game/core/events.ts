@@ -1,6 +1,6 @@
 // ===== رویدادهای فصلی با اثر واقعی بر اقتصاد، آب، خاک، دام و اعتبار =====
 import {
-  ANIMALS, EVENT_CHANCE, EVENT_DROUGHT_WATER, EVENT_FESTIVAL_COINS, EVENT_FLOOD_FERT_LOSS,
+  ANIMALS, EVENT_CHANCE, EVENT_DROUGHT_WATER, EVENT_FESTIVAL_COINS,
   EVENT_GUEST_DEMAND, EVENT_HOT_DEMAND, EVENT_MIN_DAY, EVENT_YALDA_STANDING, GOODS,
 } from '../data';
 import { S, grantGoodWithMailOverflow, mkOf, notify, notifyWorldEventMail, ownedFarms, plotsForFarm, stamCap, toast } from '../state';
@@ -69,7 +69,6 @@ export function triggerEvent(id: EventId): ActiveEvent {
           if (p.st > 0) {
             p.water = 1;
             p.dry = 0;
-            p.fert = Math.max(0.05, p.fert - EVENT_FLOOD_FERT_LOSS);
           }
         }
       }

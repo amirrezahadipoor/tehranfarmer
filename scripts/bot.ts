@@ -330,7 +330,7 @@ function buyPhase(policy: Policy) {
     if (d && S.coins < need && safeStash > 0) stashWithdraw(Math.min(safeStash, need - S.coins + 200));
   };
 
-  for (const k of ['land', 'bag', 'hoe', 'stam', 'can'] as const) {
+  for (const k of ['land', 'barn', 'hoe', 'stam', 'can'] as const) {
     const price = upgradePrice(k);
     if (price === null || upgradeLvReq(k) > lv) continue;
     if (avail() > price * cushion) { ensureCash(price); buyUpgrade(k); break; }

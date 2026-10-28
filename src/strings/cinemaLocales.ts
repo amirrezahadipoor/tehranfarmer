@@ -22,6 +22,11 @@ export interface CinemaUiStrings {
   triggerLabel: string;
   flagsLabel: string;
   proceduralLabel: string;
+  fineTitle: string;
+  fineEnergy: string;
+  fineEnergyVal: string;
+  fineStand: string;
+  fineAckBtn: string;
   areas: Record<string, string>;
   cats: Record<string, string>;
 }
@@ -29,6 +34,11 @@ export interface CinemaUiStrings {
 export const CINEMA_UI: Record<'fa' | 'en', CinemaUiStrings> = {
   fa: {
     skip: 'رد کردن صحنه',
+    fineTitle: 'خلاصهٔ جریمهٔ قسط',
+    fineEnergy: 'انرژی',
+    fineEnergyVal: 'نصف شد',
+    fineStand: 'اعتبار نزد روستا',
+    fineAckBtn: 'متوجه شدم',
     fastForward: 'تند',
     next: 'ادامه',
     finish: 'پایان',
@@ -55,6 +65,11 @@ export const CINEMA_UI: Record<'fa' | 'en', CinemaUiStrings> = {
   },
   en: {
     skip: 'Skip Scene',
+    fineTitle: 'Installment Penalty Summary',
+    fineEnergy: 'Energy',
+    fineEnergyVal: 'Halved',
+    fineStand: 'Village standing',
+    fineAckBtn: 'Understood',
     fastForward: 'Fast',
     next: 'Next',
     finish: 'Finish',

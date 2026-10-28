@@ -1,6 +1,8 @@
 import { TW, TH, cached, cropPart, ell, iconPart, ln, put, rng, shape, type Ctx } from './art';
 import { ANIMALS, COLS, ROWS, ghCovers, isUnlocked, type AnimalKind, type CropId } from './data';
 import { drawAnimal, drawFarmer, poseFarmer, type AnimalRig, type FarmerRig } from './rig';
+import { drawBackpack } from './backpackArt';
+import { drawThirstLeft } from './thirstWarn';
 import { FIELD_X, FIELD_Y, HIVE_SLOTS, OX, OY, PLOT_DX, PLOT_DY, RIVER_SPOTS, BW, BH, getSceneSource } from './scenes';
 import { S, UI, season, unreadMailCount } from './state';
 import { isReducedMotion } from './settings';
@@ -420,6 +422,7 @@ export function createSceneRenderer(
           const sway = p.dead ? 0 : Math.sin(t * 1.6 + i) * (S.weather === 2 ? 0.05 : 0.022);
           put(ctx, part, cx, cy + 16, 0.72, sway);
           if (!p.dead && p.water < 0.05) put(ctx, iconPart('drop'), cx + 26, cy - 18 + Math.sin(t * 4 + i) * 2.2, 0.44);
+          if (!p.dead && p.water < 0.05 && p.dry > 0) drawThirstLeft(ctx, cx + 26, cy - 36 + Math.sin(t * 4 + i) * 2.2, p.dry);
           if (!p.dead && !p.ripe && isCropDormantNow(p.crop!, S.gh > 0 && ghCovers(S.gh, i, COLS, ROWS, S.lv.land))) {
             put(ctx, iconPart('lock'), cx - 26, cy - 18, 0.31);
           }
@@ -430,7 +433,7 @@ export function createSceneRenderer(
         },
       });
     }
-    list.push({ y: farmer.y, f: () => drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72) });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); } });
     workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) }); });
     if (bph !== 'off') list.push({ y: builder.y, f: () => drawFarmer(ctx, builder.rig, builder.x, builder.y, builder.face, 0.72) });
     for (const a of animals.values()) {
@@ -499,7 +502,7 @@ export function createSceneRenderer(
       put(ctx, iconPart('fish'), sp.x + 36, sp.y + 12 + Math.sin(t * 2.4 + sp.x) * 3.5, 0.46);
     });
     const list: Dr[] = [];
-    list.push({ y: farmer.y, f: () => drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75) });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.75); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75); } });
     workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.75) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
@@ -529,7 +532,7 @@ export function createSceneRenderer(
       put(ctx, iconPart('honey'), sp.x + 42, sp.y - 38 + Math.sin(t * 3) * 2.5, 0.72);
     }
     const list: Dr[] = [];
-    list.push({ y: farmer.y, f: () => drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.74) });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.74); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.74); } });
     workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.74) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
@@ -567,7 +570,7 @@ export function createSceneRenderer(
     }
     if (!cinema.active) poseFarmer(jahangir.rig, { mode: 'idle', ph: t * 0.8, t, kind: '', p: 0 });
     const list: Dr[] = [];
-    list.push({ y: farmer.y, f: () => drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.76) });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.76); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.76); } });
     if (!cinema.active || isActorStagedInScene('jahangir')) {
       list.push({ y: jahangir.y, f: () => drawFarmer(ctx, jahangir.rig, jahangir.x, jahangir.y, jahangir.face, 0.78) });
     }

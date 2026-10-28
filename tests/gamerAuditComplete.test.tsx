@@ -5,7 +5,7 @@ import { renderToString } from 'react-dom/server';
 import { installDom } from './helpers/dom';
 import {
   S, UI, addXp, animalSellPrice, buyAnimal, canAct, doAct, penCap,
-  penOccupied, performPlayerPlotSweep, playerToolPlots, resetGame, sellAnimal,
+  penOccupied, performPlayerPlotSweep, playerToolPlots, resetGame, sellAnimal, transferPackToBarn,
 } from '../src/game/state';
 import { CFG } from '../src/game/settings';
 import { UT } from '../src/strings/uiText';
@@ -124,6 +124,7 @@ describe('Gamer-Eye Full Audit Regression Suite (Strings, Livestock Sex & Caps, 
     S.lv.land = 4;
     S.lv.hoe = 4;
     S.lv.can = 4;
+    S.lv.bag = 6; // کولهٔ بزرگ تا ظرفیت، آزمون جاروی AoE را محدود نکند
     S.stamina = 100;
     S.can = 20;
     S.fert = 15;
@@ -149,6 +150,7 @@ describe('Gamer-Eye Full Audit Regression Suite (Strings, Livestock Sex & Caps, 
     for (const h of plantHits) S.plots[h.plot].ripe = true;
     const harvHits = performPlayerPlotSweep(9, 'harvest', canAct, doAct, () => 0.99);
     expect(harvHits.length).toBe(9);
+    transferPackToBarn(); // کولهٔ بازیکن پس از برداشت به انبار تخلیه می‌شود
     expect((S.inv.wheat ?? 0) + (S.inv.carrot ?? 0)).toBeGreaterThanOrEqual(20);
   });
 

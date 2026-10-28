@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { installDom } from './helpers/dom';
 import App from '../src/App';
-import { S, UI, catchRegionalFish, ensureMailState, hasSave, invCount, loadGame, resetGame, saveGame } from '../src/game/state';
+import { S, UI, catchRegionalFish, ensureMailState, hasSave, invCount, loadGame, packCap, resetGame, saveGame } from '../src/game/state';
 import { craftArtisan } from '../src/game/core/artisan';
 import { completeFestivalContest, harvestFrontierNode } from '../src/game/core/frontier';
 import { debt, payDebt, processDebtDay, startDebt } from '../src/game/core/debt';
@@ -57,6 +57,7 @@ describe('QA Audit Stage 6 — Regression Suite (RED -> GREEN)', () => {
   it('BUG-02: full inventory (40/40) never drops fish catches or consecutive cave crystals even when inbox hits cap', () => {
     resetGame();
     S.inv = { wheat: 40 };
+    S.pack = { wheat: packCap() }; // کوله و انبار هر دو پُر → ماهی باید بدون اتلاف به صندوق پست برود
     expect(invCount()).toBe(40);
 
     // 1) Catching a fish when bag is full mails the fish parcel AND grants XP/coins

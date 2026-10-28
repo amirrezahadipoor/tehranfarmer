@@ -1,7 +1,7 @@
 // === نجار (همهٔ ساخت و ارتقای مزرعه) و املاکی (زمین و کارگر) ===
 import type { ReactNode } from 'react';
 import {
-  ANIMALS, BAG_CAP, CAN_CAP, fa, faDec, GH_LV, GH_PRICE, GH_SPEED, HIVE_LV, HIVE_MAX, hivePrice, HOE_SPEED, LAND_PRICES,
+  ANIMALS, BARN_CAP, CAN_CAP, fa, faDec, GH_LV, GH_PRICE, GH_SPEED, HIVE_LV, HIVE_MAX, hivePrice, HOE_SPEED, LAND_PRICES, PACK_CAP,
   PEN_BUILD, PEN_CAP_LV, PEN_KINDS, PEN_UP, plotsOf, POND_LV, POND_MAX, pondPrice, ROD_LV, ROD_PRICE, SILO_LV, SILO_MULT, SILO_PRICE,
   TROUGH_CAP, WORKER_LV, WORKER_MAX, WORKER_PRICES, WORKER_WAGE,
   type AnimalKind,
@@ -90,7 +90,8 @@ export function Carpenter() {
           cur={fa(CAN_CAP[l.can])}
           next={l.can < 5 ? fa(CAN_CAP[l.can + 1]) : null}
         />
-        <UpCard icon="bag" k="bag" name={UT.u133} max={7} cur={fa(BAG_CAP[l.bag])} next={l.bag < 6 ? fa(BAG_CAP[l.bag + 1]) : null} />
+        <UpCard icon="bag" k="bag" name={UT.uPack} max={7} cur={fa(PACK_CAP[l.bag])} next={l.bag < 6 ? fa(PACK_CAP[l.bag + 1]) : null} />
+        <UpCard icon="house" k="barn" name={UT.u133} max={7} cur={fa(BARN_CAP[l.barn])} next={l.barn < 6 ? fa(BARN_CAP[l.barn + 1]) : null} />
         <UpCard icon="fert" k="soil" name={UT.u158} max={4} cur={("+" + (fa(l.soil * 12)) + UT.u46)} next={l.soil < 3 ? ("+" + (fa((l.soil + 1) * 12)) + UT.u46) : null} />
         <div className="paper flex flex-col items-center gap-1 p-2">
           <Ic n="rod" s={4.4} />

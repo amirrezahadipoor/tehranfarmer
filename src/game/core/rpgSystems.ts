@@ -6,8 +6,8 @@ import { fa, faDec } from '../../strings/fa';
 import { sfx } from '../sound';
 import { rnd } from '../rng';
 import {
-  S, UI, addStat, addXp, canCap, farmLevel, grantGoodWithMailOverflow,
-  notify, ownedFarms, pay, plotsForFarm, saveGame, season, stamCap, toast,
+  S, UI, addPack, addStat, addXp, canCap, farmLevel, grantGoodWithMailOverflow,
+  isSimBatch, notify, ownedFarms, pay, plotsForFarm, saveGame, season, stamCap, toast,
 } from '../state';
 import type { FarmSceneId } from '../estates';
 
@@ -186,7 +186,9 @@ export function catchRegionalFish(precisionBoost = 1): { species: FishSpeciesDef
   S.fishLog ??= {};
   if (kg > (S.fishLog[sp.id] ?? 0)) S.fishLog[sp.id] = kg;
   const baseQty = sp.good === 'roe' ? (sweet ? 2 : 1) : (sweet ? 3 : 1 + Math.floor(rnd() * 2));
-  const got = grantGoodWithMailOverflow(sp.good, baseQty, 'rancher', 'fish');
+  // ماهیگیری دستی بازیکن: اول به کولهٔ پشتی؛ کوله پر شد مابقی به صندوق پست (بات/شبیه‌ساز: مستقیم انبار)
+  const packGot = isSimBatch() ? 0 : addPack(sp.good, baseQty);
+  const got = packGot + (packGot < baseQty ? grantGoodWithMailOverflow(sp.good, baseQty - packGot, 'rancher', 'fish') : 0);
   const awardedQty = Math.max(got, baseQty);
   if (awardedQty > 0) {
     S.coins += Math.round(sp.coinBonus * (sweet ? 1.5 : 0.6));

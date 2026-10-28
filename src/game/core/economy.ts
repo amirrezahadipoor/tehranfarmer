@@ -1,7 +1,7 @@
 // ===== اقتصاد: قیمت‌ها، خرید و فروش =====
 import {
-  ANIMALS, ANIMAL_RESALE_RATE, ANIMAL_SELL_XP, BAG_CAP, CAN_CAP, CROP, DEMAND_DECAY, DEMAND_FLOOR,
-  FEED_PRICE, FERT_PRICE, FINGER_PRICE, GOOD, HEART_BOND_5, LAND_PRICES, PEN_CAP_LV, PEN_KINDS, ROD_LV, ROD_PRICE,
+  ANIMALS, ANIMAL_RESALE_RATE, ANIMAL_SELL_XP, BARN_CAP, CAN_CAP, CROP, DEMAND_DECAY, DEMAND_FLOOR,
+  FEED_PRICE, FERT_PRICE, FINGER_PRICE, GOOD, HEART_BOND_5, LAND_PRICES, PACK_CAP, PEN_CAP_LV, PEN_KINDS, ROD_LV, ROD_PRICE,
   SARA5_DEMAND_DECAY, SEASON_IN_MULT, SEASON_OUT_MULT, SEED_DEMAND_CAP, SEED_DEMAND_GROW, SILO_MULT,
   SKILL_RANCH3_MULT, SKILL_TRADE1_MULT, STAM_CAP, TILEPOOL_BONUS_CAN, TROUGH_CAP, WEALTH_DIVISOR, WEALTH_MULT_CAP,
   XP, type AnimalKind, type CropId,
@@ -63,7 +63,29 @@ export function seedPackPrice(id: CropId, n: number): number {
   return sum;
 }
 export const invCount = () => Object.values(S.inv).reduce((a, b) => a + b, 0);
-export const invCap = () => BAG_CAP[S.lv.bag];
+export const invCap = () => BARN_CAP[S.lv.barn];
+export const packCount = () => Object.values(S.pack).reduce((a, b) => a + b, 0);
+export const packCap = () => PACK_CAP[S.lv.bag];
+/** افزودن کالا بهکولهٔ پشتی بازیکن — سقف کوله رعایت می‌شود */
+export function addPack(id: string, n: number): number {
+  const room = Math.max(0, packCap() - packCount());
+  const add = Math.min(room, n);
+  if (add > 0) S.pack[id] = (S.pack[id] ?? 0) + add;
+  return add;
+}
+/** تخلیهٔ کوله به انبار — هرچه جا باشد جابه‌جا می‌شود؛ مابقی در کوله می‌ماند */
+export function transferPackToBarn(): number {
+  let moved = 0;
+  for (const id of Object.keys(S.pack)) {
+    const got = addGood(id, S.pack[id]);
+    if (got > 0) {
+      S.pack[id] -= got;
+      moved += got;
+      if (S.pack[id] <= 0) delete S.pack[id];
+    }
+  }
+  return moved;
+}
 export const canCap = () => CAN_CAP[S.lv.can] + wellBonusCan() + (hasDecor('tilepool') ? TILEPOOL_BONUS_CAN : 0);
 export const stamCap = () => STAM_CAP[S.lv.stam];
 export const troughCap = () => TROUGH_CAP * SILO_MULT[S.silo]; // سیلو ظرفیت آخور را چند برابر می‌کند
@@ -100,6 +122,7 @@ export function sellGood(id: string, n: number): number {
   return sum;
 }
 export function sellAll(): number {
+  transferPackToBarn(); // «فروش همه» کولهٔ بازیکن را هم می‌فروشد (انبار پُر؛ مابقی در کوله می‌ماند)
   let t = 0;
   for (const id of Object.keys(S.inv)) {
     if (id !== 'feed' && id !== 'fingerling' && GOOD[id]) {

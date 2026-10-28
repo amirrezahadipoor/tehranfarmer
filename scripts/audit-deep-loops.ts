@@ -4,7 +4,7 @@ import { renderToString } from 'react-dom/server';
 import {
   S, UI, buyAnimal, buyGh, buyHive, buyMachine, buyPen, buyPond, buyRod, buyScarecrow,
   buySeed, buySilo, buyUpgrade, buyWell, buyWorker, exportSaveJson, floorCoins, harvestHoney,
-  harvestPond, importSaveJson, invCap, payDebt, resetGame, restoreBackupSlot, saveGame,
+  harvestPond, importSaveJson, invCap, packCap, payDebt, resetGame, restoreBackupSlot, saveGame,
   sellAll, signContract, startDebt, stashDeposit, stockPond, clearToasts, forceBackupRotation} from '../src/game/state';
 import { NOTES } from '../src/story/debtData';
 import { advanceNode, maybeStartPrologue, pendingNode } from '../src/story/engine';
@@ -94,10 +94,11 @@ export function runLoop1ActionAndToastFuzzer(report: Reporter) {
   S.hives = 2;
   S.honeyAcc = 12;
   S.inv = { wheat: invCap() }; // انبار کاملاً پر است!
+  S.pack = { wheat: packCap() }; // کولهٔ بازیکن هم کاملاً پر است (سیستم دوسیستمی)!
 
   harvestPond(0, false);
   if (!S.ponds[0].stocked) {
-    report('L1-FULL-BAG-DESTROYS-POND', 'ponds.ts:harvestPond', 'وقتی انبار پر است، کلیک روی صید استخر ماهی تمام ماهی‌های پرورش‌یافته را نابود کرد و ۰ ماهی به بازیکن داد!');
+    report('L1-FULL-BAG-DESTROYS-POND', 'ponds.ts:harvestPond', 'وقتی کولهٔ بازیکن پر است، کلیک روی صید استخر ماهی تمام ماهی‌های پرورش‌یافته را نابود کرد و ۰ ماهی به بازیکن داد!');
   }
   clearToasts();
   harvestHoney(false);
@@ -105,8 +106,9 @@ export function runLoop1ActionAndToastFuzzer(report: Reporter) {
     report('L1-FULL-BAG-ZERO-HONEY-TOAST', 'ponds.ts:harvestHoney', `وقتی انبار پر است، برداشت عسل به جای اخطار «انبار پر است» اعلان «${UI.toasts[0]?.text}» نشان داد!`);
   }
 
-  // حالا انبار را خالی کن و رقم فارسی اعلان موفق صید استخر و عسل را بسنج
+  // حالا انبار و کوله را خالی کن و رقم فارسی اعلان موفق صید استخر و عسل را بسنج
   S.inv = {};
+  S.pack = {};
   S.ponds = [{ id: 1, stocked: true, grow: 10, feed: 4 }];
   S.honeyAcc = 12;
   captureAction('ponds.ts:harvestPond(ok)', () => harvestPond(0, false));

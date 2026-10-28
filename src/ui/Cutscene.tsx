@@ -10,6 +10,7 @@ import {
   actorScreenAnchor, applyBeatToStage, beginSceneStage, cinema, endSceneStage, enterClosingShot, notifyTypewriterStep,
 } from '../game/cinemaStage';
 import { clearVisit, debt } from '../game/core/debt';
+import { STAND_BEAT } from '../story/debtData';
 import { CFG, isReducedMotion, setShortBeat, updateSetting } from '../game/settings';
 import { fa } from '../strings/fa';
 import { Ic } from './parts';
@@ -49,6 +50,7 @@ export function Cutscene() {
   const [typed, setTyped] = useState(0);
   const [closing, setClosing] = useState(false);
   const [summary, setSummary] = useState(false);
+  const [fineAck, setFineAck] = useState(false);
   const [anchor, setAnchor] = useState({ x: 640, y: 240 });
   const [boxSize, setBoxSize] = useState({ w: 360, h: 96 });
   const [barH, setBarH] = useState({ top: 52, bot: 54 });
@@ -94,6 +96,7 @@ export function Cutscene() {
     }
     setSummary(false);
     setClosing(false);
+    setFineAck(false);
     setScript(compiled);
     setBeatIdx(0);
     setTyped(0);
@@ -255,6 +258,28 @@ export function Cutscene() {
             )}
             <button className="btn g press !px-5 !py-2" onClick={closeSummary}>
               <Ic n="check" s={2.4} /><span className="ft text-xl">{UT.u13}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // کارت خلاصهٔ جریمه — قبل از صحنهٔ ضرب‌وشتم، بازیکن باید همهٔ اثرات را ببیند و تأیید کند
+  if (beating && !fineAck && visit?.kind === 'due-missed') {
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-3" dir={rtl ? 'rtl' : 'ltr'} data-fine-card="1">
+        <div className="paper popin w-[min(94vw,30rem)] p-4">
+          <div className="ft text-center text-3xl text-[#e8564a]">{ui.fineTitle}</div>
+          <div className="mt-3 space-y-1 text-sm font-extrabold">
+            <Row l={UT.u9} v={fa(visit.taken)} icon="coin" />
+            {visit.lateFee > 0 && <Row l={UT.u11} v={fa(visit.lateFee)} icon="hammer" />}
+            <Row l={ui.fineEnergy} v={ui.fineEnergyVal} icon="bolt" />
+            <Row l={ui.fineStand} v={fa(STAND_BEAT)} icon="note" />
+          </div>
+          <div className="mt-4 text-center">
+            <button className="btn g press !px-5 !py-2" data-fine-ack="1" onClick={() => { setFineAck(true); sfx.tap(); }}>
+              <Ic n="check" s={2.4} /><span className="ft text-xl">{ui.fineAckBtn}</span>
             </button>
           </div>
         </div>

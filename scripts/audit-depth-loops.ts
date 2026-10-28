@@ -311,7 +311,8 @@ export function runLoop11AntiGrindAndVarietyAudit(report: ReportFn) {
   }
 
   // ۳. پاتیل روستایی و آسیاب خانگی: هر ۶ دستور پخت کار می‌کنند و سود بیشتر بدون افت تقاضای بازار می‌دهند
-  S.lv.bag = 4;
+  S.lv.bag = 6;
+  S.lv.barn = 4; // ظرفیت انبار برای مواد اولیهٔ پاتیل
   S.inv = { wheat: 10, egg: 4, milk: 6, wool: 2, saffron: 2, rose: 4, honey: 4, pomegranate: 4, fish: 6, roe: 2 };
   S.stamina = 10;
   const demBefore = S.dem.saffron ?? 1;

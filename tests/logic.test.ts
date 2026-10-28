@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   S, UI, addGood, advance, buyAnimal, buyFeed, buySeed, canAct, doAct, farmLevel, goodPrice,
-  harvestHoney, harvestPond, invCount, invCap, resetGame, season, seedPrice, sellAll, sellGood,
+  harvestHoney, harvestPond, invCount, invCap, packCount, resetGame, season, seedPrice, sellAll, sellGood,
   sleepToMorning, stockPond, xpProgress, enqueueBuild, completeBuild, tickBuilds, penCap, honeyCap, addXp, feedPond,
 } from './helpers/game';
 import { CROP, CROPS, FINGER_PRICE, LEVEL_CAP, POND_GROW_DAYS, xpNeed } from '../src/game/data';
@@ -31,7 +31,8 @@ describe('چرخهٔ زمین و محصول', () => {
     expect(S.plots[0].ripe).toBe(true);
     const r = doAct('harvest', 0);
     expect(r.crop).toBe('wheat');
-    expect(invCount()).toBeGreaterThan(0);
+    expect(packCount()).toBeGreaterThan(0); // دوسیستمی: برداشت بازیکن به کولهٔ پشتی می‌رود
+    expect(invCount()).toBe(0);
     checkInvariants('harvest');
   });
 

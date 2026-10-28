@@ -161,7 +161,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       season: () => { toast(['spring', 'summer', 'autumn', 'winter'][season()], GT.g150); sfx.err(); },
       nocan: () => { toast('can', GT.g151); sfx.err(); },
       nofert: () => { toast('fert', GT.g152); sfx.err(); },
-      full: () => { toast('bag', GT.g43); sfx.err(); },
+      full: () => { toast('bag', GT.gPackFull); sfx.err(); },
     };
     map[r]?.();
   }

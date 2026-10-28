@@ -42,7 +42,7 @@ export function workerServiceUnifiedPond(): boolean {
   for (let i = 0; i < S.ponds.length; i++) {
     const p = S.ponds[i];
     if (p.stocked && p.grow >= POND_GROW_DAYS && invCount() < invCap()) {
-      if (harvestPond(i, true) > 0) acted = true;
+      if (harvestPond(i, true, true) > 0) acted = true;
     }
     if (!p.stocked && ((S.inv.fingerling ?? 0) > 0 || S.coins > FINGER_PRICE * 12)) {
       stockPond(i);
@@ -148,7 +148,7 @@ export function tickWorkersSim(hours: number) {
       workerRefillGrazingTrough();
       workerServiceUnifiedPond();
       if (S.hives > 0 && S.honeyAcc >= 2 && invCount() < invCap()) {
-        harvestHoney(true);
+        harvestHoney(true, true);
       }
     }
     const farms = ownedFarms();

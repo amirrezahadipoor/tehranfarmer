@@ -11,6 +11,8 @@ import {
   drawFarmlandBed, drawFarmlandPlotsLayer, drawGlasshouseSpan, drawMachineryPad, drawSignPlaque, drawValleyWaterfall,
 } from './worldRoads';
 import { drawFarmer } from './rig';
+import { drawBackpack } from './backpackArt';
+import { drawThirstLeft } from './thirstWarn';
 import { OX, dirtRoad, ground, mountains, newBG, paperGrain, signpost, tree, wellAt } from './scenes';
 import { CFG } from './settings';
 import { ESTATE_UI } from '../strings/estateStoryText';
@@ -256,6 +258,7 @@ export function renderEstateFieldScene(
           const sway = p.dead ? 0 : Math.sin(t * 1.6 + i) * (weather === 2 ? 0.05 : 0.022);
           put(ctx, part, cx, cy + 15, 0.64, sway);
           if (!p.dead && p.water < 0.05) put(ctx, iconPart('drop'), cx + 24, cy - 15 + Math.sin(t * 4 + i) * 2, 0.42);
+          if (!p.dead && p.water < 0.05 && p.dry > 0) drawThirstLeft(ctx, cx + 24, cy - 33 + Math.sin(t * 4 + i) * 2, p.dry);
           const inGh = ghLv > 0 && (i % spec.cols) >= spec.cols - 2 && Math.floor(i / spec.cols) < (ghLv >= 2 ? spec.rows : 2);
           if (!p.dead && !p.ripe && isCropDormantNow(p.crop!, inGh)) put(ctx, iconPart('lock'), cx - 24, cy - 15, 0.3);
           if (p.ripe && !p.dead) put(ctx, iconPart('star'), cx + 25, cy - 16 + Math.sin(t * 3 + i) * 2, (p.fert ?? 1) > 1.05 ? 0.38 : 0.31);
@@ -264,7 +267,7 @@ export function renderEstateFieldScene(
     }
   }
   list.push({ y: 556, f: () => drawFullScarecrow(ctx, farm === 'north' ? 1112 : 1148, 556, t, S.debt?.scarecrow ?? 0) });
-  list.push({ y: farmer.y, f: () => drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72) });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); } });
   if (owned) {
     workers.forEach((w, wi) => {
       if (wi < workerCount) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) });

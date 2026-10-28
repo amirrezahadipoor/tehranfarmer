@@ -11,7 +11,7 @@ import {
 } from './data';
 import { sfx } from './sound';
 import { rnd } from './rng';
-import { addGood, goodPrice, invCap, invCount } from './core/economy';
+import { addGood, addPack, goodPrice, invCap, invCount, packCap, packCount } from './core/economy';
 import { addStat, addXp, farmLevel } from './core/progress';
 import { bindSeason } from './core/economy';
 import { resetLvCache } from './core/progress';
@@ -42,7 +42,8 @@ export interface Save {
   northPlots: Plot[];
   valleyPlots: Plot[];
   inv: Record<string, number>; seeds: Record<string, number>; fert: number; can: number; rod: number;
-  lv: { hoe: number; can: number; bag: number; stam: number; land: number; soil: number };
+  pack: Record<string, number>; // کولهٔ پشتی بازیکن — حمل از زمین/آبگیر تا تخلیه در انبار
+  lv: { hoe: number; can: number; bag: number; stam: number; land: number; soil: number; barn: number };
   animals: AnimalS[]; trough: number; workers: number; workersHired?: number; dem: Record<string, number>; sdem: Record<string, number>;
   weather: number; nextId: number; earned: number;
   cityVisits: number;
@@ -148,8 +149,8 @@ function fresh(): Save {
     plots: Array.from({ length: COLS * ROWS }, newPlot),
     northPlots: Array.from({ length: NORTH_PLOTS_COUNT }, newPlot),
     valleyPlots: Array.from({ length: VALLEY_PLOTS_COUNT }, newPlot),
-    inv: {}, seeds: { wheat: 8, carrot: 4 }, fert: 0, can: 8, rod: 0,
-    lv: { hoe: 0, can: 0, bag: 0, stam: 0, land: 0, soil: 0 },
+    inv: {}, pack: {}, seeds: { wheat: 8, carrot: 4 }, fert: 0, can: 8, rod: 0,
+    lv: { hoe: 0, can: 0, bag: 0, stam: 0, land: 0, soil: 0, barn: 0 },
     animals: [
       { id: 1, kind: 'chicken', ready: 0, hue: 0, sex: 'f', grown: 0 },
       { id: 2, kind: 'chicken', ready: 0, hue: 1, sex: 'm', grown: 0 },
@@ -175,6 +176,7 @@ const BAK2 = KEY + '-bak2';
 const BAK_LEGACY = KEY + '-bak';
 
 let simBatchMode = false;
+export const isSimBatch = () => simBatchMode; // کارگر و بات به انبار؛ بازیکن به کوله
 let trustedSaveA = '';
 let trustedSaveB = '';
 export function setSimBatchMode(on: boolean) {
@@ -268,10 +270,10 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.machines = S.machines ?? {}; S.auto = S.auto ?? {};
   S.ponds = S.ponds ?? []; S.hives = S.hives ?? 0; S.honeyAcc = S.honeyAcc ?? 0;
   S.builds = S.builds ?? []; S.cityVisits = S.cityVisits ?? 0; S.rod = S.rod ?? 0;
-  S.pens = S.pens ?? {}; S.gh = S.gh ?? 0; S.silo = S.silo ?? 0; S.nests = S.nests ?? [];
+  S.pens = S.pens ?? {}; S.gh = S.gh ?? 0; S.silo = S.silo ?? 0; S.nests = S.nests ?? []; S.pack = S.pack ?? {};
   for (const a of S.animals) if (!S.pens[a.kind]) S.pens[a.kind] = 1;
   S.xp = S.xp ?? 0; S.stats = S.stats ?? {}; S.ach = S.ach ?? {};
-  S.lv = S.lv ?? fresh().lv; S.lv.soil = S.lv.soil ?? 0;
+  S.lv = S.lv ?? fresh().lv; S.lv.soil = S.lv.soil ?? 0; S.lv.barn = S.lv.barn ?? 0;
   for (const k2 of Object.keys(S.machines) as MachineId[]) {
     if (typeof S.machines[k2] !== 'number') S.machines[k2] = S.machines[k2] ? 1 : 0;
   }
@@ -500,7 +502,7 @@ export function canAct(kind: string, i: number, worker = false, seed?: CropId, f
       return '';
     }
     case 'water': if (p.st === 0 || (p.st === 2 && p.dead) || p.water > 0.9) return 'skip'; return worker || S.can > 0 ? '' : 'nocan';
-    case 'harvest': if (p.st !== 2 || !p.ripe || p.dead) return 'skip'; return invCount() >= invCap() ? 'full' : '';
+    case 'harvest': if (p.st !== 2 || !p.ripe || p.dead) return 'skip'; return (!worker && !isSimBatch()) ? (packCount() >= packCap() ? 'full' : '') : (invCount() >= invCap() ? 'full' : '');
     case 'fert': if (p.st === 0 || (p.st === 2 && p.dead) || p.fert > 0.95) return 'skip'; return S.fert > 0 ? '' : 'nofert';
   }
   return 'skip';
@@ -555,7 +557,9 @@ export function doAct(kind: string, i: number, worker = false, seed?: CropId, si
       const base = def.yield[0] + Math.floor(rnd() * (def.yield[1] - def.yield[0] + 1));
       const mult = (0.5 + 0.7 * p.fert) * (p.last === p.crop ? 0.8 : 1) * soilBonus() * specMult * skillMult * (1 + MK_HARVEST[harvMk]);
       const qty = Math.max(1, Math.round(base * mult));
-      const got = addGood(p.crop!, qty);
+      const isPlayerAct = !worker && !isSimBatch(); // بازیکن به کوله؛ کارگر و بات به انبار
+      let got = isPlayerAct ? addPack(p.crop!, qty) : addGood(p.crop!, qty);
+      if (isPlayerAct && got < qty) got += addGood(p.crop!, qty - got); // اضافهٔ کولهٔ پر به انبار
       if (dedicatedLock && harvMk >= 3 && ((S.day + i + p.n) % 8 === 0)) {
         S.seeds[p.crop] = (S.seeds[p.crop] ?? 0) + 1;
       }
