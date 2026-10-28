@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- تم پایه بدون حالت تاریک اجباری MIUI/HyperOS و بدون پس‌زمینهٔ سیاه یا سفید چشمک‌زن حتی در فریم ۰ اسپلش سیستم اندروید ۱۲ تا ۱۵ -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/sky_bg</item>
+        <item name="android:colorBackground">#7cc8f4</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">#7cc8f4</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">#7cc8f4</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:windowBackground">@color/sky_bg</item>
+        <item name="android:colorBackground">#7cc8f4</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">#7cc8f4</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">#7cc8f4</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
+        <item name="android:windowBackground">@color/sky_bg</item>
+        <item name="android:colorBackground">#7cc8f4</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">#7cc8f4</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">#7cc8f4</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+</resources>

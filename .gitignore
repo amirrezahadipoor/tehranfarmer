@@ -1,0 +1,36 @@
+# وابستگی‌ها و بیلد
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# رمزها و کلیدها — هرگز در گیت نروند
+.secrets/
+.env
+.env.*
+*.keystore
+*.jks
+key.properties
+keystore.properties
+*.p12
+*.pem
+
+# پوشه‌های بیلد اندروید و ابزار
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+artifacts/*.apk
+*.keystore
+*.jks
+*.p12
+*.pfx
+keystore.properties
+.vite/
+coverage/
+playwright-report/
+test-results/
+e2e/__screenshots__/
+artifacts/*.png
+

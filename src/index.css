@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* ===== فونت‌های آفلاین (داخل پروژه، woff2) ===== */
+@font-face { font-family: 'Vazirmatn'; font-weight: 400; font-display: swap; src: url('./assets/fonts/Vazirmatn-Regular.woff2') format('woff2'); }
+@font-face { font-family: 'Vazirmatn'; font-weight: 500; font-display: swap; src: url('./assets/fonts/Vazirmatn-Medium.woff2') format('woff2'); }
+@font-face { font-family: 'Vazirmatn'; font-weight: 800; font-display: swap; src: url('./assets/fonts/Vazirmatn-Bold.woff2') format('woff2'); }
+@font-face { font-family: 'Lalezar'; font-weight: 400; font-display: swap; src: url('./assets/fonts/lalezar-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+200C-200E, U+2010-2011, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: 'Lalezar'; font-weight: 400; font-display: swap; src: url('./assets/fonts/lalezar-latin.woff2') format('woff2'); unicode-range: U+0000-00FF; }
+
+html { font-size: clamp(11px, min(calc(100vh / 31), 2.08vw), 24px); }
+html[data-font-scale="1.1"] { font-size: clamp(11.8px, min(calc(100vh / 28.5), 2.22vw), 26px); }
+html[data-font-scale="1.2"] { font-size: clamp(12.5px, min(calc(100vh / 26.5), 2.35vw), 28px); }
+@media (orientation: portrait) {
+  html { font-size: clamp(12px, 3.4vw, 18px); }
+  html[data-font-scale="1.1"] { font-size: clamp(12.8px, 3.65vw, 19.5px); }
+  html[data-font-scale="1.2"] { font-size: clamp(13.5px, 3.85vw, 21px); }
+}
+html, body, #root {
+  height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none;
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  font-family: 'Vazirmatn', 'Tahoma', sans-serif; font-weight: 500; color: #503426;
+  background-color: #7cc8f4;
+}
+canvas { display: block; touch-action: none; }
+button, [role="button"], .btn, [data-tap], select, label { touch-action: manipulation; }
+.btn > * { pointer-events: none; }
+.ft { font-family: 'Lalezar', 'Vazirmatn', sans-serif; font-weight: 400; }
+
+.paper {
+  background: #fff4d8 repeating-linear-gradient(45deg, rgba(160,110,60,.07) 0 .35rem, transparent .35rem .7rem);
+  border: .2rem solid #503426;
+  border-radius: 1rem 1.5rem .8rem 1.4rem / 1.4rem .8rem 1.5rem 1rem;
+  box-shadow: .14rem .2rem 0 rgba(80,52,38,.6);
+}
+.paper-dark {
+  background: #7a4b2c repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 .35rem, transparent .35rem .7rem);
+  border: .2rem solid #503426;
+  border-radius: 1.2rem 1rem 1.5rem .9rem / .9rem 1.5rem 1rem 1.2rem;
+  box-shadow: .14rem .2rem 0 rgba(80,52,38,.6);
+}
+.press { transition: transform .08s; cursor: pointer; }
+.press:active { transform: scale(.97); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .3rem; color: #3d251a;
+  border: .17rem solid #503426; border-radius: .9rem .7rem 1rem .6rem / .6rem 1rem .7rem .9rem;
+  box-shadow: 0 .17rem 0 rgba(80,52,38,.7); padding: .2rem .7rem; font-weight: 800; cursor: pointer; white-space: nowrap;
+  min-height: max(48px, 3rem); min-width: max(48px, 3rem); /* هدف لمسی ≥ ۴۸dp واقعی روی همهٔ رزولوشن‌ها */
+}
+.btn:active { transform: scale(.97); box-shadow: 0 .06rem 0 rgba(80,52,38,.7); }
+.btn:disabled { filter: grayscale(.8) opacity(.6); }
+.g { background: #8fd35a; } .y { background: #ffd93b; } .r { background: #ff9685; } .b { background: #7cc8f4; } .p { background: #d6b8ff; }
+html[data-colorblind="1"] body, html[data-colorblind="1"] #root { color: #1f140d; }
+html[data-colorblind="1"] .paper { background-color: #fff9eb; border-color: #1f140d; }
+html[data-colorblind="1"] .paper-dark { background-color: #2b2540; border-color: #1f140d; }
+html[data-colorblind="1"] .g { background: #56b4e9; }
+html[data-colorblind="1"] .y { background: #f0e442; }
+html[data-colorblind="1"] .r { background: #f4a261; }
+html[data-colorblind="1"] .b { background: #8ecae6; }
+html[data-colorblind="1"] .p { background: #dec9ff; }
+.scroll { overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { width: .4rem; } .scroll::-webkit-scrollbar-thumb { background: #b68a58; border-radius: .3rem; }
+.scroll-x { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; touch-action: pan-x; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+html[data-bg="1"], html[data-bg="1"] * { animation-play-state: paused !important; }
+.bar { height: .85rem; border: .14rem solid #503426; border-radius: .6rem; background: #f3e6c4; overflow: hidden; position: relative; }
+.bar > i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; border-radius: .4rem; display: block; transition: width .3s; }
+@keyframes bob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-.4rem) rotate(2deg); } }
+.bob { animation: bob 1.8s ease-in-out infinite; }
+@keyframes swingClub { 0% { transform: rotate(-28deg); } 100% { transform: rotate(22deg); } }
+@keyframes beatRecoil { 0%, 40% { transform: translateY(0) rotate(0); } 75%, 100% { transform: translateY(4px) rotate(9deg); } }
+@keyframes shakeTable { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+@keyframes pop { 0% { opacity: .92; } 100% { opacity: 1; } }
+.popin { animation: pop .18s ease-out; }
+@keyframes toast { 0% { transform: translateY(-1rem) scale(.8); opacity: 0; } 12% { transform: none; opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+.toast { animation: toast 2.4s ease-out forwards; }
+@keyframes rot { 0%, 20% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+.rot { animation: rot 2.4s ease-in-out infinite; }
+@keyframes bootSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.boot-windmill { animation: bootSpin 5.5s linear infinite; transform-origin: 0px 0px; }
+
+/* ===== پروفایل‌های صفحه (فاز ۲) — توکن‌های چیدمان ===== */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bob, .rot, .popin, .toast, .boot-windmill { animation: none !important; }
+  .press, .btn { transition: none !important; }
+}
+html[data-reduce-motion="1"] .bob,
+html[data-reduce-motion="1"] .rot,
+html[data-reduce-motion="1"] .popin,
+html[data-reduce-motion="1"] .toast,
+html[data-reduce-motion="1"] .boot-windmill { animation: none !important; }
+html[data-reduce-motion="1"] .press,
+html[data-reduce-motion="1"] .btn { transition: none !important; }

@@ -1,0 +1,215 @@
+import { expect, test } from '@playwright/test';
+
+/**
+ * ربات جامع مرورگر واقعی — سطح استودیویی AAA (حلقهٔ ۴ و ۵):
+ * ۱) شروع بازی نو، رد پرولوگ، ورود واقعی به شهر:
+ *    - تست کلیک واقعی روی «بذرفروشی» با «رد کردن صحنه» -> باز شدن خودکار پنجرهٔ «بذر و کود»
+ *    - تست کلیک واقعی روی «بازار» با «تماشای کامل ضرب‌به‌ضرب تا پایان طبیعی صحنه» (بدون رد کردن!) -> باز شدن خودکار پنجرهٔ «بازار»
+ * ۲) ممیزی سخت‌گیرانهٔ جایگاه پیکسلی تمام ۷۹ صحنه در:
+ *    - هر دو زبان فارسی (fa) و انگلیسی (en)
+ *    - هر سه فرم‌فاکتور دشوار: دسکتاپ (1280×720)، موبایل افقی کم‌ارتفاع با فونت درشت ۱۲۰٪ (640×360 @ 1.2x)، و موبایل عمودی باریک با فونت درشت ۱۲۰٪ (360×740 @ 1.2x)
+ *    - شامل پیمایش تمام ضرب‌های زنجیره‌ای پرولوگ (p1..p7) و جشن پایان (ch6-outro..finale)
+ * ۳) تست کامل سفر به رودخانه و زنبورستان، تریگر دیدار اول هر دو ناحیه، و وضعیت پایان‌بازی + افتتاح موزه و دریافت جایزهٔ تندیس جهانگیر در مرورگر زنده!
+ */
+test('ربات استودیویی مرورگر (AAA): تریگرهای زنده + ممیزی پیکسلی ۷۹ صحنه در فارسی/انگلیسی و فونت ۱۲۰٪ موبایل/عمودی/دسکتاپ + پایان‌بازی', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/');
+
+  // ۱. شروع بازی نو از صفحهٔ عنوان و رد پرولوگ
+  await page.locator('button').first().click();
+  await expect(page.locator('[data-scene-id="p1"]')).toBeVisible();
+  await page.locator('button:has-text("رد کردن صحنه")').click();
+  await expect(page.locator('[data-scene-id]')).toHaveCount(0);
+
+  await page.evaluate(() => (document.fullscreenElement ? document.exitFullscreen() : Promise.resolve()));
+  await page.setViewportSize({ width: 1280, height: 720 });
+
+  // ۲. تست ورود به شهر و باز شدن خودکار مغازه در هر دو مسیر (Skip و پایان طبیعی بدون Skip!)
+  await page.evaluate(() => {
+    (window as unknown as { __gameApi: { setEnv: (p: { scene: 'town' }) => void } }).__gameApi.setEnv({ scene: 'town' });
+  });
+  await page.waitForTimeout(220);
+
+  // مسیر الف: رد کردن صحنه در بذرفروشی -> باز شدن خودکار «بذر و کود»
+  await page.mouse.click(150, 380);
+  await expect(page.locator('[data-scene-id="shop-intro-seed"]')).toBeVisible({ timeout: 15000 });
+  await page.locator('button:has-text("رد کردن صحنه")').click();
+  await expect(page.getByRole('dialog', { name: 'بذر و کود' })).toBeVisible({ timeout: 5000 });
+  await page.getByRole('button', { name: 'بستن پنجره' }).click();
+
+  // مسیر ب: پیش‌روی طبیعی ضرب‌به‌ضرب تا پایان در بازار -> باز شدن خودکار «بازار» بدون کلیک مجدد!
+  await page.mouse.click(350, 380);
+  await expect(page.locator('[data-scene-id="shop-intro-market"]')).toBeVisible({ timeout: 15000 });
+  // ضرب ۱: تکمیل تایپ + ادامه
+  await page.locator('[data-scene-id="shop-intro-market"] button:has-text("ادامه")').click();
+  await page.locator('[data-scene-id="shop-intro-market"] button:has-text("ادامه")').click();
+  // ضرب ۲ (آخر): تکمیل تایپ + پایان
+  await page.locator('[data-scene-id="shop-intro-market"] button:has-text("پایان")').click();
+  await page.locator('[data-scene-id="shop-intro-market"] button:has-text("پایان")').click();
+  await expect(page.getByRole('dialog', { name: 'بازار' })).toBeVisible({ timeout: 4000 });
+  await page.getByRole('button', { name: 'بستن پنجره' }).click();
+
+  // ۳. ممیزی پیکسلی تمام ۷۹ صحنه در فارسی و انگلیسی + فونت درشت ۱۲۰٪ روی موبایل افقی و عمودی!
+  const layoutBugs: string[] = [];
+  const sceneIds: string[] = await page.evaluate(() => {
+    const dbg = (window as unknown as { __cinemaDebug: { list: () => Array<{ id: string }> } }).__cinemaDebug;
+    return dbg.list().map((s) => s.id);
+  });
+  expect(sceneIds.length).toBeGreaterThanOrEqual(87);
+
+  const profiles = [
+    { label: 'desktop-fa', w: 1280, h: 720, lang: 'fa', font: '16px' },
+    { label: 'mobile-en-120pct', w: 640, h: 360, lang: 'en', font: '19.2px' },
+    { label: 'portrait-fa-120pct', w: 360, h: 740, lang: 'fa', font: '19.2px' },
+  ] as const;
+
+  for (const prof of profiles) {
+    await page.setViewportSize({ width: prof.w, height: prof.h });
+    await page.evaluate(({ lang, font }) => {
+      document.documentElement.style.fontSize = font;
+      localStorage.setItem('mazrae-rangi-settings-v1', JSON.stringify({
+        sound: true, music: true, haptics: true, reduceMotion: false, colorblind: false, shortBeat: false,
+        fontScale: font === '19.2px' ? 1.2 : 1, locale: lang,
+      }));
+    }, { lang: prof.lang, font: prof.font });
+
+    // همچنین در پروفایل موبایل انگلیسی با فونت ۱۲۰٪ با دکمهٔ زنده زبان را تغییر بده
+    await page.evaluate((id) => {
+      (window as unknown as { __cinemaDebug: { play: (s: string) => unknown } }).__cinemaDebug.play(id);
+    }, 'p1');
+    await page.waitForTimeout(30);
+    const curLangBtn = await page.locator('[data-scene-id="p1"] button').first().textContent();
+    if ((prof.lang === 'en' && curLangBtn?.includes('فارسی')) || (prof.lang === 'fa' && curLangBtn?.includes('English'))) {
+      await page.locator('[data-scene-id="p1"] button').first().click({ force: true });
+    }
+
+    for (const id of sceneIds) {
+      await page.evaluate((sceneId) => {
+        (window as unknown as { __cinemaDebug: { play: (s: string) => unknown } }).__cinemaDebug.play(sceneId);
+      }, id);
+      await page.waitForTimeout(28);
+
+      const issues = await page.evaluate(({ sceneId, tag, w, h }) => {
+        const errs: string[] = [];
+        const root = document.querySelector(`[data-scene-id="${sceneId}"]`);
+        if (!root) {
+          errs.push(`${sceneId}@${tag}: ریشهٔ صحنه رندر نشد`);
+          return errs;
+        }
+        const txt = root.textContent ?? '';
+        if (/undefined|NaN|\[object/.test(txt)) {
+          errs.push(`${sceneId}@${tag}: متن خراب (${txt.slice(0, 60)})`);
+        }
+        const boxes = [...root.querySelectorAll('div.pointer-events-none')];
+        for (const box of boxes) {
+          const r = box.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          if (r.left < 4) errs.push(`${sceneId}@${tag}: بریدگی چپ (left=${Math.round(r.left)}px)`);
+          if (r.right > w - 4) errs.push(`${sceneId}@${tag}: بریدگی راست (right=${Math.round(r.right)}px > ${w}px)`);
+          if (r.top < 42) errs.push(`${sceneId}@${tag}: برخورد با نوار بالا (top=${Math.round(r.top)}px)`);
+          if (r.bottom > h - 38) errs.push(`${sceneId}@${tag}: برخورد با نوار هدف پایین (bottom=${Math.round(r.bottom)}px > ${h - 38}px)`);
+        }
+        return errs;
+      }, { sceneId: id, tag: prof.label, w: prof.w, h: prof.h });
+
+      layoutBugs.push(...issues);
+    }
+  }
+
+  expect(layoutBugs, `ایرادهای جایگاه نوشته‌ها در فونت ۱۲۰٪ / انگلیسی / عمودی / موبایل:\n${layoutBugs.join('\n')}`).toEqual([]);
+
+  // ۴. ممیزی ظاهر، مقیاس فونت، عدم سرریز افقی و سفر سریع موبایل در حالت عمودی (360×740) و افقی موبایل (800×360)
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  for (const mob of [{ w: 360, h: 740 }, { w: 800, h: 360 }]) {
+    await page.setViewportSize({ width: mob.w, height: mob.h });
+    await page.evaluate(() => {
+      (window as unknown as { __gameApi: { setEnv: (p: { scene: 'farm'; postgame: boolean }) => void } }).__gameApi.setEnv({ scene: 'farm', postgame: false });
+    });
+    await page.waitForTimeout(120);
+    const mobileMetrics = await page.evaluate(() => {
+      const btns = [...document.querySelectorAll('button')].filter((b) => {
+        const r = b.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && getComputedStyle(b).visibility !== 'hidden';
+      });
+      const overlaps: string[] = [];
+      for (let i = 0; i < btns.length; i++) {
+        for (let j = i + 1; j < btns.length; j++) {
+          const a = btns[i].getBoundingClientRect();
+          const b = btns[j].getBoundingClientRect();
+          const ix = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+          const iy = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          if (ix > 4 && iy > 4) {
+            overlaps.push(`(${btns[i].getAttribute('aria-label') || btns[i].textContent?.trim()}) <-> (${btns[j].getAttribute('aria-label') || btns[j].textContent?.trim()})`);
+          }
+        }
+      }
+      return {
+        rootPx: parseFloat(getComputedStyle(document.documentElement).fontSize),
+        overflowX: document.documentElement.scrollWidth - window.innerWidth,
+        overlaps,
+      };
+    });
+    expect(mobileMetrics.rootPx).toBeGreaterThanOrEqual(11);
+    expect(mobileMetrics.overflowX).toBeLessThanOrEqual(1);
+    expect(mobileMetrics.overlaps, `هم‌پوشانی دکمه‌ها در ${mob.w}×${mob.h}: ${mobileMetrics.overlaps.join(', ')}`).toEqual([]);
+  }
+
+  // تست دکمه‌های ناوبری سریع موبایل به رودخانه و زنبورستان و فعال شدن تریگر معرفی هر ناحیه!
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.getByRole('button', { name: 'سفر به رودخانه' }).click();
+  await expect(page.locator('[data-scene-id="area-intro-river"]')).toBeVisible({ timeout: 5000 });
+  await page.locator('button:has-text("رد کردن صحنه")').click();
+
+  await page.getByRole('button', { name: 'سفر به زنبورستان' }).click();
+  await expect(page.locator('[data-scene-id="area-intro-apiary"]')).toBeVisible({ timeout: 5000 });
+  await page.locator('button:has-text("رد کردن صحنه")').click();
+
+  // ۵. تست زندهٔ حرکت فیزیکی کاراکترها روی صحنه + چک‌لیست ارتقا + کشف راز مخفی درخت کهنسال با کلیک واقعی روی بوم!
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.evaluate(() => {
+    (window as unknown as { __cinemaDebug: { play: (id: string) => void } }).__cinemaDebug.play('ch4-outro');
+  });
+  await page.waitForTimeout(380);
+  const movedPx = await page.evaluate(() => (window as unknown as { __gameApi: { summary: () => { stageMoved: number } } }).__gameApi.summary().stageMoved);
+  expect(movedPx).toBeGreaterThan(25);
+  await page.locator('button:has-text("رد کردن صحنه")').click();
+
+  // بدون ارتقای زمین و خاک طلایی، کلیک روی درخت کهنسال هیچ راز مخفی را لو نمی‌دهد
+  await page.evaluate(() => {
+    (window as unknown as { __gameApi: { setEnv: (p: { scene: 'farm'; postgame: boolean }) => void } }).__gameApi.setEnv({ scene: 'farm', postgame: false });
+  });
+  await page.waitForTimeout(100);
+  await page.mouse.click(468, 110);
+  await expect(page.locator('[data-scene-id="secret-grandpa-tree"]')).toHaveCount(0);
+
+  // با آزادسازی کامل زمین (land=4) و خاک طلایی (soil=1)، کلیک واقعی روی درخت کهنسال صحنهٔ مخفی و ۷۵٬۰۰۰ سکه را باز می‌کند!
+  await page.evaluate(() => {
+    (window as unknown as { __gameApi: { setEnv: (p: { land: number; soil: number }) => void } }).__gameApi.setEnv({ land: 4, soil: 1 });
+  });
+  await page.mouse.click(468, 110);
+  await expect(page.locator('[data-scene-id="secret-grandpa-tree"]')).toBeVisible({ timeout: 5000 });
+  await page.locator('button:has-text("رد کردن صحنه")').click();
+
+  await page.evaluate(() => {
+    (window as unknown as { __gameApi: { openModal: (m: 'quests') => void } }).__gameApi.openModal('quests');
+  });
+  await expect(page.locator('[data-chapter-quest]')).toBeVisible();
+  await expect(page.locator('[data-secrets-panel="1"]')).toContainText('۱ / ۸');
+  await page.getByRole('button', { name: 'بستن پنجره' }).click();
+
+  // ۶. بازگشت به مزرعه و تست کامل وضعیت پایان‌بازی + تراشهٔ «مزرعه آزاد است» + افتتاح موزه در مرورگر زنده
+  await page.evaluate(() => {
+    const api = (window as unknown as {
+      __gameApi: { setEnv: (p: { scene?: 'farm'; postgame?: boolean }) => void };
+    }).__gameApi;
+    api.setEnv({ scene: 'farm', postgame: true });
+  });
+  await page.waitForTimeout(150);
+
+  await expect(page.getByText('مزرعه آزاد است')).toBeVisible();
+  await page.getByText('مزرعه آزاد است').click();
+  await expect(page.getByRole('dialog', { name: 'موزهٔ میراث مزرعه و تندیس جهانگیر' })).toBeVisible();
+  await page.getByRole('button', { name: /دریافت یادبود افتتاح موزه/ }).click();
+  await expect(page.getByRole('button', { name: /یادبود دریافت شد/ })).toBeDisabled();
+});

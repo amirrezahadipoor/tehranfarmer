@@ -1,0 +1,154 @@
+name: ساخت و بازرسی اندروید و وب آفلاین
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-verify:
+    name: آزمون کامل، ساخت APK (Debug/Release) و بارگذاری Artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: دریافت کد منبع
+        uses: actions/checkout@v4
+
+      - name: راه‌اندازی Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: راه‌اندازی Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: کش Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: اطمینان از نصب Android SDK 35 و Build-Tools 35.0.0
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: نصب وابستگی‌های npm
+        run: npm ci
+
+      - name: گیت کامل کیفیت، تست‌ها، حریم خصوصی و تک‌فایل آفلاین
+        run: npm run check
+
+      - name: شبیه‌ساز بالانس و ربات داستان (سخت‌گیرانه)
+        run: |
+          STRICT=1 RUNS=3 npm run sim:balance
+          STRICT=1 npm run sim:story
+
+      - name: آماده‌سازی کلید امضای موقت از GitHub Secrets (در صورت تنظیم)
+        id: keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          fi
+
+      - name: ساخت APK نسخهٔ Debug
+        run: npm run android:debug
+
+      - name: ساخت APK نسخهٔ Release
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: npm run android:release
+
+      - name: پاک‌سازی فوری کلید موقت
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - name: بازرسی خودکار باینری هر دو APK
+        run: npm run android:verify
+
+      - name: بارگذاری Artifact نسخهٔ Debug APK
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: mazrae-rangi-debug-apk
+          path: artifacts/mazrae-rangi-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: بارگذاری Artifact نسخهٔ Release APK
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: mazrae-rangi-release-apk
+          path: artifacts/mazrae-rangi-release.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: بارگذاری Artifact نسخهٔ تک‌فایل وب آفلاین
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: mazrae-rangi-web-singlefile
+          path: dist/index.html
+          if-no-files-found: error
+          retention-days: 30
+
+  emulator-touch-audit:
+    name: تست واقعی نصب APK و تاچ سخت‌افزاری روی شبیه‌ساز اندروید ۱۴
+    needs: build-and-verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    continue-on-error: true
+
+    steps:
+      - name: دریافت اسکریپت آزمون شبیه‌ساز
+        uses: actions/checkout@v4
+
+      - name: دریافت APK ساخته‌شده
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: mazrae-rangi-debug-apk
+          path: artifacts
+
+      - name: فعال‌سازی شتاب سخت‌افزاری KVM برای اجرای سریع شبیه‌ساز اندروید ۱۴
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -la /dev/kvm
+
+      - name: اجرای شبیه‌ساز واقعی Android 14 و آزمون لمس واقعی (Start -> Cutscene -> Farm -> Plot)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          profile: pixel_7
+          cores: 4
+          ram-size: 4096M
+          disable-animations: true
+          script: python3 scripts/android-emulator-audit.py
+
+      - name: بارگذاری اسکرین‌شات‌های واقعی شبیه‌ساز اندروید ۱۴
+        if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: android-emulator-proof
+          path: /tmp/apk-proof
+          retention-days: 14

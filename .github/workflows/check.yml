@@ -1,0 +1,31 @@
+name: check
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci || npm install
+      - run: npm run check
+      - run: STRICT=1 RUNS=3 npm run sim:balance
+      - run: STRICT=1 RUNS=2 npm run sim:story
+      - run: npx playwright install --with-deps chromium
+      - name: Visual tests
+        run: npm run test:visual
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: visual-screenshots
+          path: |
+            e2e/__screenshots__/
+            test-results/
+          retention-days: 7

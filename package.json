@@ -1,0 +1,61 @@
+{
+  "name": "mazrae-rangi",
+  "private": true,
+  "version": "10.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit && npm run --silent lint:fa && npm run --silent lint:magic && npm run --silent privacy:audit && npm run --silent audit:agents && npm run --silent test && npm run --silent build && npm run --silent verify:offline && npm run --silent icons:audit && npm run --silent audit:play",
+    "audit:play": "vite-node scripts/audit-playthrough.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sim:balance": "tsx scripts/sim-balance.ts",
+    "sim:story": "tsx scripts/sim-story.ts",
+    "roadmap:progress": "node scripts/roadmap-progress.mjs",
+    "icons:audit": "node scripts/icon-audit.mjs",
+    "verify:offline": "node scripts/verify-offline.mjs",
+    "lint:fa": "node scripts/lint-fa.mjs --strict",
+    "android:debug": "node scripts/android-build.mjs debug",
+    "android:release": "node scripts/android-build.mjs release",
+    "android:assets": "node scripts/generate-android-assets.mjs",
+    "android:verify": "node scripts/verify-apk.mjs",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "lint:magic": "node scripts/lint-magic.mjs",
+    "privacy:audit": "node scripts/privacy-audit.mjs",
+    "audit:agents": "node scripts/agents-audit.mjs"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.4",
+    "clsx": "2.1.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "tailwind-merge": "3.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "4.1.17",
+    "@types/node": "22.19.17",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.1",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "4.1.17",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3",
+    "vite": "^7.3.7",
+    "vite-plugin-singlefile": "2.3.0",
+    "vitest": "^3.2.6"
+  },
+  "overrides": {
+    "tinypool": "2.1.2"
+  }
+}

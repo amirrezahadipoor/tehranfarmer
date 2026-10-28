@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">مزرعه رنگی</string>
+    <string name="title_activity_main">مزرعه رنگی</string>
+    <string name="package_name">ir.mazraerangi.game</string>
+    <string name="custom_url_scheme">ir.mazraerangi.game</string>
+</resources>
