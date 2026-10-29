@@ -453,21 +453,18 @@ export function compileSceneScript(startId: string): SceneScript | null {
   const cast = [...castSet];
   const initialCast = [...initialCastSet];
 
-  // Build initial marks cleanly on walkable ground (never inside animal pens or on field soil!)
+  // An evenly spaced opening row keeps bodies clear without later corrective shuffling.
+  const rowWidth = (initialCast.length - 1) * 96;
+  const rowStart = Math.max(95, Math.min(1185 - rowWidth, centerX - rowWidth / 2));
   const initialMarks: StageMark[] = initialCast.map((actor, idx) => {
-    if (actor === 'player') {
-      return { actor, x: centerX - 42, y: centerY + 2, face: 1, prop: startId === 'p1' ? 'hoe' : '' };
-    }
-    const slotOffset = idx === 1 ? 46 : idx === 2 ? -102 : idx === 3 ? 90 : -148;
+    const x = rowStart + idx * 96;
     return {
-      actor,
-      x: Math.max(95, Math.min(1185, centerX + slotOffset)),
+      actor, x,
       y: area === 'farm' ? centerY - (idx % 2 === 0 ? 3 : 0) : centerY + (idx % 2 === 0 ? -6 : 2),
-      face: slotOffset > 0 ? -1 : 1,
-      prop: defaultPropFor(actor),
+      face: x > centerX ? -1 : 1,
+      prop: actor === 'player' ? (startId === 'p1' ? 'hoe' : '') : defaultPropFor(actor),
     };
   });
-
   const actorPos = new Map<Actor, { x: number; y: number }>();
   for (const m of initialMarks) actorPos.set(m.actor, { x: m.x, y: m.y });
 
@@ -496,21 +493,24 @@ export function compileSceneScript(startId: string): SceneScript | null {
       if (ov.move) {
         actorPos.set(ov.move.actor, { x: ov.move.toX, y: ov.move.toY });
       }
+      // Late speakers get an entrance, never a centre spawn or automatic line-to-line walk.
+      const marks = ov.marks ? [...ov.marks] : [];
+      if (line.who !== 'narrator' && !actorPos.has(line.who) && !ov.move) {
+        const occupied = [...actorPos.values()];
+        const dx = [190, -190, 280, -280, 380, -380].find((d) => occupied.every((p) => Math.abs(p.x - Math.max(95, Math.min(1185, centerX + d))) >= 92)) ?? 420;
+        const x = Math.max(95, Math.min(1185, centerX + dx));
+        marks.push({ actor: line.who, x, y: centerY + 2, face: x > centerX ? -1 : 1, prop: defaultPropFor(line.who) });
+        actorPos.set(line.who, { x, y: centerY + 2 });
+      }
       const spPos = line.who !== 'narrator' ? (actorPos.get(line.who) ?? { x: centerX, y: centerY }) : { x: centerX, y: centerY - 12 };
-      const stepDir = spPos.x > centerX ? -1 : 1;
-      const autoMove = !ov.move && line.who !== 'narrator'
-        ? { actor: line.who, toX: Math.max(95, Math.min(1185, spPos.x + (li % 2 === 0 ? stepDir * 24 : -stepDir * 16))), toY: spPos.y, face: stepDir as -1 | 1 }
-        : ov.move;
-      if (autoMove) actorPos.set(autoMove.actor, { x: autoMove.toX, y: autoMove.toY });
-
       const major = cat === 'prologue' || cat === 'chapter' || cat === 'deed' || cat === 'visit' || cat === 'quest';
       beats.push({
         nodeId: node.id,
         lineIdx: li,
         who: line.who,
         area: ov.area,
-        marks: ov.marks,
-        move: autoMove,
+        marks: marks.length ? marks : undefined,
+        move: ov.move,
         pose: ov.pose ?? (line.who === 'narrator' ? 'idle' : defaultPoseFor(line.text, line.who)),
         prop: ov.prop,
         react: ov.react ?? (line.who !== 'narrator' && line.who !== 'player' && line.text.includes('!')

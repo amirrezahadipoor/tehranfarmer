@@ -3,7 +3,7 @@
 import { toolPart, iconPart, put, type Ctx } from './art';
 import { drawFarmer, poseFarmer, type FarmerRig } from './rig';
 import { drawActorFaceOverlay, drawCinemaSetPiece, safePropName } from './cinemaArt';
-import { drawNpcOverheadInfo, safeSceneMark } from './npcLabels';
+import { safeSceneMark } from './npcLabels';
 export { safeSceneMark };
 import { playCinemaCue, playVoiceBlip, setMusicDuck } from './cinemaAudio';
 import { UI, notify } from './state';
@@ -539,18 +539,9 @@ export function drawCinemaWorldExtras(c: Ctx) {
   }
 }
 
-/** Draws overhead NPC Name + Job (+ golden-yellow ! if quest ready) — ZERO icons over faces! */
+/** Draws cinema particles only; speech bubbles already identify the speaker. */
 export function drawCinemaForegroundUI(c: Ctx) {
   if (!cinema.active || !world) return;
-  for (const id of ACTORS) {
-    if (id === 'player') continue;
-    const st = slots[id];
-    if (!st.staged || st.area !== UI.scene || st.talking) continue;
-    const w = walkerOf(id);
-    if (!w) continue;
-    const sc = id === 'grandma' ? 0.71 : id === 'sara' ? 0.74 : id === 'engineer' ? 0.79 : id === 'rancher' ? 0.81 : 0.8;
-    drawNpcOverheadInfo(c, id, w.x, w.y, sc, cinema.clock);
-  }
   for (let i = 0; i < POOL_SIZE; i++) {
     const p = pool[i];
     if (!p.active) continue;

@@ -324,10 +324,10 @@ function Workshop() {
           <UpCard icon="bolt" k="stam" name={UT.u88} max={6} cur={fa(STAM_CAP[S.lv.stam])} next={S.lv.stam < 5 ? fa(STAM_CAP[S.lv.stam + 1]) : null} compact />
         </div>
       </div>
-      <div className="mb-1.5 flex items-center gap-2">
+      <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
         <Ic n="tractor" s={2.1} />
         <span className="ft text-xl">{UT.u89}</span>
-        <span className="text-xs font-bold opacity-70">{UT.u90}</span>
+        <span className="w-full text-xs font-bold opacity-70 md:w-auto">{UT.u90}</span>
       </div>
       <div className={grid}>
         {MACHINE_LIST.map((id) => {

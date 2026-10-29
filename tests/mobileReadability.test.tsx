@@ -55,6 +55,6 @@ describe('Android readability regressions', () => {
 
     UI.portrait = false;
     const landscape = renderToStaticMarkup(<InventoryModal />);
-    expect(landscape).toContain('grid grid-cols-3 gap-1.5 pb-2 sm:grid-cols-4');
+    expect(landscape).toContain('grid grid-cols-2 gap-2 pb-2 sm:grid-cols-4');
   });
 });

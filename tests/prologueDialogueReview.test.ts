@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NODES } from '../src/story/story';
-import { compileSceneScript } from '../src/story/sceneScripts';
+import { compileSceneScript, listAllScenes } from '../src/story/sceneScripts';
 import { EN_LINES } from '../src/strings/cinemaLocales';
 
 const PROLOGUE = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'] as const;
@@ -43,6 +43,39 @@ describe('بازبینی دیالوگ پرولوگ و چمای سینمایی (�
     // در دفتر املاک و جشن، فنجان/چایِ صریحِ صحنه جایگزین می‌شود (عمدی)
     const p4 = compileSceneScript('p4');
     expect(p4!.beats[0].marks?.find((m) => m.actor === 'jahangir')?.prop).toBe('teacup');
+  });
+
+  it('دیالوگ عادی بازیگر را نمی‌رَواند؛ ورودهای دیررس جای جدا و حرکت‌های تعمدی حفظ می‌شوند', () => {
+    const scenes = listAllScenes();
+    const beats = scenes.flatMap((scene) => scene.beats);
+    expect(beats.length).toBeGreaterThan(300);
+    expect(beats.filter((beat) => beat.move)).toHaveLength(13);
+
+    const p1 = compileSceneScript('p1')!;
+    expect(p1.beats[0].move).toMatchObject({ actor: 'player', toX: 522, toY: 472 });
+    expect(p1.beats.filter((beat) => beat.nodeId === 'p1').slice(1).every((beat) => !beat.move)).toBe(true);
+    expect(compileSceneScript('p6')!.beats.every((beat) => !beat.move)).toBe(true);
+
+    for (const scene of scenes) {
+      for (let i = 0; i < scene.initialMarks.length; i++) {
+        for (let j = i + 1; j < scene.initialMarks.length; j++) {
+          expect(Math.abs(scene.initialMarks[i].x - scene.initialMarks[j].x), scene.id).toBeGreaterThanOrEqual(90);
+        }
+      }
+      const staged = new Map(scene.initialMarks.map((mark) => [mark.actor, mark]));
+      for (const beat of scene.beats) {
+        const lateSpeaker = beat.who !== 'narrator' && !staged.has(beat.who) ? beat.who : null;
+        for (const mark of beat.marks ?? []) staged.set(mark.actor, mark);
+        if (lateSpeaker) {
+          expect(beat.marks?.some((mark) => mark.actor === lateSpeaker), `${scene.id}:${beat.nodeId}`).toBe(true);
+          const entrance = staged.get(lateSpeaker)!;
+          for (const [actor, other] of staged) {
+            if (actor !== lateSpeaker) expect(Math.abs(entrance.x - other.x), `${scene.id}:${beat.nodeId}:${actor}`).toBeGreaterThanOrEqual(90);
+          }
+        }
+        if (beat.move) staged.set(beat.move.actor, { actor: beat.move.actor, x: beat.move.toX, y: beat.move.toY });
+      }
+    }
   });
 
   it('ترجمهٔ انگلیسی پرولوگ هم‌تعداد با متن فارسی است', () => {

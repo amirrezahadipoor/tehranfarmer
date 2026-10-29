@@ -6,7 +6,7 @@ import { UT } from '../strings/uiText';
 
 export const close = () => { UI.modal = null; notify(); };
 export const Wallet = () => <div className="paper flex items-center gap-2 px-3 py-0.5"><Ic n="coin" s={2.2} /><span className="ft text-2xl">{fa(S.coins)}</span></div>;
-export const grid = 'grid grid-cols-3 gap-1.5 pb-2 sm:grid-cols-4';
+export const grid = 'grid grid-cols-2 gap-2 pb-2 sm:grid-cols-4';
 export const buildingNow = (kind: BuildJob['kind'] | string, key: string) => S.builds.find((b) => b.kind === kind && b.key === key);
 export const lv = () => farmLevel();
 export const Lock = ({ req }: { req: number }) => (

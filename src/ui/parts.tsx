@@ -77,12 +77,12 @@ export function Modal({ title, icon, onClose, children, coins }: { title: string
         className="paper popin flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-1rem)] w-[min(94vw,46rem)] max-w-[calc(100vw-var(--safe-left)-var(--safe-right)-1rem)] flex-col p-2 sm:p-2.5"
       >
         <div className="mb-1.5 flex items-center gap-2">
-          <div className="paper-dark flex min-w-0 items-center gap-1.5 px-2.5 py-0.5 text-[#fff4d8]">
+          <div className="paper-dark flex min-w-0 flex-1 items-center gap-1.5 px-2.5 py-0.5 text-[#fff4d8] sm:flex-initial">
             <Ic n={icon} s={2.05} />
-            <span className="ft truncate text-xl sm:text-2xl">{title}</span>
+            <span className="ft text-xl sm:truncate sm:text-2xl">{title}</span>
           </div>
-          <div className="flex-1" />
-          {coins}
+          <div className="hidden flex-1 sm:block" />
+          {coins && <div className="shrink-0">{coins}</div>}
           <button aria-label={UT.closeBtn} className="btn r press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={onClose}><Ic n="close" s={2.2} /></button>
         </div>
         <div className="scroll min-h-0 flex-1 pr-1">{children}</div>
