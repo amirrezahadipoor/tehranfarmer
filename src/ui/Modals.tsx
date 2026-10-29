@@ -144,7 +144,7 @@ function SeedShop() {
                     </span>
                   </div>
                   <Trend r={p / c.seed} />
-                  <div className="flex w-full gap-1">
+                  <div className="flex w-full flex-wrap gap-1">
                     <BuyBtn n={UT.u77} price={p} onClick={() => buySeed(c.id, 1)} />
                     <BuyBtn n={UT.u78} price={seedPackPrice(c.id, 5)} onClick={() => buySeed(c.id, 5)} />
                     <BuyBtn n={UT.pack25} price={seedPackPrice(c.id, 25)} onClick={() => buySeed(c.id, 25)} />
@@ -157,7 +157,7 @@ function SeedShop() {
         <div className="paper flex flex-col items-center gap-1 p-2">
           <div className="relative"><Ic n="fert" s={4.6} /><span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.fert)}</span></div>
           <div className="text-sm font-extrabold">{UT.u31}</div>
-          <div className="flex w-full gap-1">
+          <div className="flex w-full flex-wrap gap-1">
             <BuyBtn n={UT.u77} price={FERT_PRICE} onClick={() => buyFert(1)} />
             <BuyBtn n={UT.u78} price={FERT_PRICE * 5} onClick={() => buyFert(5)} />
             <BuyBtn n={UT.pack25} price={FERT_PRICE * 25} onClick={() => buyFert(25)} />
@@ -166,7 +166,7 @@ function SeedShop() {
         <div className="paper flex flex-col items-center gap-1 p-2">
           <div className="relative"><Ic n="feed" s={4.6} /><span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.inv.feed ?? 0)}</span></div>
           <div className="text-sm font-extrabold">{UT.u79}</div>
-          <div className="flex w-full gap-1">
+          <div className="flex w-full flex-wrap gap-1">
             <BuyBtn n={UT.u78} price={FEED_PRICE * 5} onClick={() => buyFeed(5)} />
             <BuyBtn n={UT.u80} price={FEED_PRICE * 10} onClick={() => buyFeed(10)} />
             <BuyBtn n={UT.pack50} price={FEED_PRICE * 50} onClick={() => buyFeed(50)} />
@@ -176,7 +176,7 @@ function SeedShop() {
           <div className="relative"><Ic n="fingerling" s={4.6} /><span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.inv.fingerling ?? 0)}</span></div>
           <div className="text-sm font-extrabold">{UT.u81}</div>
           <div className="text-[.7rem] font-bold opacity-70">{UT.u82}</div>
-          <div className="flex w-full gap-1">
+          <div className="flex w-full flex-wrap gap-1">
             <BuyBtn n={UT.u77} price={FINGER_PRICE} onClick={() => buyFingerling(1)} />
             <BuyBtn n={UT.u78} price={FINGER_PRICE * 5} onClick={() => buyFingerling(5)} />
           </div>
@@ -245,9 +245,9 @@ function Market() {
               <div className="text-sm font-extrabold leading-none">{g.fa}</div>
               {offSeason && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.66rem] font-black text-amber-900">{UT.outSeasonBonus}</span>}
               <div className="flex items-center gap-2"><Coin v={goodPrice(g.id)} s={1.4} cls="text-base" /><Trend r={goodRatio(g.id)} /></div>
-              <div className="flex w-full gap-1">
-                <button className="btn y press min-w-0 flex-1 !px-1 !text-xs" disabled={q < 1} onClick={() => sellGood(g.id, 1)}><span className="font-black">{UT.u77}</span><Ic n="coin" s={1.1} /></button>
-                <button className="btn g press min-w-0 flex-1 !px-1 !text-xs" disabled={q < 1} onClick={() => sellGood(g.id, q)}><span className="font-black">{UT.sellAllStack}</span><Ic n="coin" s={1.1} /></button>
+              <div className="flex w-full flex-wrap gap-1">
+                <button className="btn y press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => sellGood(g.id, 1)}><span className="font-black">{UT.u77}</span><Ic n="coin" s={1.1} /></button>
+                <button className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => sellGood(g.id, q)}><span className="font-black">{UT.sellAllStack}</span><Ic n="coin" s={1.1} /></button>
               </div>
             </div>
           );

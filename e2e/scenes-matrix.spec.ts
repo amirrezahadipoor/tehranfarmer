@@ -74,6 +74,7 @@ test('ماتریس ۳۲ اسکرین‌شات: هر ۴ صحنه در ۴ فصل �
   });
 
   await page.addInitScript((save) => {
+    Date.now = () => 1_760_000_000_000;
     let seed = 133742;
     window.__resetSeed = () => { seed = 133742; };
     Math.random = () => {
@@ -84,6 +85,7 @@ test('ماتریس ۳۲ اسکرین‌شات: هر ۴ صحنه در ۴ فصل �
     };
     let lastCb: FrameRequestCallback | null = null;
     let now = 1000;
+    performance.now = () => now;
     window.requestAnimationFrame = (cb: FrameRequestCallback) => {
       lastCb = cb;
       return 1;

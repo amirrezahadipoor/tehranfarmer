@@ -372,13 +372,13 @@ function DebtChip() {
   return (
     <>
       <button
-        className="paper pointer-events-auto press flex min-h-[48px] w-48 items-center gap-1 px-2 py-0.5"
+        className="hud-debt paper pointer-events-auto press flex min-h-[48px] w-48 items-center gap-1 px-2 py-0.5"
         onClick={() => { UI.modal = 'ledger'; sfx.tap(); notify(); }}
         title={note?.name ?? UT.u36}
       >
         <Ic n="ledger" s={1.8} />
         <span className="flex flex-1 flex-col leading-none">
-          <span className="text-[.72rem] font-black opacity-70">{UT.u37} {faNum(d.noteIdx + 1)}</span>
+          <span className="whitespace-nowrap text-[.72rem] font-black opacity-70">{UT.u37} {faNum(d.noteIdx + 1)}</span>
           <span className="ft text-base">{faNum(Math.max(0, Math.round(d.remaining)))}</span>
           {/* نوارِ اعتبار (پیشنهاد گزارش ۳۰۰X): مرزها و اثرش بر سود با تولتیپ */}
           <span className="mt-1 block h-1.5 w-full overflow-hidden rounded-full bg-black/15" title={standingBadgeText()}>
@@ -386,7 +386,7 @@ function DebtChip() {
           </span>
         </span>
         <span className="flex flex-col items-end leading-none">
-          <span className="text-[.72rem] font-black opacity-70">{UT.u38}</span>
+          <span className="whitespace-nowrap text-[.72rem] font-black opacity-70">{UT.u38}</span>
           <span className="ft text-base whitespace-nowrap">{faNum(days)}{UT.u39}</span>
         </span>
       </button>

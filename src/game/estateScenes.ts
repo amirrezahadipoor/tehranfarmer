@@ -17,6 +17,7 @@ import { OX, dirtRoad, ground, mountains, newBG, paperGrain, signpost, tree, wel
 import { CFG } from './settings';
 import { ESTATE_UI } from '../strings/estateStoryText';
 import { WX } from '../strings/worldExpansionText';
+import { worldLabelBoost } from './labelScale';
 import type { Task, Walker } from './engineRender';
 
 function stoneBarn(c: Ctx, cx: number, base: number, season: number, roofCol: string) {
@@ -304,7 +305,7 @@ export function renderEstateFieldScene(
     ctx.font = '700 22px Lalezar, Vazirmatn, sans-serif';
     ctx.fillStyle = '#4a2c16';
     ctx.fillText(title, bx, by - 12);
-    ctx.font = '700 14px Vazirmatn, sans-serif';
+    ctx.font = `700 ${14 * worldLabelBoost(14, 11)}px Vazirmatn, sans-serif`;
     ctx.fillStyle = '#8b5120';
     ctx.fillText(hint, bx, by + 16);
     ctx.restore();

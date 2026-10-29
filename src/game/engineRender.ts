@@ -17,10 +17,10 @@ import { drawFarmlandPlotsLayer, drawGlasshouseSpan, drawSignPlaque } from './wo
 import { FT } from '../strings/frontierText';
 import { WX } from '../strings/worldExpansionText';
 import { drawCourtyardDecor, drawFestivalDecor, drawRiverCastGauge, isCropDormantNow } from './worldVisuals';
-import { drawNpcOverheadInfo } from './npcLabels';
+import { drawNpcOverheadGroup } from './npcLabels';
+import { worldLabelBoost } from './labelScale';
 import { POSTBOX_GEOM, drawCachedSilo, drawWorldMachines, drawWorldPostbox } from './postboxArt';
 import type { SceneKey } from './scenes';
-
 import { drawFarmZonesAndTrough, drawUnifiedPond, isPoultry } from './farmZones';
 
 const W = 1280;
@@ -297,10 +297,9 @@ export function createSceneRenderer(
     }
     // برچسب نام + شغل و علامت تعجب زرد اهالی در شهر بالای تاریکی شب تا در شب هم ۱۰۰٪ درخشان و خوانا بمانند
     if (UI.scene === 'town' && !cinema.active) {
-      drawNpcOverheadInfo(ctx, 'jahangir', jahangir.x, jahangir.y, 0.8, t);
-      const npcIds2 = ['grandma', 'sara', 'engineer', 'rancher'] as const;
-      const npcScales2 = [0.71, 0.74, 0.79, 0.81];
-      npcs.forEach((n, ni) => drawNpcOverheadInfo(ctx, npcIds2[ni % 4], n.x, n.y, npcScales2[ni % 4], t));
+      const npcIds2 = ['grandma', 'sara', 'engineer', 'rancher'] as const, npcScales2 = [0.71, 0.74, 0.79, 0.81];
+      drawNpcOverheadGroup(ctx, [{ who: 'jahangir', x: jahangir.x, footY: jahangir.y, actorScale: 0.8 },
+        ...npcs.map((n, ni) => ({ who: npcIds2[ni % 4], x: n.x, footY: n.y, actorScale: npcScales2[ni % 4] }))], t);
     }
     // افکت‌ها و پلاک‌های نام شخصیت‌ها در کات‌سین بالای نور شب
     drawCinemaForegroundUI(ctx);
@@ -474,7 +473,7 @@ export function createSceneRenderer(
     for (const d of list) d.f();
     // پلاک خوانای مقصد بالای هر ۵ تابلوی خروجی مزرعه
     drawSignPlaque(ctx, 1216, 344, WX.gateTown);
-    drawSignPlaque(ctx, 696, 214, WX.gateNorth);
+    drawSignPlaque(ctx, 696, worldLabelBoost() > 1 ? 336 : 214, WX.gateNorth); // موبایل: زیر HUD و بالای کرت‌ها
     drawSignPlaque(ctx, 1212, 464, WX.gateValley);
     drawSignPlaque(ctx, 60, 628, WX.gateRiver);
     drawSignPlaque(ctx, 316, 628, WX.gateApiary);

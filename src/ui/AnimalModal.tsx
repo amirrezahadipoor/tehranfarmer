@@ -63,7 +63,7 @@ export function AnimalShop() {
               </div>
               <div className="text-sm font-extrabold">{locked ? UT.lockedAnimal : d.fa}</div>
               {locked ? <Lock req={d.lv} /> : !hasPen ? (
-                <button className="btn b press !px-2.5 !py-1 !text-xs font-black" onClick={() => { UI.modal = 'carp'; notify(); }}>{UT.u99}</button>
+                <button className="btn b press !px-2.5 !py-1 text-[.75rem] font-black" onClick={() => { UI.modal = 'carp'; notify(); }}>{UT.u99}</button>
               ) : (
                 <>
                   <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">

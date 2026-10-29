@@ -1,7 +1,7 @@
 // ===== انبار مزرعه + کولهٔ پشتی بازیکن + پاتیل و آسیاب فرآوری روستایی =====
 import { CROPS, GOOD, GOODS, fa } from '../game/data';
 import {
-  ARTISAN_RECIPES, S, artisanMaxBatches, artisanRewardCoins, craftArtisan, invCap, invCount,
+  ARTISAN_RECIPES, S, UI, artisanMaxBatches, artisanRewardCoins, craftArtisan, invCap, invCount,
   notify, packCap, packCount, saveGame, toast, transferPackToBarn,
 } from '../game/state';
 import { Coin, Ic, Modal } from './parts';
@@ -80,7 +80,7 @@ export function InventoryModal() {
         <div className="text-xs font-bold opacity-75">{UT.artisanSecSub}</div>
       </div>
 
-      <div className={grid} data-artisan-kitchen="1">
+      <div className={UI.portrait ? 'grid grid-cols-2 gap-2 pb-2' : grid} data-artisan-kitchen="1">
         {ARTISAN_RECIPES.map((rec) => {
           const maxB = artisanMaxBatches(rec);
           const reward = artisanRewardCoins(rec);

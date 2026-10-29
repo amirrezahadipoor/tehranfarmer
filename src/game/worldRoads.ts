@@ -1,5 +1,6 @@
 // Hand-drawn Architecture: Farmland Terrace & Cached Soil Layer, Gate Plaques, Mountain Arch, Glasshouse & Stands
 import { box, cached, circ, ell, ln, oval, put, shape, soilTile, type Ctx } from './art';
+import { worldLabelBoost } from './labelScale';
 
 export interface SoilPlotView {
   st: number;
@@ -178,7 +179,12 @@ export function drawSignPlaque(ctx: Ctx, x: number, postBaseY: number, label: st
     c.fillStyle = '#472a18';
     c.fillText(label, 0, 0);
   });
-  put(ctx, sp, x, postBaseY - 122, 1);
+  // در landscapeِ 800×360 مقدار 15px با scaleِ دوربین به 7.5px می‌رسید؛ پلاک را فقط روی موبایل بزرگ کن.
+  const boost = worldLabelBoost();
+  const halfW = (bw * boost) / 2;
+  // متن‌های بلندِ غار/جنگل پس از بزرگ‌نمایی از لبهٔ راست بیرون می‌زدند؛ مرکز را داخل دنیا نگه دار.
+  const safeX = boost > 1 ? Math.max(halfW + 8, Math.min(1280 - halfW - 8, x)) : x;
+  put(ctx, sp, safeX, postBaseY - 122, boost);
 }
 
 /** Scenic stone-and-timber country arch framing the Northern Meadow pass on Main Farm */

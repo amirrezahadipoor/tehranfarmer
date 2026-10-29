@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "check": "tsc --noEmit && npm run --silent lint:fa && npm run --silent lint:magic && npm run --silent privacy:audit && npm run --silent audit:agents && npm run --silent test && npm run --silent build && npm run --silent verify:offline && npm run --silent icons:audit && npm run --silent audit:play",
     "audit:play": "vite-node scripts/audit-playthrough.ts",
+    "audit:mobile": "node scripts/mobile-audit.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "sim:balance": "tsx scripts/sim-balance.ts",

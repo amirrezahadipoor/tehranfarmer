@@ -5,6 +5,7 @@ import { CFG } from './settings';
 import type { SceneArea } from '../story/cinemaTypes';
 import { NPC_ROLES, type NpcRoleActor } from '../strings/estateStoryText';
 import { npcHasQuestMarker } from '../story/npcQuests';
+import { worldLabelBoost } from './labelScale';
 
 /** تضمین سراسری عدم برخورد یا گیر کردن سر و صورت کاراکترها روی پنجره، حصار دام، چشمه، کندو و دیوار ساختمان‌ها در تمام صحنه‌ها */
 export function safeSceneMark(area: SceneArea, rawX: number, rawY: number): { x: number; y: number } {
@@ -67,6 +68,54 @@ export interface NpcOverheadGeometry {
   questBangCenterY: number;
 }
 
+export interface NpcOverheadEntry {
+  who: NpcRoleActor;
+  x: number;
+  footY: number;
+  actorScale: number;
+}
+
+export interface NpcOverheadPlacement extends NpcOverheadEntry {
+  cx: number;
+  width: number;
+}
+
+let measureCtx: Ctx | null = null;
+function npcBasePlateWidth(who: NpcRoleActor): number {
+  const info = NPC_ROLES[CFG.locale === 'en' ? 'en' : 'fa'][who];
+  if (!info) return 88;
+  if (!measureCtx && typeof document !== 'undefined') {
+    measureCtx = document.createElement('canvas').getContext('2d');
+  }
+  if (!measureCtx) return Math.min(188, Math.max(88, Math.max(info.name.length * 8, info.job.length * 6) + 22));
+  measureCtx.font = '800 13.5px Vazirmatn, sans-serif';
+  const wName = measureCtx.measureText(info.name).width;
+  measureCtx.font = '700 11px Vazirmatn, sans-serif';
+  const wJob = measureCtx.measureText(info.job).width;
+  return Math.min(188, Math.max(88, Math.max(wName, wJob) + 22));
+}
+
+/** چیدمانِ بدون برخوردِ پلاک‌های شهر؛ فقط موبایل، با حفظ اندازهٔ فونت و ترتیب شخصیت‌ها. */
+export function placeNpcOverheadRow(entries: NpcOverheadEntry[]): NpcOverheadPlacement[] {
+  const boost = worldLabelBoost(10.8, 11, 2);
+  const placed = entries.map((e) => ({ ...e, cx: e.x, width: npcBasePlateWidth(e.who) * boost }));
+  if (boost === 1) return placed;
+  placed.sort((a, b) => a.x - b.x);
+  let right = 8;
+  for (const p of placed) {
+    const half = p.width / 2;
+    p.cx = Math.max(p.x - half, right) + half;
+    right = p.cx + half + 10;
+  }
+  const overflow = right - 10 - 1272;
+  if (overflow > 0) for (const p of placed) p.cx -= overflow;
+  return placed;
+}
+
+export function drawNpcOverheadGroup(c: Ctx, entries: NpcOverheadEntry[], t: number) {
+  for (const p of placeNpcOverheadRow(entries)) drawNpcOverheadInfo(c, p.who, p.cx, p.footY, p.actorScale, t);
+}
+
 export function npcOverheadLayout(
   who: NpcRoleActor,
   _x: number,
@@ -78,7 +127,8 @@ export function npcOverheadLayout(
   const info = NPC_ROLES[locale][who];
   if (!info) return null;
   const plateBottomY = footY - Math.max(130, 152 * actorScale + 14);
-  const plateTopY = plateBottomY - 34;
+  const boost = worldLabelBoost(10.8, 11, 2);
+  const plateTopY = plateBottomY - 34 * boost;
   return {
     name: info.name,
     role: info.job,
@@ -103,14 +153,10 @@ export function drawNpcOverheadInfo(
 
   const boxH = 34;
   const plate = cached(`npc-plate:${lay.name}|${lay.role}`, 196, 44, 98, 5, (pc) => {
+    const padW = npcBasePlateWidth(who);
+    const bx = -padW / 2;
     pc.textAlign = 'center';
     pc.textBaseline = 'middle';
-    pc.font = '800 13.5px Vazirmatn, sans-serif';
-    const wName = pc.measureText(lay.name).width;
-    pc.font = '700 11px Vazirmatn, sans-serif';
-    const wJob = pc.measureText(lay.role).width;
-    const padW = Math.min(188, Math.max(88, Math.max(wName, wJob) + 22));
-    const bx = -padW / 2;
 
     pc.fillStyle = 'rgba(255, 249, 232, 0.94)';
     pc.strokeStyle = '#503426';
@@ -129,7 +175,7 @@ export function drawNpcOverheadInfo(
     pc.fillText(lay.role, 0, 25.5);
   });
 
-  put(c, plate, x, lay.plateTopY, 1);
+  put(c, plate, x, lay.plateTopY, worldLabelBoost(10.8, 11, 2));
 
   if (lay.hasQuest) {
     drawYellowQuestExclamation(c, x, lay.plateTopY, t);
