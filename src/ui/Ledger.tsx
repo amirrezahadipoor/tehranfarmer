@@ -1,9 +1,9 @@
 // ===== دفتر کل جهانگیر — مدیریت بدهی، قلک، اعتبار و مترسک =====
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { S, UI, farmLevel, notify } from '../game/state';
 import {
-  activeNote, buyScarecrow, daysToDue, debt, floorCoins, formatDebtHistoryText, interestOf, minPay, payDebt,
-  scarecrowPrice, stashCap, stashDeposit, stashWithdraw, standingBand, totalRemaining,
+  activeNote, buyScarecrow, daysToDue, debt, floorCoins, formatDebtHistoryText, interestOf, maybeReactionScene,
+  minPay, payDebt, scarecrowPrice, stashCap, stashDeposit, stashWithdraw, standingBand, totalRemaining,
 } from '../game/core/debt';
 import { NOTES } from '../story/debtData';
 import { questOf, questProgress } from '../story/quests';
@@ -24,6 +24,8 @@ export function Ledger() {
   const band = standingBand();
   const cap = stashCap();
   const due = daysToDue();
+  // واکنش جهانگیر (فقط یک‌بار هر وضعیت) به محض باز شدن دفتر
+  useEffect(() => { maybeReactionScene(); }, []);
 
   return (
     <Modal title={UT.u36} icon="ledger" onClose={close} coins={<Coin v={S.coins} />}>

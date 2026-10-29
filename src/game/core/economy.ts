@@ -199,7 +199,8 @@ export function buyFingerling(n: number) {
   n = Number.isFinite(n) ? Math.floor(n) : 0;
   if (n < 1) return;
   for (let i = 0; i < n; i++) {
-    if (invCount() >= invCap()) { toast('bag', GT.g43); break; }
+    // فاصلهٔ واقعی تا سقف: موجودی کسری نباید اجازهٔ عبور از سقف را بدهد
+    if (Math.floor(invCap() - invCount()) < 1) { toast('bag', GT.g43); break; }
     if (!pay(FINGER_PRICE)) break;
     S.inv.fingerling = (S.inv.fingerling ?? 0) + 1;
   }
@@ -209,7 +210,8 @@ export function buyFeed(n: number) {
   n = Number.isFinite(n) ? Math.floor(n) : 0;
   if (n < 1) return;
   for (let i = 0; i < n; i++) {
-    if (invCount() >= invCap()) { toast('bag', GT.g43); break; }
+    // فاصلهٔ واقعی تا سقف: موجودی کسری نباید اجازهٔ عبور از سقف را بدهد
+    if (Math.floor(invCap() - invCount()) < 1) { toast('bag', GT.g43); break; }
     if (!pay(FEED_PRICE)) break;
     S.inv.feed = (S.inv.feed ?? 0) + 1;
   }

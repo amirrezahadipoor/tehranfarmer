@@ -166,6 +166,8 @@ export function visitNodeId(kind: 'due' | 'raid' | 'rest', missed: boolean, beat
   if (kind === 'rest') return 'visit-rest';
   if (kind === 'raid') return 'visit-raid';
   if (!missed) return 'visit-due-paid';
-  const v = ((Math.max(1, Math.floor(beatings)) - 1) % 3 + 3) % 3;
+  const b = Math.max(1, Math.floor(beatings));
+  if (b === 1) return 'visit-due-missed'; // اولین قسط جاافتاده: یادآوری مهربانانهٔ جهانگیر
+  const v = ((b - 2) % 3 + 3) % 3;
   return `visit-due-missed-${v}`;
 }

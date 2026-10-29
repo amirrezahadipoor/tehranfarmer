@@ -57,6 +57,7 @@ export const NOTE_COUNT = NOTES.length;
 // ===== قسط و سود =====
 export const DUE_DAYS = 28;                  // دورهٔ قسط = یک «سال» بازی
 export const MINPAY_INTEREST_FACTOR = 1.6;   // نامتغیر: minPay ≥ ۱٫۶ × بیشترین سود
+export const REACTION_RICH_MULT = 10;        // «جیب پر» صحنهٔ واکنش جهانگیر: ده‌برابرِ minPay
 export const LATE_FEE_RATE = 0.14;           // جریمهٔ دیرکرد روی کسری قسط
 export const FLOOR_MIN = 60;                 // کف امن مطلق (سکه)
 export const FLOOR_PLOT_CAP = 40;

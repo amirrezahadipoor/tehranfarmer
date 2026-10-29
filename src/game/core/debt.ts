@@ -1,14 +1,14 @@
 // ===== بدهی، شرخر، اعتبار، قلک و مترسک =====
 // همهٔ اعداد از src/story/debtData.ts می‌آید؛ اینجا فقط منطق است.
 import { CROP, HEART_BOND_2, HEART_BOND_5, JAHANGIR2_INT_MULT, JAHANGIR5_RAID_MULT, SHEEPDOG_RAID_MULT } from '../data';
-import { S, addGood, farmLevel, forceBackupRotation, notify, saveGame, stamCap, toast, troughCap } from '../state';
+import { S, UI, addGood, farmLevel, forceBackupRotation, notify, saveGame, stamCap, toast, troughCap } from '../state';
 import { sfx } from '../sound';
 import { rnd, randRange, chance } from '../rng';
 import { triggerCutscene } from '../../story/engine';
 import {
   DUE_DAYS, DUE_GIFT_CHANCE, FLOOR_MIN, FLOOR_PLOT_CAP, FLOOR_PLOT_RATIO, HISTORY_CAP, LATE_FEE_RATE,
   MINPAY_INTEREST_FACTOR, NOTES, NOTE_COUNT, POSTGAME_CHAPTER, RAID_GAP_MAX, RAID_GAP_MIN,
-  RAID_IMMUNITY, RAID_MAX_NOTE_RATIO, RAID_MIN, RAID_POCKET_RATIO, RAID_TO_DEBT_HALF, REFUND_BONUS,
+  RAID_IMMUNITY, RAID_MAX_NOTE_RATIO, RAID_MIN, RAID_POCKET_RATIO, RAID_TO_DEBT_HALF, REACTION_RICH_MULT, REFUND_BONUS,
   SCARECROW_GAP_MULT, SCARECROW_PRICE_MAX, SCARECROW_PRICE_MIN, SCARECROW_PRICE_MULT, SCARECROW_RAID_MULT,
   STANDING_MAX, STAND_BAD, STAND_BAD_INTEREST_MULT, STAND_BAD_RAID_GAP, STAND_BAD_RAID_MULT, STAND_BEAT, STAND_GOOD,
   STAND_GOOD_INTEREST_MULT, STAND_GOOD_RAID_GAP, STAND_GOOD_RAID_MULT, STANDING_START, STAND_ON_TIME, STAND_PREPAY, STAND_PREPAY_MULT, STASH_CAP_MIN, STASH_CAP_MULT,
@@ -347,6 +347,7 @@ export function processRaid(): VisitResult {
   const toDebt = Math.round(take * RAID_TO_DEBT_HALF);
   S.coins -= take;
   d.remaining = Math.max(0, d.remaining - toDebt);
+  if (toDebt > 0) d.paidTotal += toDebt; // باجی که راهی بدهی شد هم «پرداختی» است (قفل‌نشدن دستاورد ۶ میلیونی)
   d.extorted += take - toDebt;
   d.immuneUntilDay = today() + RAID_IMMUNITY;
   scheduleRaid(today());
@@ -386,6 +387,28 @@ export function clearVisit() {
   if (!d) return;
   d.pendingVisit = null;
   notify();
+}
+
+/**
+ * صحنهٔ واکنش جهانگیر هنگام باز شدن دفتر بدهی: بدحسابی، جیب خالی یا جیب پر.
+ * هر سه صحنه فقط یک‌بار در هر سیو اجرا می‌شوند (بدون مزاحمت برای باز باز کردن دفتر).
+ */
+export function maybeReactionScene(): boolean {
+  const d = debt();
+  if (!d || !UI.started || !S.story?.prologueSeen || S.story.postgame || S.story.pending || S.tut?.active) return false;
+  if (typeof navigator !== 'undefined' && navigator.webdriver) return false; // محیط خودکار مانند آموزش روز اول
+  const mp = minPay();
+  const id = standingBand() === 'bad'
+    ? 'reaction-bad'
+    : S.coins < mp
+      ? 'reaction-poor'
+      : S.coins >= mp * REACTION_RICH_MULT
+        ? 'reaction-rich'
+        : null;
+  if (!id) return false;
+  const started = triggerCutscene(id, { explicitAction: true }) !== null;
+  if (started) UI.afterModal = 'ledger'; // بعد از صحنه، دفتر دوباره باز شود
+  return started;
 }
 
 /** آیا الان اجازهٔ ملاقات داریم؟ (ساعت کاری، بدون مودال، بعد از مهلت ورود) */
