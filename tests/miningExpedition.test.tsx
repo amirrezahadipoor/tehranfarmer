@@ -7,7 +7,7 @@ import { CFG } from '../src/game/settings';
 import { S, UI, exportSaveJson, importSaveJson, resetGame } from '../src/game/state';
 import { ensureFrontier } from '../src/game/core/frontier';
 import {
-  activeMineNodes, closeMineEncounter, completeMineNode, currentMineEncounter, mineFloorProgress,
+  activeMineNodes, closeMineEncounter, completeMineNode, currentMineEncounter, finishMineEncounter, mineFloorProgress,
   openMineEncounter, openMineMap, stepMineFloor,
 } from '../src/game/core/mining';
 import { MiningModal } from '../src/ui/MiningModal';
@@ -93,6 +93,23 @@ describe('Rebuilt Mine Expedition — skill, guarantees, progression, saves and 
     const flawless = completeMineNode(3, 5, [0.97, 0.97, 0.97, 0.97]);
     expect(flawless).toMatchObject({ good: 'diamond', qty: 1, perfect: true });
     expect(S.stats.minePerfect).toBe(1);
+  });
+
+  it('a stale finish callback cannot spend or complete a newly reopened encounter', () => {
+    expect(openMineEncounter(0)).toBe(true);
+    const staleToken = currentMineEncounter()!.token;
+    closeMineEncounter();
+    expect(openMineEncounter(1)).toBe(true);
+    const currentToken = currentMineEncounter()!.token;
+    expect(currentToken).not.toBe(staleToken);
+    const stamina = S.stamina;
+    expect(finishMineEncounter(quick, staleToken)).toBeNull();
+    expect(currentMineEncounter()?.token).toBe(currentToken);
+    expect(UI.modal).toBe('mining');
+    expect(S.stamina).toBe(stamina);
+    expect(mineFloorProgress(1).cleared).toBe(0);
+    expect(finishMineEncounter(quick, currentToken)?.qty).toBe(1);
+    expect(UI.modal).toBeNull();
   });
 
   it('mining modal, map and contextual HUD render in FA and EN without Persian leaks or ASCII FA digits', () => {

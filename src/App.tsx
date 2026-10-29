@@ -4,7 +4,7 @@ import { S, UI, hasSave, loadGame, notify, resetGame as resetGameFn, saveGame, u
 import { Hud } from './ui/Hud';
 import { TutorialOverlay } from './ui/TutorialOverlay';
 import { Modals } from './ui/Modals';
-import { Ic } from './ui/parts';
+import { Ic, useDialogFocus } from './ui/parts';
 import { Cutscene, VisitGate } from './ui/Cutscene';
 declare const __DEV_TOOLS__: boolean;
 // رفع N-6: در بیلد production این ماژول اصلاً بارگذاری نمی‌شود (import تنبل + شرط ثابت بیلد).
@@ -354,7 +354,10 @@ export default function App() {
     const t = window.setTimeout(() => { portraitHintDone = true; notify(); }, 4200);
     return () => window.clearTimeout(t);
   }, [UI.started, UI.portrait, inCinema]);
-  const bgInert = Boolean(UI.modal || UI.confirm) || undefined;
+  const portraitGateOpen = UI.started && UI.portrait && !portraitAcknowledged();
+  const portraitGateVisible = portraitGateOpen && !inCinema;
+  const portraitGateRef = useDialogFocus<HTMLDivElement>('[data-portrait-continue="1"]', portraitGateVisible);
+  const bgInert = Boolean(UI.modal || UI.confirm || portraitGateOpen) || undefined;
   return (
     <div className="fixed inset-0" dir={CFG.locale === 'en' ? 'ltr' : 'rtl'}>
       <div className="contents" inert={bgInert}>
@@ -372,8 +375,8 @@ export default function App() {
       )}
       {!bootReady && <BootLoader pct={bootProg.pct} label={bootProg.label} fadingOut={bootFading} />}
       {bootReady && !UI.started && <Start />}
-      {UI.started && UI.portrait && !portraitAcknowledged() && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[#2b1a10]/92 px-6 text-center" role="dialog" aria-modal="true" aria-label={UT.u186}>
+      {portraitGateVisible && (
+        <div ref={portraitGateRef} tabIndex={-1} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[#2b1a10]/92 px-6 text-center" role="dialog" aria-modal="true" aria-label={UT.u186}>
           <svg viewBox="0 0 120 120" className="h-24 w-24 rotate-90" aria-hidden="true">
             <rect x="34" y="10" width="52" height="100" rx="9" fill="#ffd93b" stroke="#503426" strokeWidth="5" />
             <rect x="42" y="24" width="36" height="70" rx="4" fill="#fff4d8" stroke="#503426" strokeWidth="3" />
@@ -382,7 +385,7 @@ export default function App() {
           <h2 className="ft text-2xl text-[#fff4d8]">{UT.u186}</h2>
           <p className="max-w-[24rem] text-sm font-bold text-[#f3e4c6]">{UT.u187}</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <button className="btn g press px-4" onClick={() => { acknowledgePortrait(); notify(); }}>{UT.u188}</button>
+            <button data-portrait-continue="1" className="btn g press px-4" onClick={() => { acknowledgePortrait(); notify(); }}>{UT.u188}</button>
             <button className="btn b press px-4" onClick={() => { portraitHintDone = true; notify(); }}>{UT.u189}</button>
           </div>
         </div>

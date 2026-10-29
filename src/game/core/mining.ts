@@ -30,8 +30,9 @@ export interface MineResult {
   liftUnlocked: boolean;
 }
 
-interface MineEncounter { floor: number; idx: number }
+interface MineEncounter { floor: number; idx: number; token: number }
 let encounter: MineEncounter | null = null;
+let encounterToken = 0;
 
 const CAVE_COORDS = [[305, 478], [468, 548], [642, 578], [808, 478], [945, 568], [520, 632]] as const;
 const FLOOR_GOODS: GoodId[][] = [
@@ -89,7 +90,7 @@ export function openMineEncounter(idx: number) {
   const spot = activeMineNodes(f.caveFloor).find((n) => n.idx === idx);
   if (!spot || isMineNodeHarvested(idx, f.caveFloor)) return false;
   if (S.stamina < spot.stam) { toast('bolt', GT.g148); sfx.err(); return false; }
-  encounter = { floor: f.caveFloor, idx };
+  encounter = { floor: f.caveFloor, idx, token: ++encounterToken };
   UI.modal = 'mining';
   notify();
   return true;
@@ -145,7 +146,9 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
   return { good, qty, accuracy, perfect, liftUnlocked };
 }
 
-export function finishMineEncounter(accuracies: number[]) {
+export function finishMineEncounter(accuracies: number[], token?: number) {
+  // تایمرِ پایانِ یک رگهٔ بسته‌شده نباید encounter تازه‌ای را که دوباره باز شده مصرف کند.
+  if (typeof token === 'number' && encounter?.token !== token) return null;
   const active = currentMineEncounter();
   if (!active) { closeMineEncounter(); return null; }
   const result = completeMineNode(active.floor, active.idx, accuracies);

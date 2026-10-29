@@ -61,7 +61,7 @@ export function MiningModal() {
     if (grade === 'miss') sfx.err(); else sfx.dig();
     if (next.length >= spot.strikes) {
       setFinished(true);
-      finishTimer.current = setTimeout(() => finishMineEncounter(next), 520);
+      finishTimer.current = setTimeout(() => finishMineEncounter(next, active.token), 520);
     } else {
       setStage(next.length);
     }
@@ -70,7 +70,7 @@ export function MiningModal() {
   const quick = () => {
     if (finished) return;
     setFinished(true);
-    finishMineEncounter(Array.from({ length: spot.strikes }, () => 0.45));
+    finishMineEncounter(Array.from({ length: spot.strikes }, () => 0.45), active.token);
   };
 
   const flashText = flash === 'perfect' ? FT.minePerfectHit : flash === 'good' ? FT.mineGoodHit : flash === 'miss' ? FT.mineMissHit : FT.mineWeakPointHint;

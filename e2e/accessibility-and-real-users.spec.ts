@@ -282,8 +282,14 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await page.goto('/');
     await page.locator('button').first().click();
     await page.locator('button:has-text("رد کردن صحنه")').click();
-    await page.getByRole('button', { name: 'ادامه با همین حالت' }).click();
-    await expect(page.getByRole('button', { name: 'ادامه با همین حالت' })).toHaveCount(0);
+    const portraitContinue = page.getByRole('button', { name: 'ادامه با همین حالت' });
+    await expect(portraitContinue).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByRole('button', { name: 'حالا بچرخان' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(portraitContinue).toBeFocused();
+    await portraitContinue.click();
+    await expect(portraitContinue).toHaveCount(0);
     await page.waitForTimeout(4400);
     for (const nav of ['farm', 'north', 'valley', 'town', 'river', 'cave', 'apiary', 'forest']) {
       const box = await page.locator(`[data-nav="${nav}"]`).boundingBox();
