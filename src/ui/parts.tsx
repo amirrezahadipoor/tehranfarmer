@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from 'react';
+import { memo, useEffect, useRef, type ReactNode } from 'react';
 import { iconURL } from '../game/art';
 import { fa, faPct } from '../game/data';
 import { UT } from '../strings/uiText';
@@ -58,12 +58,59 @@ export function Pips({ n, max }: { n: number; max: number }) {
 
 export const ModalShell = Modal;
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function visibleFocusables(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => {
+    if (el.hasAttribute('disabled') || el.getAttribute('aria-hidden') === 'true') return false;
+    const style = window.getComputedStyle?.(el);
+    return !style || (style.display !== 'none' && style.visibility !== 'hidden');
+  });
+}
+
+/** Initial focus, a real Tab trap and focus restoration for every modal/confirmation. */
+export function useDialogFocus<T extends HTMLElement>(initialSelector?: string, activeKey: unknown = true) {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root || activeKey === null || activeKey === false) return;
+    const previous = typeof HTMLElement !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFirst = () => {
+      const preferred = initialSelector ? root.querySelector<HTMLElement>(initialSelector) : null;
+      (preferred ?? visibleFocusables(root)[0] ?? root).focus({ preventScroll: true });
+    };
+    focusFirst();
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const items = visibleFocusables(root);
+      if (!items.length) { e.preventDefault(); root.focus({ preventScroll: true }); return; }
+      const first = items[0], last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !root.contains(active))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (active === last || !root.contains(active))) { e.preventDefault(); first.focus(); }
+    };
+    root.addEventListener('keydown', trap);
+    return () => {
+      root.removeEventListener('keydown', trap);
+      globalThis.setTimeout(() => {
+        if (previous?.isConnected && !previous.closest('[inert]') && !document.querySelector('[aria-modal="true"]')) {
+          previous.focus({ preventScroll: true });
+        }
+      }, 0);
+    };
+  }, [initialSelector, activeKey]);
+  return ref;
+}
+
 export function Modal({ title, icon, onClose, children, coins }: { title: string; icon: string; onClose: () => void; children: ReactNode; coins?: ReactNode; wide?: boolean }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>();
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      tabIndex={-1}
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45"
       style={{
         paddingLeft: 'max(0.5rem, var(--safe-left))',
@@ -85,7 +132,7 @@ export function Modal({ title, icon, onClose, children, coins }: { title: string
           {coins && <div className="shrink-0">{coins}</div>}
           <button aria-label={UT.closeBtn} className="btn r press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={onClose}><Ic n="close" s={2.2} /></button>
         </div>
-        <div className="scroll min-h-0 flex-1 pr-1">{children}</div>
+        <div className="scroll min-h-0 flex-1 pr-1" tabIndex={0} role="region" aria-label={`${title} — ${UT.modalContent}`} data-modal-scroll="1">{children}</div>
       </div>
     </div>
   );

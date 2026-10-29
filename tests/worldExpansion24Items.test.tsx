@@ -224,24 +224,25 @@ describe('ممیزی کامل ۲۴ ویژگی مصوب توسعهٔ جهان (#�
     expect(ARTISAN_RECIPES.length).toBeGreaterThanOrEqual(14);
   });
 
-  it('مورد #۲۴ (اصلاح‌شده پس از ممیزی/C-4): هیچ میانبر حرکتی WASD / Arrow / 1-9 / Space وجود ندارد و کل شنونده‌های صفحه‌کلید دقیقاً دو تای مستند هستند', () => {
-    // رفع C-4: ادعای قبلی «صفر شنوندهٔ صفحه‌کلید» با «معاف‌کردن نام فایل» نوشته شده بود و
-    // در نتیجه دو شنوندهٔ واقعی (Esc در androidNav.ts و F9 در SceneDebugMenu.tsx) را پنهان می‌کرد.
-    // حالا قاعده «همهٔ فایل‌ها» است و تعداد شنونده‌ها دقیقاً assert می‌شود.
+  it('مورد #۲۴: هیچ میانبر حرکتی WASD/عددی وجود ندارد و شنونده‌های صفحه‌کلید فقط برای ناوبری، دسترس‌پذیری و ابزار توسعه‌اند', () => {
+    // Esc در androidNav، F9 در SceneDebugMenu و Tab trap در parts شنونده‌های واقعی و مستندند.
+    // Space/ArrowUp فقط در دو کنترل «نگه‌داشتن» ماهی‌گیری و دیگ جشن مجازند؛ هیچ‌کدام حرکت بازیکن نیستند.
     const srcFiles = walkSrcFiles(path.resolve(__dirname, '../src'));
     expect(srcFiles.length).toBeGreaterThan(40);
     const listeners: string[] = [];
     for (const file of srcFiles) {
       const code = fs.readFileSync(file, 'utf8');
-      if (/addEventListener\(\s*['"](keydown|keyup|keypress)['"]/.test(code)) {
-        listeners.push(path.relative(path.resolve(__dirname, '../src'), file));
-      }
-      // هیچ میانبر حرکتی/عددی/فاصله در هیچ فایلی مجاز نیست
-      expect(code, `میانبر حرکتی در ${file} ممنوع است`).not.toMatch(/Arrow(Up|Down|Left|Right)|Key[WASD]|Digit[0-9]|['"]Space['"]/);
+      const rel = path.relative(path.resolve(__dirname, '../src'), file);
+      if (/addEventListener\(\s*['"](keydown|keyup|keypress)['"]/.test(code)) listeners.push(rel);
+      // مقایسهٔ مقدار دقیق کلید، نه تطبیق سطحی KeyDown با KeyD؛ WASD/حرکت/اعداد همچنان ممنوعند.
+      const accessibleHold = rel === 'ui/FishingModal.tsx' || rel === 'ui/FestivalModal.tsx';
+      const forbidden = accessibleHold
+        ? /['"](?:ArrowDown|ArrowLeft|ArrowRight|Key[WASD]|Digit[0-9]|Space)['"]/
+        : /['"](?:ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Key[WASD]|Digit[0-9]|Space)['"]/;
+      expect(code, `میانبر حرکتی در ${file} ممنوع است`).not.toMatch(forbidden);
       expect(code, `window.onkey* در ${file} ممنوع است`).not.toMatch(/window\.onkey(down|up|press)\s*=/);
     }
-    // رفع N-6: شنوندهٔ F9 فقط در بیلد توسعه باقی می‌ماند (در production کل ماژول حذف می‌شود)
-    expect(listeners.sort()).toEqual(['game/androidNav.ts', 'ui/SceneDebugMenu.tsx']);
+    expect(listeners.sort()).toEqual(['game/androidNav.ts', 'ui/SceneDebugMenu.tsx', 'ui/parts.tsx']);
     expect(fs.readFileSync(path.resolve(__dirname, '../src/App.tsx'), 'utf8')).toContain('DEV_TOOLS');
   });
 

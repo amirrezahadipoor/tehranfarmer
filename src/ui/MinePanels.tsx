@@ -52,7 +52,7 @@ export function MineMapModal() {
             const gems = [...new Set(activeMineNodes(floor).map((n) => n.good))].slice(0, 4);
             const best = Math.max(0, ...activeMineNodes(floor).map((n) => S.stats[`mineBest:${floor}:${n.idx}`] ?? 0));
             return (
-              <section data-mine-floor={floor} key={floor} className={`flex flex-col gap-2 rounded-xl border-2 p-2.5 ${style.paper} ${style.line} ${locked ? 'opacity-60' : ''}`}>
+              <section data-mine-floor={floor} key={floor} className={`flex flex-col gap-2 rounded-xl border-2 p-2.5 ${style.paper} ${style.line} ${locked ? 'border-dashed' : ''}`}>
                 <div className="flex items-center justify-between gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[.68rem] font-black ${style.badge}`}>{mineFloorTitle(floor)}</span>
                   {here && <span className="text-[.68rem] font-black text-[#315d4b]">{FT.mineCurrentFloor}</span>}

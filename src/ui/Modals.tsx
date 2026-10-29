@@ -11,7 +11,7 @@ import {
   isNight, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond, holdCount,
 } from '../game/state';
 import { sfx } from '../game/sound';
-import { Bar, Coin, Ic, Modal, Trend } from './parts';
+import { Bar, Coin, Ic, Modal, Trend, useDialogFocus } from './parts';
 import { BuildingBadge, BuyBtn, close, grid, Lock, lv, UpCard, Wallet, buildingNow } from './shopKit';
 import { Carpenter, Estate } from './Shops2';
 import { AnimalShop } from './AnimalModal';
@@ -81,8 +81,9 @@ export function Modals() {
 }
 
 function Confirm({ icon, msg, onYes }: { icon: string; msg?: string; onYes: () => void }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>();
   return (
-    <div role="alertdialog" aria-modal="true" className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45">
+    <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-label={msg ?? UT.yesBtn} tabIndex={-1} className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45">
       <div className="paper popin flex flex-col items-center gap-3 p-5 text-center">
         <Ic n={icon} s={7} cls="bob" />
         {msg && <div className="text-sm font-black">{msg}</div>}
@@ -473,7 +474,7 @@ function HiveModal() {
         {Array.from({ length: HIVE_MAX }, (_, i) => {
           const built = i < S.hives;
           return (
-            <div key={i} className={'paper flex flex-col items-center gap-1.5 p-3 ' + (built ? '' : 'opacity-60')}>
+            <div key={i} className={'paper flex flex-col items-center gap-1.5 p-3 ' + (built ? '' : i === S.hives ? 'border-dashed' : 'opacity-60')}>
               <Ic n={built ? 'hive' : 'lock'} s={4.6} cls={built ? 'bob' : 'grayscale'} />
               <div className="text-sm font-extrabold">{UT.u123}{fa(i + 1)}</div>
               {built ? <div className="text-xs font-black text-green-700">{UT.u124}</div> : i === S.hives ? (

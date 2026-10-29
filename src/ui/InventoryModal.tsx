@@ -85,7 +85,7 @@ export function InventoryModal() {
           const maxB = artisanMaxBatches(rec);
           const reward = artisanRewardCoins(rec);
           return (
-            <div key={rec.id} className={'paper flex flex-col justify-between gap-1.5 p-2 ' + (maxB > 0 ? 'ring-2 ring-[#6cc84c]' : 'opacity-80')}>
+            <div key={rec.id} className={'paper flex flex-col justify-between gap-1.5 p-2 ' + (maxB > 0 ? 'ring-2 ring-[#6cc84c]' : 'border-dashed')}>
               <div className="flex items-center gap-2">
                 <Ic n={rec.icon} s={3} />
                 <div className="min-w-0 flex-1 leading-tight">
@@ -97,7 +97,7 @@ export function InventoryModal() {
                 {rec.inputs.map(([gid, need]) => {
                   const have = S.inv[gid] ?? 0;
                   return (
-                    <span key={gid} className={'rounded-lg px-1.5 py-0.5 ' + (have >= need ? 'bg-[#dcfce7] text-green-900' : 'bg-[#f5ebd6] text-[#7a5a3a]')} dir="ltr">
+                    <span key={gid} className={'rounded-lg px-1.5 py-0.5 ' + (have >= need ? 'bg-[#dcfce7] text-green-900' : 'bg-[#f5ebd6] text-[#5b3b24]')} dir="ltr">
                       <Ic n={gid} s={1.2} /> {fa(have)}/{fa(need)}
                     </span>
                   );

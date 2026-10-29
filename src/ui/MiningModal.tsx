@@ -97,7 +97,16 @@ export function MiningModal() {
           <div className="absolute bottom-1 left-2 flex items-center gap-1 rounded-full bg-[#101a25cc] px-2 py-0.5 text-white"><Ic n={spot.good} s={1.55} /><span className="text-[.68rem] font-black">{scores.length ? faPct(average * 100) : '—'}</span></div>
         </div>
 
-        <div className="flex justify-center gap-2" dir="ltr" aria-label={`${scores.length}/${spot.strikes}`}>
+        <div
+          className="flex justify-center gap-2"
+          dir="ltr"
+          role="progressbar"
+          aria-label={FT.mineStageLabel}
+          aria-valuemin={0}
+          aria-valuemax={spot.strikes}
+          aria-valuenow={scores.length}
+          aria-valuetext={`${fa(scores.length)} / ${fa(spot.strikes)}`}
+        >
           {Array.from({ length: spot.strikes }, (_, i) => <span key={i} className={`h-3 w-9 rounded-full border-2 border-[#503426] ${i < scores.length ? (scores[i] >= 0.9 ? 'bg-[#ffd93b]' : scores[i] >= 0.48 ? 'bg-[#75cf79]' : 'bg-[#b69b80]') : 'bg-[#e5d5b4]'}`} />)}
         </div>
 

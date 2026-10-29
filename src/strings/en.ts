@@ -225,6 +225,7 @@ export const UT_EN = {
   stateOn: 'ON',
   stateOff: 'OFF',
   closeBtn: 'Close Modal',
+  modalContent: 'Dialog Content',
   speedBtn: 'Game Speed',
   backFarm: 'Back to Farm',
   goTown: 'Go to Town',

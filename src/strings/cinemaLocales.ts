@@ -7,6 +7,7 @@ export interface CinemaUiStrings {
   fastForward: string;
   next: string;
   finish: string;
+  choose: string;
   replayTag: string;
   objectivePrefix: string;
   directorBtn: string;
@@ -42,6 +43,7 @@ export const CINEMA_UI: Record<'fa' | 'en', CinemaUiStrings> = {
     fastForward: 'تند',
     next: 'ادامه',
     finish: 'پایان',
+    choose: 'یک پاسخ را انتخاب کن',
     replayTag: 'بازپخش کارگردان',
     objectivePrefix: 'هدف بعدی: ',
     directorBtn: 'گالری صحنه‌های سینمایی',
@@ -73,6 +75,7 @@ export const CINEMA_UI: Record<'fa' | 'en', CinemaUiStrings> = {
     fastForward: 'Fast',
     next: 'Next',
     finish: 'Finish',
+    choose: 'Choose a response',
     replayTag: 'Director Replay',
     objectivePrefix: 'Next Objective: ',
     directorBtn: 'Scene Director Gallery',

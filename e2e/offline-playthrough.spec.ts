@@ -45,7 +45,9 @@ test('اجرای کامل حلقهٔ بازی (شروع، پرولوگ کامل�
   const cutOverlay = page.locator('.fixed.inset-0.z-\\[70\\]');
   for (let i = 0; i < 90; i++) {
     if (!(await cutOverlay.isVisible().catch(() => false))) break;
-    await cutOverlay.dispatchEvent('pointerdown', { bubbles: true });
+    const choice = cutOverlay.locator('[data-scene-choice="0"]');
+    if (await choice.isVisible().catch(() => false)) await choice.click();
+    else await cutOverlay.dispatchEvent('pointerdown', { bubbles: true });
   }
   await expect(cutOverlay).toBeHidden();
 

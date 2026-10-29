@@ -7,7 +7,7 @@ import { sfx } from '../game/sound';
 import { FT } from '../strings/frontierText';
 import { UT } from '../strings/uiText';
 import { GT } from '../strings/gameText';
-import { Ic } from './parts';
+import { Ic, useDialogFocus } from './parts';
 
 interface FishProfile {
   nameKey: 'fishSpeciesTrout' | 'fishSpeciesCarp' | 'fishSpeciesSalmon' | 'fishSpeciesPearl' | 'fishSpeciesSturgeon';
@@ -25,6 +25,7 @@ const PROFILES: readonly FishProfile[] = [
 ];
 
 export function FishingModal() {
+  const dialogRef = useDialogFocus<HTMLDivElement>();
   // آمارِ کسری یا نامعتبر (سیوهای قدیمی) نباید ایندکس را خارج از محدوده ببرد و مودال را از کار بیندازد
   const rawIdx = S.day + Math.floor(S.hour) + (S.stats.fish ?? 0);
   const idx = Number.isFinite(rawIdx) ? Math.abs(Math.floor(rawIdx)) % PROFILES.length : 0;
@@ -170,17 +171,42 @@ export function FishingModal() {
     notify();
   };
 
+  const beginHolding = () => {
+    if (stRef.current.ended) return;
+    setHolding(true);
+    sfx.water();
+  };
+  const stopHolding = () => setHolding(false);
+  const holdKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== ' ' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    if (!e.repeat) beginHolding();
+  };
+  const holdKeyUp = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== ' ' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    stopHolding();
+  };
+
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={FT.fishModalTitle}
+      tabIndex={-1}
       data-fishing-minigame="1"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-2 select-none"
       onPointerUp={() => setHolding(false)}
       onPointerCancel={() => setHolding(false)}
     >
-      <div className="paper popin flex w-[min(94vw,30rem)] flex-col gap-2.5 p-3.5">
+      <div
+        className="paper popin scroll flex max-h-[94dvh] w-[min(94vw,30rem)] flex-col gap-2.5 overflow-y-auto p-3.5"
+        data-modal-scroll="1"
+        role="region"
+        aria-label={`${FT.fishModalTitle} — ${UT.modalContent}`}
+        tabIndex={0}
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="paper-dark flex items-center gap-2 px-3 py-1 text-[#fff4d8]">
             <Ic n="fish" s={2} />
@@ -203,14 +229,14 @@ export function FishingModal() {
 
         <div className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
           <div>{FT[prof.nameKey]}</div>
-          <div className="mt-0.5 text-[.7rem] opacity-80">{FT.fishHoldHint}</div>
+          <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{FT.fishHoldHint}</div>
         </div>
 
         {/* Interactive Water Column + Tension Progress Gauge */}
         <div className="flex items-stretch justify-center gap-4 py-1">
           <div
-            className="relative h-56 w-20 overflow-hidden rounded-2xl border-[3px] border-[#3d291a] bg-gradient-to-b from-[#67c3f3] via-[#2b7cb3] to-[#164268]"
-            onPointerDown={() => { setHolding(true); sfx.water(); }}
+            className="relative h-56 w-20 touch-none overflow-hidden rounded-2xl border-[3px] border-[#3d291a] bg-gradient-to-b from-[#67c3f3] via-[#2b7cb3] to-[#164268]"
+            onPointerDown={beginHolding}
           >
             {/* Sunken Gem Chest */}
             {chestProg < 100 && (
@@ -238,7 +264,14 @@ export function FishingModal() {
           {/* Catch Progress Column */}
           <div className="flex flex-col items-center justify-between">
             <span className="ft text-base text-emerald-800">{faPct(Math.round(progress))}</span>
-            <div className="relative h-44 w-6 overflow-hidden rounded-full border-2 border-[#503426] bg-[#e9dcc0]">
+            <div
+              className="relative h-44 w-6 overflow-hidden rounded-full border-2 border-[#503426] bg-[#e9dcc0]"
+              role="progressbar"
+              aria-label={FT.fishCatchProgress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+            >
               <div
                 style={{ height: `${progress}%` }}
                 className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-amber-500 via-lime-500 to-emerald-500"
@@ -249,7 +282,7 @@ export function FishingModal() {
         </div>
 
         {resultMsg ? (
-          <div className="rounded-xl bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
+          <div role="status" aria-live="polite" className="rounded-xl bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
             {resultMsg}
           </div>
         ) : (
@@ -258,9 +291,15 @@ export function FishingModal() {
               type="button"
               data-fish-hold="1"
               aria-label={FT.fishHoldBtn}
-              className={'btn press flex-1 !py-2.5 text-sm font-black ' + (holding ? 'y' : 'g')}
-              onPointerDown={() => { setHolding(true); sfx.water(); }}
-              onPointerUp={() => setHolding(false)}
+              aria-describedby="fish-hold-hint"
+              aria-pressed={holding}
+              className={'btn press touch-none flex-1 !py-2.5 text-sm font-black ' + (holding ? 'y' : 'g')}
+              onPointerDown={beginHolding}
+              onPointerUp={stopHolding}
+              onPointerCancel={stopHolding}
+              onKeyDown={holdKeyDown}
+              onKeyUp={holdKeyUp}
+              onBlur={stopHolding}
             >
               <Ic n="fish" s={1.8} />
               <span>{FT.fishHoldBtn}</span>

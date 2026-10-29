@@ -13,7 +13,7 @@ import { clearVisit, debt } from '../game/core/debt';
 import { STAND_BEAT } from '../story/debtData';
 import { CFG, isReducedMotion, setShortBeat, updateSetting } from '../game/settings';
 import { fa } from '../strings/fa';
-import { Ic } from './parts';
+import { Ic, useDialogFocus } from './parts';
 import { sfx } from '../game/sound';
 import { UT } from '../strings/uiText';
 import { CHAR_NAMES, CINEMA_UI, EN_LINES, OBJECTIVES } from '../strings/cinemaLocales';
@@ -56,9 +56,10 @@ export function Cutscene() {
   const [barH, setBarH] = useState({ top: 52, bot: 54 });
   const [holding, setHolding] = useState(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
   const topBarRef = useRef<HTMLDivElement>(null);
   const botBarRef = useRef<HTMLDivElement>(null);
-  const timer = useRef<number | null>(null);
+  const timer = useRef<number | null>(null), closingTimer = useRef<number | null>(null);
   const ptrHandledRef = useRef(false);
 
   const locale = CFG.locale === 'en' ? 'en' : 'fa';
@@ -94,6 +95,7 @@ export function Cutscene() {
       skipActiveCutscene();
       return;
     }
+    if (closingTimer.current !== null) { window.clearTimeout(closingTimer.current); closingTimer.current = null; }
     setSummary(false);
     setClosing(false);
     setFineAck(false);
@@ -103,11 +105,24 @@ export function Cutscene() {
     beginSceneStage(compiled);
   }, [activePending?.id]);
 
+  useEffect(() => () => {
+    if (closingTimer.current !== null) window.clearTimeout(closingTimer.current);
+  }, []);
+
+  useEffect(() => {
+    if (closing) nextButtonRef.current?.focus({ preventScroll: true });
+  }, [closing]);
+
   const beat = effectiveScript?.beats[beatIdx];
   const rawFa = beat ? (nodeById(beat.nodeId)?.lines[beat.lineIdx]?.text ?? '') : '';
   const rawEn = beat ? EN_LINES[beat.nodeId]?.[beat.lineIdx] : undefined;
   const full = locale === 'en' && rawEn ? rawEn : rawFa;
   const done = typed >= full.length;
+  const showingSummary = summary && Boolean(d?.lastVisit);
+  const showingFine = beating && !fineAck && d?.lastVisit?.kind === 'due-missed';
+  const showingScene = Boolean(effectiveScript && (beat || closing));
+  const focusKey = showingSummary ? 'summary' : showingFine ? 'fine' : showingScene ? `scene:${effectiveScript!.id}` : null;
+  const dialogRef = useDialogFocus<HTMLDivElement>('[data-cutscene-next="1"]', focusKey);
 
   // Live head anchor & dramatic pause tracker (paced cleanly at ~30 FPS & paused when tab is hidden to save battery)
   useEffect(() => {
@@ -153,16 +168,18 @@ export function Cutscene() {
     if (isReducedMotion()) { setTyped(full.length); return; }
     const stepChars = rootId.startsWith('visit-') && Boolean(S.story.seen[rootId]) ? 4 : 2;
     timer.current = window.setTimeout(() => {
+      timer.current = null;
       setTyped((prev) => {
         const nxt = Math.min(full.length, prev + stepChars);
         notifyTypewriterStep(beat.who, nxt);
         return nxt;
       });
     }, 1000 / CPS);
-    return () => { if (timer.current) window.clearTimeout(timer.current); };
+    return () => { if (timer.current !== null) { window.clearTimeout(timer.current); timer.current = null; } };
   }, [typed, full, beat, summary, closing, holding]);
 
   const finishSceneCompletely = (wasVisit: boolean) => {
+    if (closingTimer.current !== null) { window.clearTimeout(closingTimer.current); closingTimer.current = null; }
     endSceneStage();
     setScript(null);
     setClosing(false);
@@ -197,6 +214,9 @@ export function Cutscene() {
       setTyped(full.length);
       return;
     }
+    const choiceRequired = beatIdx + 1 >= script.beats.length && !UI.directorReplay
+      && !S.story.seen[`choice:${beat.nodeId}`] && Boolean(SCENE_CHOICES[beat.nodeId]);
+    if (choiceRequired) { sfx.err(); return; }
     const nextBeat = script.beats[beatIdx + 1];
     // If leaving current StoryNode, commit its effects cleanly right on schedule
     if (!nextBeat || nextBeat.nodeId !== beat.nodeId) {
@@ -215,11 +235,9 @@ export function Cutscene() {
     if (script.durationKind === 'major' && !isReducedMotion()) {
       setClosing(true);
       enterClosingShot();
-      window.setTimeout(() => {
-        setClosing((stillClosing) => {
-          if (stillClosing) finishSceneCompletely(rootId.startsWith('visit-'));
-          return false;
-        });
+      closingTimer.current = window.setTimeout(() => {
+        closingTimer.current = null;
+        finishSceneCompletely(rootId.startsWith('visit-'));
       }, 1650);
     } else {
       sfx.tap();
@@ -234,10 +252,29 @@ export function Cutscene() {
     notify();
   };
 
+  const onSceneKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape' && (!beating || canSkipBeating(beatings))) {
+      e.preventDefault();
+      skipScene();
+    } else if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+      e.preventDefault();
+      next();
+    }
+  };
+
   const visit = d?.lastVisit ?? null;
   if (summary && visit) {
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-3" dir={rtl ? 'rtl' : 'ltr'}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={UT.u8}
+        tabIndex={-1}
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-3"
+        dir={rtl ? 'rtl' : 'ltr'}
+        onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); closeSummary(); } }}
+      >
         <div className="paper popin w-[min(94vw,34rem)] p-4">
           <div className="ft text-center text-3xl text-[#e8564a]">{UT.u8}</div>
           <div className="mt-3 space-y-1 text-sm font-extrabold">
@@ -268,7 +305,16 @@ export function Cutscene() {
   // کارت خلاصهٔ جریمه — قبل از صحنهٔ ضرب‌وشتم، بازیکن باید همهٔ اثرات را ببیند و تأیید کند
   if (beating && !fineAck && visit?.kind === 'due-missed') {
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-3" dir={rtl ? 'rtl' : 'ltr'} data-fine-card="1">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ui.fineTitle}
+        tabIndex={-1}
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-3"
+        dir={rtl ? 'rtl' : 'ltr'}
+        data-fine-card="1"
+      >
         <div className="paper popin w-[min(94vw,30rem)] p-4">
           <div className="ft text-center text-3xl text-[#e8564a]">{ui.fineTitle}</div>
           <div className="mt-3 space-y-1 text-sm font-extrabold">
@@ -293,9 +339,9 @@ export function Cutscene() {
   const speakerName = CHAR_NAMES[locale][who];
   const isNarrator = who === 'narrator';
   const objText = OBJECTIVES[locale][objectiveKeyFor(effectiveScript.id)] ?? OBJECTIVES[locale].default;
-  const isLastBeat = beatIdx + 1 >= effectiveScript.beats.length;
-  const sceneChoices = (!closing && done && isLastBeat && !UI.directorReplay && !S.story.seen['choice:' + effectiveScript.id])
-    ? SCENE_CHOICES[effectiveScript.id]
+  const isLastBeat = beatIdx + 1 >= effectiveScript.beats.length, choiceNodeId = beat?.nodeId ?? effectiveScript.id;
+  const sceneChoices = (!closing && done && isLastBeat && !UI.directorReplay && !S.story.seen['choice:' + choiceNodeId])
+    ? SCENE_CHOICES[choiceNodeId]
     : undefined;
   const talkVillagerId: SocialNpcId | null = (who === 'jahangir' || who === 'grandma' || who === 'sara' || who === 'engineer' || who === 'rancher')
     ? who : null;
@@ -320,13 +366,19 @@ export function Cutscene() {
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={speakerName}
+      tabIndex={-1}
       className="fixed inset-0 z-[70] select-none"
       dir={rtl ? 'rtl' : 'ltr'}
+      onKeyDown={onSceneKeyDown}
       data-tap="cutscene"
       style={{ touchAction: 'manipulation' }}
       onPointerDown={onStagePointerDown}
       onClick={onStageClick}
-      data-scene-id={effectiveScript.id}
+      data-scene-id={effectiveScript.id} data-beat-node={beat?.nodeId}
     >
       {beating && <BeatStage variant={beatVariantOf(rootId, beatings)} />}
 
@@ -391,7 +443,8 @@ export function Cutscene() {
             style={{ top: `${Math.max(safeTop + 4, Math.round(vh * 0.12))}px`, backgroundColor: '#241914' }}
             className="pointer-events-none fixed left-1/2 w-[min(88vw,38rem)] -translate-x-1/2 rounded-xl border-2 border-[#d9a441] bg-[#241914]/94 px-4 py-2 text-center text-[#fff6da] shadow-lg"
           >
-            <div className={compact ? 'text-[0.86rem] font-extrabold leading-snug' : 'text-[1rem] font-extrabold leading-relaxed'}>
+            <span className="sr-only">{full}</span>
+            <div aria-hidden="true" className={compact ? 'text-[0.86rem] font-extrabold leading-snug' : 'text-[1rem] font-extrabold leading-relaxed'}>
               {full.slice(0, typed)}
               {!done && <span className="opacity-45">|</span>}
             </div>
@@ -407,13 +460,14 @@ export function Cutscene() {
             }}
             className={'pointer-events-none fixed w-fit min-w-[9.5rem] rounded-2xl border-[3px] border-[#503426] bg-[#fffdf4]/97 text-[#3d251a] shadow-xl ' + (compact ? 'max-w-[min(76vw,21.5rem)] px-3 py-1.5' : 'max-w-[min(82vw,24.5rem)] px-3.5 py-2.5')}
           >
-            <div className="mb-0.5 flex items-center gap-1.5">
+            <span className="sr-only">{speakerName}: {full}</span>
+            <div aria-hidden="true" className="mb-0.5 flex items-center gap-1.5">
               <span className="ft rounded-md border border-[#503426] bg-[#ffe6a3] px-2 py-0.2 text-xs sm:text-sm text-[#503426]">
                 {speakerName}
               </span>
             </div>
-            <div className="grid">
-              <div aria-hidden="true" className={'invisible col-start-1 row-start-1 ' + (compact ? 'text-[0.84rem] font-extrabold leading-snug' : 'text-[0.98rem] font-extrabold leading-relaxed')}>
+            <div className="grid" aria-hidden="true">
+              <div className={'invisible col-start-1 row-start-1 ' + (compact ? 'text-[0.84rem] font-extrabold leading-snug' : 'text-[0.98rem] font-extrabold leading-relaxed')}>
                 {full}
               </div>
               <div className={'col-start-1 row-start-1 ' + (compact ? 'text-[0.84rem] font-extrabold leading-snug' : 'text-[0.98rem] font-extrabold leading-relaxed')}>
@@ -423,6 +477,7 @@ export function Cutscene() {
             </div>
             {/* Hand-drawn pointer tail aimed directly toward the live actor's head */}
             <div
+              aria-hidden="true"
               style={{ left: `calc(50% + ${tailDx}px)` }}
               className="absolute -bottom-[9px] h-3.5 w-3.5 -translate-x-1/2 rotate-45 border-b-[3px] border-r-[3px] border-[#503426] bg-[#fffdf4]"
             />
@@ -436,8 +491,10 @@ export function Cutscene() {
                   <button
                     key={idx}
                     type="button"
+                    autoFocus={idx === 0}
+                    data-scene-choice={idx}
                     className="btn y press !min-h-[max(48px,2rem)] w-full !justify-start !px-2.5 !py-1 text-start text-xs font-black"
-                    onClick={() => { applyDialogueChoice(effectiveScript.id, idx as 0 | 1); next(); }}
+                    onClick={() => { applyDialogueChoice(choiceNodeId, idx as 0 | 1); next(); }}
                   >
                     <span>{locale === 'en' ? ch.labelEn : ch.labelFa}</span>
                   </button>
@@ -475,12 +532,15 @@ export function Cutscene() {
             ))}
           </div>
           <button
+            ref={nextButtonRef}
             type="button"
+            data-cutscene-next="1"
+            disabled={Boolean(sceneChoices)}
             className="btn g press !min-h-[max(48px,2.15rem)] !min-w-[max(48px,3.5rem)] !px-3 !py-0.5 text-xs font-black"
             onClick={next}
           >
             <Ic n="arrow" s={1.5} />
-            <span>{closing || isLastBeat ? ui.finish : ui.next}</span>
+            <span>{sceneChoices ? ui.choose : closing || isLastBeat ? ui.finish : ui.next}</span>
           </button>
         </div>
       </div>

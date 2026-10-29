@@ -189,7 +189,8 @@ export const FT = {
 
   // Skill Fishing Minigame UI
   get fishModalTitle() { return en() ? 'River Tension Reel — Skill Angling' : 'مینی‌گیم مهارتی کشش قلاب رودخانه'; },
-  get fishHoldHint() { return en() ? 'HOLD Touch or Mouse to lift the green bar — keep the swimming fish inside!' : 'نگه‌داشتن لمس یا کلیک موس: بالا بردن شناور سبز — ماهی متحرک را داخل کادر نگه دار!'; },
+  get fishHoldHint() { return en() ? 'Hold touch, mouse, Space or Up Arrow to lift the green bar — keep the swimming fish inside!' : 'لمس، کلیک یا نگه‌داشتن Space / کلید بالا شناور سبز را بالا می‌برد؛ ماهی را داخل کادر نگه دار!'; },
+  get fishCatchProgress() { return en() ? 'Catch progress' : 'پیشرفت صید'; },
   get fishHoldBtn() { return en() ? 'HOLD TO REEL UP' : 'نگه دار: کشیدن قلاب بالا'; },
   get fishQuickBtn() { return en() ? 'Quick Cast (Instant)' : 'پرتاب سریع تک‌ضربه‌ای'; },
   get fishPerfect() { return en() ? 'PERFECT ANGLING! Double Catch!' : 'صید بی‌نقص مهارتی! ۲ برابر محصول!'; },
@@ -212,7 +213,7 @@ export const FT = {
   get fairTokens() { return en() ? 'Festival Tokens' : 'ژتون جشنواره'; },
   get judgeHint() { return en() ? 'Pick up to 3 different items from your backpack & barn (1 of each is handed to the judges)! High base price + distinct categories (Crop / Artisan / Ranch / Forest & Cave) score huge bonus points!' : 'تا ۳ کالای متفاوت از کوله و انبارت بچین (هر قلم به داوران تحویل داده می‌شود)! تنوع رده‌ها (زراعی / کارگاهی / دام / جنگل و غار) + ارزش بالا امتیاز داوران را منفجر می‌کند!'; },
   get judgeSubmit() { return en() ? 'Present Basket to Village Judges' : 'داوری سبد در حضور بزرگان دهکده'; },
-  get stirHint() { return en() ? 'Hold button to stoke the copper cauldron flame — keep heat marker inside the moving gold zone!' : 'دکمهٔ «دمیدن به آتش» را نگه دار و رها کن تا نشانگر دما داخل محدودهٔ طلایی بماند!'; },
+  get stirHint() { return en() ? 'Hold the button, Space or Up Arrow to stoke the copper cauldron — keep the heat marker inside the moving gold zone!' : 'دکمه، Space یا کلید بالا را نگه دار و رها کن تا نشانگر دما داخل محدودهٔ طلایی متحرک بماند!'; },
   get stirStart() { return en() ? 'Light Copper Cauldron!' : 'روشن کردن دیگ جشنواره!'; },
   get stirHold() { return en() ? 'HOLD: STOKE FLAME!' : 'نگه دار: دمیدن به شعله!'; },
   get archeryHint() { return en() ? 'Watch the wind pennant & release 3 arrows right as the sight crosses the golden bullseye!' : 'حرکت نشانه را دنبال کن و دقیقاً وسط خال طلایی ۳ تیر رها کن!'; },

@@ -143,7 +143,7 @@ export function FestivalModal() {
         </div>
 
         {banner && (
-          <div className="rounded-xl border-2 border-emerald-700 bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
+          <div role="status" aria-live="polite" className="rounded-xl border-2 border-emerald-700 bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
             {banner}
           </div>
         )}
@@ -190,7 +190,7 @@ export function FestivalModal() {
 
         {tab === 'cauldron' && (
           <div className="paper space-y-3 p-3">
-            <div className="text-xs font-extrabold">{FT.stirHint}</div>
+            <div id="festival-stir-hint" className="text-xs font-extrabold">{FT.stirHint}</div>
             <div className="relative h-9 overflow-hidden rounded-full border-2 border-[#503426] bg-[#f3e3c3]">
               <div
                 style={{ left: `${Math.max(0, sweet - 16)}%`, width: '32%' }}
@@ -221,10 +221,25 @@ export function FestivalModal() {
               <button
                 type="button"
                 aria-label={FT.stirHold}
-                className={'btn press w-full !py-2.5 text-sm font-black ' + (stoking ? 'y' : 'g')}
+                aria-describedby="festival-stir-hint"
+                aria-pressed={stoking}
+                data-stir-hold="1"
+                className={'btn press touch-none w-full !py-2.5 text-sm font-black ' + (stoking ? 'y' : 'g')}
                 onPointerDown={() => setStoking(true)}
                 onPointerUp={() => setStoking(false)}
                 onPointerLeave={() => setStoking(false)}
+                onPointerCancel={() => setStoking(false)}
+                onBlur={() => setStoking(false)}
+                onKeyDown={(e) => {
+                  if (e.key !== ' ' && e.key !== 'ArrowUp') return;
+                  e.preventDefault();
+                  setStoking(true);
+                }}
+                onKeyUp={(e) => {
+                  if (e.key !== ' ' && e.key !== 'ArrowUp') return;
+                  e.preventDefault();
+                  setStoking(false);
+                }}
               >
                 <span>{FT.stirHold}</span>
               </button>

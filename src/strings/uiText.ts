@@ -228,6 +228,7 @@ export const UT_FA = {
   stateOn: "روشن",
   stateOff: "خاموش",
   closeBtn: "بستن پنجره",
+  modalContent: "محتوای پنجره",
   speedBtn: "تغییر سرعت زمان",
   backFarm: "بازگشت به مزرعه",
   goTown: "سفر به شهر",
