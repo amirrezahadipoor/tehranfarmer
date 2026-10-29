@@ -75,7 +75,11 @@ export const STANDING_START = 60;
 export const STAND_ON_TIME = 8;
 export const STAND_PREPAY = 12;
 export const STAND_PREPAY_MULT = 1.5;
-export const STAND_BEAT = -25;
+// DEF اکت۲۹: کتک به‌قدری سنگین است که باند «بدحساب» عملاً قابل دسترس بماند؛
+// قبلاً −۲۵ در برابر سینک‌های منفعل (حکم +۵، جشنواره +۶، سرسید +۸، جایزهٔ روزِ کتک) بی‌اثر می‌شد و
+// صحنه‌های sharkhar-*-bad و reaction-bad هرگز دیده نمی‌شدند. با −۹۰ حتی از سقفِ ۱۰۰ هم
+// باند به زیر ۳۰ می‌رود و بازیابی صادقانه (سرسهای سرِوقت +۸) چند دوره طول می‌کشد.
+export const STAND_BEAT = -90;
 export const STAND_GOOD = 70;               // ≥ ۷۰ خوش‌حساب
 export const STAND_BAD = 30;                // < ۳۰ بدحساب
 export const STAND_GOOD_RAID_GAP = 1.6;
