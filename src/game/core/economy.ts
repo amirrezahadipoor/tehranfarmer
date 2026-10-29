@@ -92,9 +92,11 @@ export const packCount = () => Object.values(S.pack).reduce((a, b) => a + b, 0);
 export const packCap = () => PACK_CAP[S.lv.bag];
 /** افزودن کالا بهکولهٔ پشتی بازیکن — سقف کوله رعایت می‌شود */
 export function addPack(id: string, n: number): number {
-  const room = Math.max(0, packCap() - packCount());
-  const add = Math.min(room, n);
-  if (add > 0) S.pack[id] = (S.pack[id] ?? 0) + add;
+  // کوله هم مانند انبار: فقط اعداد صحیح؛ ورودی کسری کف می‌شود و پسماند کسری ترمیم می‌گردد
+  const want = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+  const room = Math.max(0, Math.floor(packCap() - packCount()));
+  const add = Math.min(room, want);
+  if (add > 0) S.pack[id] = Math.floor(S.pack[id] ?? 0) + add;
   return add;
 }
 /** تخلیهٔ کوله به انبار — هرچه جا باشد جابه‌جا می‌شود؛ مابقی در کوله می‌ماند */
@@ -126,9 +128,11 @@ export function landPrice(i: number): number {
 }
 
 export function addGood(id: string, n: number): number {
-  const room = Math.max(0, invCap() - invCount());
-  const add = Math.min(room, n);
-  if (add > 0) S.inv[id] = (S.inv[id] ?? 0) + add;
+  // کالا همیشه عدد صحیح است: ورودیِ کسری و فضای کسری (پسماند سیوهای قدیمی) نباید کسری بسازد
+  const want = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+  const room = Math.max(0, Math.floor(invCap() - invCount()));
+  const add = Math.min(room, want);
+  if (add > 0) S.inv[id] = Math.floor(S.inv[id] ?? 0) + add;
   return add;
 }
 export function sellGood(id: string, n: number): number {

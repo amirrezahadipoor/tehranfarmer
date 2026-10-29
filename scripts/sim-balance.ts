@@ -6,7 +6,8 @@ import { BEATINGS_MAX, BEATINGS_MIN, NOTES, TOTAL_DEBT } from '../src/story/debt
 import { fa } from '../src/strings/fa';
 
 const POLICIES: Policy[] = ['optimal', 'good', 'normal', 'bad'];
-const RUNS = Number(process.env.RUNS ?? 2);
+// نمونه‌گیری پیش‌فرض مطابق CI (ci.yml: RUNS=3) تا میانگینِ معیارهای مرزی قابل‌اتکا باشد
+const RUNS = Number(process.env.RUNS ?? 3);
 const MAX_DAYS = Number(process.env.MAX_DAYS ?? 3000);
 
 interface Agg extends SimMetrics {

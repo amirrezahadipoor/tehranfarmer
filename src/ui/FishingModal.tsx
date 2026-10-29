@@ -25,7 +25,9 @@ const PROFILES: readonly FishProfile[] = [
 ];
 
 export function FishingModal() {
-  const idx = (S.day + Math.floor(S.hour) + (S.stats.fish ?? 0)) % PROFILES.length;
+  // آمارِ کسری یا نامعتبر (سیوهای قدیمی) نباید ایندکس را خارج از محدوده ببرد و مودال را از کار بیندازد
+  const rawIdx = S.day + Math.floor(S.hour) + (S.stats.fish ?? 0);
+  const idx = Number.isFinite(rawIdx) ? Math.abs(Math.floor(rawIdx)) % PROFILES.length : 0;
   const prof = PROFILES[idx];
   const [barY, setBarY] = useState(52);
   const [fishY, setFishY] = useState(48);

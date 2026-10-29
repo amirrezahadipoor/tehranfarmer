@@ -106,10 +106,12 @@ export function newDay() {
     const cap = troughCap();
     const have = S.inv.feed ?? 0;
     if (have > 0 && S.trough < cap) {
+      // آخور پیوسته می‌ماند (رفتار خوراندن دست‌نخورده)؛ فقط پسماندِ کسری نباید وارد کالای انبار شود
       const put = Math.min(have, cap - S.trough);
       S.trough += put;
-      S.inv.feed = have - put;
-      if (S.inv.feed <= 0) delete S.inv.feed;
+      const left = Math.floor(have - put);
+      if (left > 0) S.inv.feed = left;
+      else delete S.inv.feed;
     }
   }
   let hungry = false;

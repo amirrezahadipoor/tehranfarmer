@@ -147,6 +147,11 @@ export function migrateSave(raw: unknown): Raw | null {
   d.animals = (d.animals as unknown[]).filter((a) => {
     const an = a as Raw | null;
     return !!an && typeof an === 'object' && typeof an.kind === 'string' && !!ANIMALS[an.kind as keyof typeof ANIMALS] && Number.isFinite(num(an.id, NaN));
+  }).map((a) => {
+    const an = a as Raw;
+    // شناسه/پالت/آمادگی باید صحیح باشند تا ایندکس رنگ و شمارش کالا از محدوده بیرون نرود
+    const hue = num(an.hue, 0);
+    return { ...an, id: Math.floor(num(an.id, 0)), hue: ((Math.floor(hue) % 4) + 4) % 4, ready: Math.max(0, Math.floor(num(an.ready, 0))) };
   });
   if (!Array.isArray(d.builds)) d.builds = [];
   if (!Array.isArray(d.ponds)) d.ponds = [];
@@ -157,11 +162,14 @@ export function migrateSave(raw: unknown): Raw | null {
     const out: Record<string, number> = {};
     for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
       const n = num(v, 0);
-      if (known(k) && Number.isFinite(n) && n >= 0) out[k] = n;
+      // کالا/آمار شمارنده‌اند: پسماندِ کسری سیوهای قدیمی باید صحیح شود
+      if (known(k) && Number.isFinite(n) && n >= 0) out[k] = Math.floor(n);
     }
     return out;
   };
   d.inv = cleanRec(d.inv, (k) => !!GOOD[k]);
+  d.pack = cleanRec(d.pack, (k) => !!GOOD[k]);
   d.seeds = cleanRec(d.seeds, (k) => !!CROP[k]);
+  d.stats = cleanRec(d.stats, () => true);
   return d;
 }
