@@ -149,7 +149,8 @@ describe('موتور صدای استودیویی کم‌حجم (.mp3 درون‌
     expect(musicPauseCount).toBeGreaterThan(0);
   });
 
-  it('تنظیمات صدا، موسیقی، لرزش، اندازهٔ فونت و کاهش حرکت فوری روی DOM اعمال و ذخیره می‌شوند (P7-03)', () => {
+  it('تنظیمات صدا، موسیقی، لرزش، فونت، کاهش حرکت و سرعت انیمیشن کار ذخیره می‌شوند (P7-03)', () => {
+    updateSetting('actionSpeed', 2);
     updateSetting('fontScale', 1.2);
     updateSetting('reduceMotion', true);
     updateSetting('music', false);
@@ -158,6 +159,7 @@ describe('موتور صدای استودیویی کم‌حجم (.mp3 درون‌
     expect(document.documentElement.dataset.reduceMotion).toBe('1');
     resetGame();
     loadSettings();
+    expect(CFG.actionSpeed).toBe(2);
     expect(CFG.fontScale).toBe(1.2);
     expect(CFG.reduceMotion).toBe(true);
     expect(CFG.music).toBe(false);

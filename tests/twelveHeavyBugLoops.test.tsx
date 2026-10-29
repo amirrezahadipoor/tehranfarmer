@@ -19,6 +19,7 @@ import {
   judgeFestivalSubmission, redeemFestivalTokens, ringTownFestivalBell,
   stepFrontierLayer, useFrontierLandmark,
 } from '../src/game/core/frontier';
+import { completeMineNode, openMineEncounter, stepMineFloor } from '../src/game/core/mining';
 import { startDebt, solvable } from '../src/game/core/debt';
 import { NOTE_COUNT, TOTAL_DEBT } from '../src/story/debtData';
 import { applyDialogueChoice } from '../src/story/socialVillagers';
@@ -114,7 +115,7 @@ describe('12 Heavy Cross-System Bug-Hunting Loops + Longer Days Without Economy 
     expect(S.wellLv).toBe(1);
   });
 
-  it('Loop 2: Zero ASCII digits, zero raw ASCII %, and zero Persian leaks across ALL 21 modals + HUD in FA & EN', () => {
+  it('Loop 2: Zero ASCII digits, zero raw ASCII %, and zero Persian leaks across ALL 23 modals + HUD in FA & EN', () => {
     S.xp = 500_000;
     S.coins = 250_000;
     S.story.chapter = 6;
@@ -134,7 +135,7 @@ describe('12 Heavy Cross-System Bug-Hunting Loops + Longer Days Without Economy 
     const allModals = [
       'seed', 'market', 'work', 'carp', 'estate', 'animal', 'inv',
       'menu', 'auto', 'pond', 'hive', 'achieve', 'ledger', 'quests', 'museum',
-      'home', 'almanac', 'mail', 'fishing', 'festival', 'atlas',
+      'home', 'almanac', 'mail', 'fishing', 'festival', 'atlas', 'mining', 'mineMap',
     ] as const;
 
     // 1. Persian parity audit
@@ -143,6 +144,7 @@ describe('12 Heavy Cross-System Bug-Hunting Loops + Longer Days Without Economy 
     expect(/[0-9]/.test(hudFa)).toBe(false);
     expect(/%/.test(hudFa)).toBe(false);
     for (const m of allModals) {
+      if (m === 'mining') openMineEncounter(0);
       UI.modal = m;
       const txt = visibleTextOf(renderToString(<Modals />));
       expect(/[0-9]/.test(txt), `ASCII digit in FA modal ${m}: ${txt}`).toBe(false);
@@ -155,6 +157,7 @@ describe('12 Heavy Cross-System Bug-Hunting Loops + Longer Days Without Economy 
     const hudEn = visibleTextOf(renderToString(<Hud />));
     expect(/[\u0600-\u06FF]/.test(hudEn), `Persian leak in EN HUD: ${hudEn}`).toBe(false);
     for (const m of allModals) {
+      if (m === 'mining') openMineEncounter(0);
       UI.modal = m;
       const txt = visibleTextOf(renderToString(<Modals />));
       expect(/[\u0600-\u06FF]/.test(txt), `Persian leak in EN modal ${m}: ${txt}`).toBe(false);
@@ -244,8 +247,9 @@ describe('12 Heavy Cross-System Bug-Hunting Loops + Longer Days Without Economy 
   it('Loop 8: Cavern stairs & Forest glade transitions clear stale movement tasks & preserve 8-region portal symmetry', () => {
     UI.scene = 'cave';
     S.stamina = 150;
-    // ابتدا پله با یک ضربهٔ قطعی کشف می‌شود؛ سپس تاچ همان ناحیه طبقه را عوض می‌کند.
-    harvestFrontierNode('cave', 0, () => 0);
+    // آسانسور با دو استخراج قطعی باز می‌شود؛ سپس تاچ همان ناحیه طبقه را عوض می‌کند.
+    completeMineNode(1, 0, [0.45, 0.45, 0.45]);
+    completeMineNode(1, 1, [0.45, 0.45, 0.45]);
     expect(ensureFrontier().stairsFound['cave:1']).toBe(true);
 
     const farmer = {
@@ -355,9 +359,9 @@ describe('12 Heavy Cross-System Bug-Hunting Loops + Longer Days Without Economy 
       if (canAct('water', step % 12) === '') doAct('water', step % 12);
       tickLiveClock(48);
       if (S.plots[step % 12].ripe && canAct('harvest', step % 12) === '') doAct('harvest', step % 12);
-      harvestFrontierNode('cave', step % 6);
+      completeMineNode(ensureFrontier().caveFloor, step % 6, [0.45, 0.45, 0.45, 0.45]);
       harvestFrontierNode('forest', step % 6);
-      stepFrontierLayer('cave', 1);
+      stepMineFloor(1);
       stepFrontierLayer('forest', 1);
       if (step % 7 === 0) {
         ringTownFestivalBell();

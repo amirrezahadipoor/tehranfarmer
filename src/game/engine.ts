@@ -302,7 +302,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       if (w.mode === 'walk') {
         const dx = tk.x - w.x, dy = tk.y - w.y, d = Math.hypot(dx, dy);
         const spd = w.player && (w.tasks.some((q) => q.kind === 'travel' || q.kind === 'open') ? true : false) ? 520 : (w.player && d > 240 ? 390 : w.speed);
-        const st = spd * dt;
+        const st = spd * (w.player ? CFG.actionSpeed : 1) * dt;
         if (d <= st + 1) {
           w.x = tk.x; w.y = tk.y; w.mode = 'act'; w.p = 0; w.kind = tk.kind; if (tk.face) w.face = tk.face;
           if (w.player && tk.kind === 'fish' && fishCast.armed) { fishCast.armed = false; fishCast.active = true; fishCast.t = 0; sfx.nibble(); notify(); }
@@ -310,7 +310,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         }
         else { w.x += (dx / d) * st; w.y += (dy / d) * st; w.ph += st * 0.075; if (Math.abs(dx) > 3) w.face = dx > 0 ? 1 : -1; }
       } else if (w.mode === 'act') {
-        w.p += dt / tk.dur;
+        w.p += dt * (w.player ? CFG.actionSpeed : 1) / tk.dur;
         if (!w.hitDone && w.p >= tk.hit) { w.hitDone = true; applyTask(w, tk); }
         if (w.p >= 1) { w.cur = null; w.mode = 'idle'; }
       }

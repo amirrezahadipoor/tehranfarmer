@@ -220,6 +220,8 @@ export const UT_EN = {
   setMotion: 'Reduced Motion',
   setColorblind: 'High-Contrast Palette',
   setFont: 'Text Size',
+  setActionSpeed: 'Work Animation Speed',
+  setActionSpeedHint: 'Only player walking and work animations speed up; crop growth, world time and the economy stay unchanged.',
   stateOn: 'ON',
   stateOff: 'OFF',
   closeBtn: 'Close Modal',

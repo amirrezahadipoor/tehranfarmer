@@ -1,6 +1,7 @@
 // Bilingual (FA + EN) Strings for Multi-Layer Cavern, Misty Forest, Seamless World Atlas,
 // Skill Fishing Minigame, Interactive Town Square Festivals, Branching Village Charters & Late-Game Shocks.
 import { CFG } from '../game/settings';
+import { fa } from './fa';
 
 const en = () => CFG.locale === 'en';
 
@@ -121,9 +122,6 @@ export const FT = {
   get goodEmerald() { return en() ? 'Verdant Emerald' : 'زمرد سبز'; },
   get goodRuby() { return en() ? 'Royal Ruby' : 'یاقوت سرخ سلطنتی'; },
   get goodDiamond() { return en() ? 'Eternal Diamond' : 'الماس جاودان'; },
-  get mineEmpty() { return en() ? 'Only ordinary stone this time…' : 'این ضربه فقط سنگ معمولی بود…'; },
-  get mineStairsFound() { return en() ? 'Your pickaxe uncovered a hidden stairway down!' : 'کلنگ تو راه پلهٔ پنهان طبقهٔ پایین را آشکار کرد!'; },
-  get mineStairsHidden() { return en() ? 'No stairway found yet. Strike the rocks with your pickaxe!' : 'هنوز راهی پیدا نشده؛ با کلنگ روی سنگ‌ها بزن تا در طبقهٔ پایین آشکار شود!'; },
   get mineFloor() { return en() ? 'Mine level' : 'طبقهٔ معدن'; },
   get mineHint() { return en() ? 'Tap a rock: walk over, swing, and test your luck. Empty strikes are normal.' : 'روی سنگ بزن: کاراکتر نزدیک می‌شود و کلنگ می‌زند. خالی‌آمدن طبیعی است.'; },
   get recElixirName() { return en() ? 'Mountain Stamina Elixir' : 'معجون گیاهی کوهستان'; },
@@ -153,8 +151,41 @@ export const FT = {
   get springHealed() { return en() ? 'Warm mineral spring restored +38 Stamina!' : 'آب گرم چشمهٔ زیرزمینی قنات +۳۸ انرژی تازه بخشید!'; },
   get shrineBlessed() { return en() ? 'The ancient tree gifted rare seasonal seeds & +25 Stamina!' : 'درخت کهنسال جنگل ۲ بذر فصل و +۲۵ انرژی برکت داد!'; },
   get springUsed() { return en() ? 'Spring already visited today — come back tomorrow' : 'امروز از برکت چشمه بهره برده‌ای؛ فردا دوباره سر بزن'; },
-  get rockfallJolt() { return en() ? 'Cavern tremor! Extra stamina spent stabilizing the vein.' : 'لرزش سقف غار! کمی انرژی بیشتر صرف مهار رگه شد.'; },
   get seamlessArrived() { return en() ? 'Entered region:' : 'ورود پیوسته به:'; },
+
+  // Rebuilt Mine Expedition — deterministic veins, skill strikes and lift progress
+  get mineHudTitle() { return en() ? 'Mine expedition' : 'عملیات معدن'; },
+  get mineFloorShort() { return en() ? 'Level' : 'طبقه'; },
+  get mineVeinsShort() { return en() ? 'veins' : 'رگه'; },
+  get mineLiftShort() { return en() ? 'Lift' : 'آسانسور'; },
+  get mineOpenMap() { return en() ? 'Open mine map and field guide' : 'باز کردن نقشه و راهنمای معدن'; },
+  get mineMapTitle() { return en() ? 'Mine Map & Field Guide' : 'نقشه و دفترچهٔ معدن'; },
+  get mineMapIntro() { return en() ? 'Every visible vein guarantees its shown gem. Clear two veins to power the lift; precise weak-point strikes earn bonus ore.' : 'هر رگه‌ای که می‌بینی، گوهر مشخص‌شده‌اش را تضمین می‌کند. با استخراج دو رگه آسانسور روشن می‌شود و ضربهٔ دقیق به نقطهٔ شکست جایزهٔ اضافه دارد.'; },
+  get mineFloor1Name() { return en() ? 'Qanat Entrance' : 'دهانهٔ قنات'; },
+  get mineFloor2Name() { return en() ? 'Turquoise Gallery' : 'تالار فیروزه'; },
+  get mineFloor3Name() { return en() ? 'Amber Heart' : 'قلب کهربا'; },
+  get mineFloor1Lore() { return en() ? 'Old cedar supports still carry the marks of the first farmers. Quartz and turquoise are safest to learn on.' : 'تیرهای کهن هنوز جای دست نخستین کشاورزان را دارند. کوارتز و فیروزه این‌جا برای یادگیری امن‌ترند.'; },
+  get mineFloor2Lore() { return en() ? 'A dry watercourse crosses blue stone. Follow the bright seams instead of wasting strength on blank rock.' : 'بستر خشک آب از دل سنگ‌های آبی می‌گذرد. خطوط روشن را دنبال کن تا نیرویت صرف سنگ‌های پوچ نشود.'; },
+  get mineFloor3Lore() { return en() ? 'The oldest geodes sleep below the qanat. The royal ruby vein hides a diamond only for a flawless extraction.' : 'کهن‌ترین ژئودها زیر قنات خوابیده‌اند. رگهٔ سلطنتی یاقوتی فقط در استخراج بی‌نقص راز الماس را نشان می‌دهد.'; },
+  get mineCurrentFloor() { return en() ? 'You are here' : 'اینجا هستی'; },
+  get mineTravelFloor() { return en() ? 'Take lift to this level' : 'رفتن با آسانسور به این طبقه'; },
+  get mineLockedFloor() { return en() ? 'Clear two veins on the previous level to unlock.' : 'با استخراج دو رگه در طبقهٔ قبل باز می‌شود.'; },
+  get mineProgressLabel() { return en() ? 'Veins cleared' : 'رگه‌های استخراج‌شده'; },
+  get mineLifetimeLabel() { return en() ? 'Lifetime veins' : 'کل رگه‌ها'; },
+  get minePerfectLabel() { return en() ? 'Flawless extractions' : 'استخراج‌های بی‌نقص'; },
+  get mineGameTitle() { return en() ? 'Break the Vein' : 'شکستن رگه'; },
+  get mineWeakPointHint() { return en() ? 'Strike when the pick marker crosses the bright fracture. Each stage gets narrower; every completed strike still advances the vein.' : 'وقتی نشانگر کلنگ روی شکاف روشن رسید ضربه بزن. هر مرحله باریک‌تر می‌شود؛ حتی ضربهٔ غیردقیق هم رگه را جلو می‌برد.'; },
+  get mineStrikeBtn() { return en() ? 'STRIKE THE WEAK POINT' : 'ضربه به نقطهٔ شکست'; },
+  get mineQuickBtn() { return en() ? 'Quick extraction' : 'استخراج سریع'; },
+  get mineQuickHint() { return en() ? 'No timing: guaranteed base gem, no accuracy bonus.' : 'بدون timing: گوهر پایهٔ تضمینی، بدون جایزهٔ دقت.'; },
+  get minePerfectHit() { return en() ? 'Perfect fracture!' : 'شکست بی‌نقص!'; },
+  get mineGoodHit() { return en() ? 'Clean strike' : 'ضربهٔ خوب'; },
+  get mineMissHit() { return en() ? 'Glancing blow — keep going' : 'ضربهٔ کناری — ادامه بده'; },
+  get mineStageLabel() { return en() ? 'Strike' : 'ضربه'; },
+  get mineLiftOpened() { return en() ? 'Two veins cleared! The lift to the next level is now powered.' : 'دو رگه استخراج شد! آسانسور طبقهٔ بعد روشن شد.'; },
+  mineLoot(name: string, qty: number) { return en() ? `+${qty} ${name} secured` : `${fa(qty)} ${name} به کوله رفت`; },
+  get mineBestAccuracy() { return en() ? 'Best precision' : 'بهترین دقت'; },
+  get mineRoyalHint() { return en() ? 'Royal vein: flawless extraction reveals diamond' : 'رگهٔ سلطنتی: استخراج بی‌نقص الماس می‌دهد'; },
 
   // Skill Fishing Minigame UI
   get fishModalTitle() { return en() ? 'River Tension Reel — Skill Angling' : 'مینی‌گیم مهارتی کشش قلاب رودخانه'; },

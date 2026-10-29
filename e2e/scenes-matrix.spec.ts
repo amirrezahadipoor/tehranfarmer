@@ -65,7 +65,7 @@ declare global {
   }
 }
 
-test('ماتریس ۳۲ اسکرین‌شات: هر ۴ صحنه در ۴ فصل و ۲ ساعت روز/شب (P8-10)', async ({ page }) => {
+test('ماتریس ۴۸ اسکرین‌شات: هر ۶ صحنه در ۴ فصل و ۲ ساعت روز/شب (P8-10)', async ({ page }) => {
   test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

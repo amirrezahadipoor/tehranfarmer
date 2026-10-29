@@ -21,6 +21,7 @@ import {
   activeFrontierNodes, ensureFrontier, isFrontierNodeHarvested,
   isTownFestivalActive, stepFrontierLayer, useFrontierLandmark,
 } from './core/frontier';
+import { activeMineNodes, isMineNodeHarvested, stepMineFloor } from './core/mining';
 
 const FX = FIELD_X, FY = FIELD_Y;
 export const SHOPS = [{ id: 'seed', cx: 150 }, { id: 'market', cx: 350 }, { id: 'work', cx: 550 }, { id: 'animal', cx: 750 }, { id: 'carp', cx: 950 }, { id: 'estate', cx: 1150 }] as const;
@@ -314,26 +315,26 @@ export function createSceneTapRouter(d: SceneInputDeps) {
       if (useFrontierLandmark(scene)) d.pop(640, 336, 'star', 2);
       return;
     }
-    // کل دهانه و پله‌ها هدف لمسی بزرگ دارند؛ پایین‌رفتن فقط پس از کشف با کلنگ ممکن است.
+    // آسانسور معدن با پیشرفت قطعی و گذرگاه جنگل با جمع‌آوری باز می‌شود.
     if (layer < 3 && x >= 1072 && x <= 1224 && y >= 252 && y <= 574) {
-      if (stepFrontierLayer(scene, 1)) {
+      if (scene === 'cave' ? stepMineFloor(1) : stepFrontierLayer(scene, 1)) {
         d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
         d.farmer.x = 216; d.farmer.y = 594; d.farmer.face = 1;
       } else if (scene === 'cave') {
-        toast('hammer', FT.mineStairsHidden);
+        toast('hammer', FT.stairsLocked);
         sfx.err();
       }
       return;
     }
     if (layer > 1 && x >= 916 && x <= 1044 && y >= 282 && y <= 574) {
-      if (stepFrontierLayer(scene, -1)) {
+      if (scene === 'cave' ? stepMineFloor(-1) : stepFrontierLayer(scene, -1)) {
         d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
         d.farmer.x = 1040; d.farmer.y = 560; d.farmer.face = -1;
       }
       return;
     }
-    for (const spot of activeFrontierNodes(scene)) {
-      if (isFrontierNodeHarvested(scene, spot.idx)) continue;
+    for (const spot of scene === 'cave' ? activeMineNodes() : activeFrontierNodes(scene)) {
+      if (scene === 'cave' ? isMineNodeHarvested(spot.idx) : isFrontierNodeHarvested(scene, spot.idx)) continue;
       if (Math.hypot(x - spot.x, y - spot.y) <= 66) {
         if (S.stamina < spot.stam) { d.reasonToast('tired'); return; }
         d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';

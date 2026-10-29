@@ -19,6 +19,16 @@ export function formatVersion(v: string = RAW_APP_VERSION): string {
 export const APP_VERSION = RAW_APP_VERSION;
 export const CHANGELOG: { v: string; note: string }[] = [
   {
+    get v() { return locText('۱۰٫۱٫۰', '10.1.0'); },
+    get note() {
+      return locText(
+        'بازسازی کامل معدن با استخراج مهارتی، نقشهٔ طبقات و تنظیم سرعت انیمیشن کار',
+        'Complete mine rebuild with skill extraction, floor map and work-animation speed',
+      );
+    },
+  },
+
+{
     get v() { return locText('۱۰٫۰٫۱', '10.0.1'); },
     get note() {
       return locText(

@@ -18,6 +18,7 @@ import { ESTATE_UI } from '../strings/estateStoryText';
 import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
 import { FT } from '../strings/frontierText';
+import { MineStatusChip } from './MinePanels';
 
 const WEATHER = ['sun', 'cloud', 'rain', 'snow'];
 
@@ -94,7 +95,7 @@ export function Hud() {
             <LevelChip />
           </div>
           <div className="flex flex-wrap items-center gap-1">
-            <DebtChip />
+            {UI.scene === 'cave' ? <MineStatusChip /> : <DebtChip />}
             {S.builds.slice(0, 2).map((b) => (
               <div key={b.id} className="paper flex w-44 items-center gap-1.5 px-2 py-0.5">
                 <Ic n={b.icon} s={1.6} cls="bob" />

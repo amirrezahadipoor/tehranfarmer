@@ -1,6 +1,5 @@
 // ===== Frontier Expansion Core: Multi-Layer Cavern & Forest, 8-Region Portals, Charters, Fair & Late-Game Shocks =====
-import { CROP, CROPS, GOOD, HEART_BOND_2, KAVEH2_PRICE_MULT, machineMkPrice, type GemId, type MachineId } from '../data';
-import { rnd } from '../rng';
+import { CROP, CROPS, GOOD, HEART_BOND_2, KAVEH2_PRICE_MULT, machineMkPrice, type MachineId } from '../data';
 import { S, addStat, addXp, farmLevel, grantGoodWithMailOverflow, holdCount, notify, saveGame, season, stamCap, takeHold, toast } from '../state';
 import { addStanding } from './debt';
 import { sfx } from '../sound';
@@ -15,7 +14,7 @@ export interface FrontierState {
   forestLayer: number;        // 1..3
   maxForestLayer: number;     // 1..3
   nodesDone: Record<string, boolean>;
-  /** پله‌هایی که با ضربهٔ کلنگ در هر طبقه کشف شده‌اند */
+  /** آسانسورهایی که با پیشرفت قطعی معدن باز شده‌اند؛ با سیوهای قدیمی هم سازگار است */
   stairsFound: Record<string, boolean>;
   nodesDay: number;
   springDay: number;
@@ -320,142 +319,75 @@ export function fulfillRoyalDecree(id: string): boolean {
   return true;
 }
 
-// ===== ۳. معدن سه‌طبقه با کلنگ واقعی، غنایم مستقل و جنگل اسرارآمیز =====
+// ===== ۳. جنگل سه‌لایه؛ معدن مهارتی در core/mining.ts مستقل است =====
 export interface FrontierNodeSpot {
   idx: number;
   x: number;
   y: number;
-  good: GemId | 'herb' | 'mushroom' | 'truffle';
+  good: 'herb' | 'mushroom' | 'truffle';
   stam: number;
 }
 
-const CAVE_COORDS: readonly [number, number][] = [
-  [305, 478], [468, 548], [642, 578], [808, 478], [945, 568], [520, 632],
-];
 const FOREST_COORDS: readonly [number, number][] = [
   [292, 466], [456, 548], [628, 582], [812, 474], [956, 566], [508, 632],
 ];
 
-export function activeFrontierNodes(scene: 'cave' | 'forest'): FrontierNodeSpot[] {
-  const f = ensureFrontier();
-  const layer = scene === 'cave' ? f.caveFloor : f.forestLayer;
-  const coords = scene === 'cave' ? CAVE_COORDS : FOREST_COORDS;
-  return coords.map(([x, y], idx) => {
-    const good = scene === 'cave'
-      ? 'quartz' // رنگ رگه، خروجی قرعه را لو نمی‌دهد؛ غنیمت فقط لحظهٔ ضربه تعیین می‌شود.
-      : (layer >= 3 && idx % 2 === 1 ? 'truffle' : layer >= 2 && idx % 2 === 0 ? 'mushroom' : idx === 4 ? 'mushroom' : 'herb');
-    return { idx, x, y, good, stam: scene === 'cave' ? 26 + layer * 6 : 12 + layer * 4 };
-  });
+export function activeFrontierNodes(_scene: 'forest'): FrontierNodeSpot[] {
+  const layer = ensureFrontier().forestLayer;
+  return FOREST_COORDS.map(([x, y], idx) => ({
+    idx, x, y,
+    good: layer >= 3 && idx % 2 === 1 ? 'truffle' : layer >= 2 && idx % 2 === 0 ? 'mushroom' : idx === 4 ? 'mushroom' : 'herb',
+    stam: 12 + layer * 4,
+  }));
 }
 
-export function isFrontierNodeHarvested(scene: 'cave' | 'forest', idx: number): boolean {
+export function isFrontierNodeHarvested(_scene: 'forest', idx: number): boolean {
   const f = ensureFrontier();
-  const layer = scene === 'cave' ? f.caveFloor : f.forestLayer;
-  return !!f.nodesDone[`${scene}:${layer}:${idx}`];
+  return !!f.nodesDone[`forest:${f.forestLayer}:${idx}`];
 }
 
-const GEM_WEIGHTS: Readonly<Record<number, readonly [GemId, number][]>> = {
-  1: [['quartz', 62], ['turquoise', 20], ['amber', 7], ['amethyst', 6], ['garnet', 3], ['opal', 1.4], ['sapphire', 0.45], ['emerald', 0.12], ['ruby', 0.025], ['diamond', 0.005]],
-  2: [['quartz', 45], ['turquoise', 22], ['amber', 10], ['amethyst', 9], ['garnet', 6], ['opal', 4], ['sapphire', 2.2], ['emerald', 1.2], ['ruby', 0.55], ['diamond', 0.05]],
-  3: [['quartz', 30], ['turquoise', 20], ['amber', 12], ['amethyst', 12], ['garnet', 9], ['opal', 8], ['sapphire', 4.5], ['emerald', 2.8], ['ruby', 1.5], ['diamond', 0.2]],
-};
-
-/** قرعهٔ مستقل هر ضربه؛ شانس صفر هم دارد و هیچ سنگی تضمینی نیست. */
-export function rollCaveGem(floor: number, random: () => number = rnd): { good: GemId; qty: 1 } | null {
-  const emptyChance = 0.34 + Math.max(1, Math.min(3, floor)) * 0.04;
-  if (random() < emptyChance) return null;
-  const weights = GEM_WEIGHTS[Math.max(1, Math.min(3, floor))];
-  const total = weights.reduce((sum, [, w]) => sum + w, 0);
-  let roll = random() * total;
-  for (const [good, weight] of weights) {
-    roll -= weight;
-    if (roll <= 0) return { good, qty: 1 };
-  }
-  return { good: 'quartz', qty: 1 };
-}
-
-export function harvestFrontierNode(scene: 'cave' | 'forest', idx: number, random: () => number = rnd): { good: string; qty: number } | null {
+export function harvestFrontierNode(scene: 'forest', idx: number): { good: string; qty: number } | null {
   const f = ensureFrontier();
-  const layer = scene === 'cave' ? f.caveFloor : f.forestLayer;
-  const key = `${scene}:${layer}:${idx}`;
+  const layer = f.forestLayer;
+  const key = `forest:${layer}:${idx}`;
   const spot = activeFrontierNodes(scene)[idx];
   if (!spot || f.nodesDone[key]) return null;
   if (S.stamina < spot.stam) { sfx.err(); return null; }
   S.stamina = Math.max(0, S.stamina - spot.stam);
   f.nodesDone[key] = true;
-
-  let result: { good: string; qty: number } = { good: '', qty: 0 };
-  if (scene === 'cave') {
-    const rolled = rollCaveGem(layer, random);
-    if (rolled) {
-      result = rolled;
-      grantGoodWithMailOverflow(rolled.good, 1, 'engineer', scene);
-      addStat('harv', 1);
-    } else {
-      toast('hammer', FT.mineEmpty);
-    }
-    // پله فقط با کلنگ و به‌صورت تصادفی کشف می‌شود؛ حتی ضربهٔ بی‌غنیمت هم می‌تواند آن را آشکار کند.
-    if (layer < 3 && !f.stairsFound[`cave:${layer}`] && random() < 0.14) {
-      f.stairsFound[`cave:${layer}`] = true;
-      f.maxCaveFloor = Math.max(f.maxCaveFloor, layer + 1);
-      toast('cave', FT.mineStairsFound);
-      sfx.fanfare();
-    }
-    if (layer >= 2 && random() < 0.12 && S.stamina > 8) {
-      S.stamina = Math.max(2, S.stamina - 6);
-      toast('hammer', FT.rockfallJolt);
-    }
-    addXp(7 * layer);
-    sfx.dig();
-  } else {
-    const qty = activeCharter('frontier') === 'sanctuary' ? 2 : 1;
-    result = { good: spot.good, qty };
-    grantGoodWithMailOverflow(spot.good, qty, 'grandma', scene);
-    addStat('harv', qty);
-    addXp(11 * layer);
-    sfx.pop();
-  }
+  const qty = activeCharter('frontier') === 'sanctuary' ? 2 : 1;
+  grantGoodWithMailOverflow(spot.good, qty, 'grandma', scene);
+  addStat('harv', qty);
+  addXp(11 * layer);
+  sfx.pop();
   saveGame();
   notify();
-  return result;
+  return { good: spot.good, qty };
 }
 
-export function stepFrontierLayer(scene: 'cave' | 'forest', delta: 1 | -1): boolean {
+export function stepFrontierLayer(_scene: 'forest', delta: 1 | -1): boolean {
   const f = ensureFrontier();
-  const cur = scene === 'cave' ? f.caveFloor : f.forestLayer;
+  const cur = f.forestLayer;
   const next = cur + delta;
   if (next < 1 || next > 3) return false;
   if (delta > 0) {
-    if (scene === 'cave' && !f.stairsFound[`cave:${cur}`]) {
+    const clearedHere = [0, 1, 2, 3, 4, 5].filter((i) => f.nodesDone[`forest:${cur}:${i}`]).length;
+    const unlockedAlready = f.maxForestLayer >= next;
+    if (!unlockedAlready && clearedHere < 2) {
       sfx.err();
-      toast('lock', FT.mineStairsHidden);
+      toast('lock', FT.gladeLocked);
       return false;
     }
-    if (scene === 'forest') {
-      const clearedHere = [0, 1, 2, 3, 4, 5].filter((i) => f.nodesDone[`forest:${cur}:${i}`]).length;
-      const unlockedAlready = f.maxForestLayer >= next;
-      if (!unlockedAlready && clearedHere < 2) {
-        sfx.err();
-        toast('lock', FT.gladeLocked);
-        return false;
-      }
-    }
   }
-  if (scene === 'cave') {
-    f.caveFloor = next;
-    f.maxCaveFloor = Math.max(f.maxCaveFloor, next);
-  } else {
-    f.forestLayer = next;
-    f.maxForestLayer = Math.max(f.maxForestLayer, next);
-  }
+  f.forestLayer = next;
+  f.maxForestLayer = Math.max(f.maxForestLayer, next);
   sfx.step();
   saveGame();
   notify();
   return true;
 }
 
-export function useFrontierLandmark(scene: 'cave' | 'forest'): boolean {
-  if (scene === 'cave') return false; // چشمهٔ آب گرم قنات از معدن حذف شده است.
+export function useFrontierLandmark(_scene: 'forest'): boolean {
   const f = ensureFrontier();
   if (f.shrineDay === S.day) { sfx.err(); toast('water', FT.springUsed); return false; }
   f.shrineDay = S.day;

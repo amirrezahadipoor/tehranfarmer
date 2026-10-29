@@ -291,9 +291,9 @@ export const EN_LINES: Record<string, string[]> = {
     'Let’s set up new beehives and bring that honey back, Grandma!',
   ],
   'area-intro-cave': [
-    'The ancient Qanat Crystal Cavern—veins of quartz, turquoise, and sun-amber shimmer across vaulted stone strata.',
-    'Each deeper floor yields rarer gems, heir—watch your stamina and rest beside the thermal spring!',
-    'Lanterns lit! Let’s delve into the deep crystal strata!',
+    'The ancient Qanat Crystal Cavern—quartz and turquoise veins shine beneath old cedar supports and lantern light.',
+    'Every vein shows its gem, heir. Strike the bright fractures with your pick; clearing two veins powers the lift to the next level!',
+    'No blank rocks and no lucky guesswork this time—I choose my route and put my precision to work!',
   ],
   'area-intro-forest': [
     'The Misty Ancient Woods—golden sunbeams filter through towering oaks onto wild herbs and glowing mushrooms.',

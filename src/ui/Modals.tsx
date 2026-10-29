@@ -24,6 +24,8 @@ import { FarmhouseModal } from './FarmhouseModal';
 import { AlmanacModal } from './AlmanacModal';
 import { MailboxModal } from './MailboxModal';
 import { FishingModal } from './FishingModal';
+import { MiningModal } from './MiningModal';
+import { MineMapModal } from './MinePanels';
 import { FestivalModal } from './FestivalModal';
 import { WorldAtlasModal } from './WorldAtlasModal';
 import { currentRegionalShock, hasMonocultureSaturation } from '../game/core/frontier';
@@ -65,6 +67,8 @@ export function Modals() {
       {UI.modal === 'museum' && <Museum />}
       {UI.modal === 'home' && <FarmhouseModal />}
       {UI.modal === 'fishing' && <FishingModal />}
+      {UI.modal === 'mining' && <MiningModal />}
+      {UI.modal === 'mineMap' && <MineMapModal />}
       {UI.modal === 'festival' && <FestivalModal />}
       {UI.modal === 'atlas' && <WorldAtlasModal />}
       {UI.modal === 'almanac' && <AlmanacModal />}

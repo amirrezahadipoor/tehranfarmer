@@ -4,7 +4,8 @@ import { installDom } from './helpers/dom';
 import App from '../src/App';
 import { S, UI, catchRegionalFish, ensureMailState, hasSave, invCount, loadGame, packCap, resetGame, saveGame } from '../src/game/state';
 import { craftArtisan } from '../src/game/core/artisan';
-import { completeFestivalContest, harvestFrontierNode } from '../src/game/core/frontier';
+import { completeFestivalContest } from '../src/game/core/frontier';
+import { completeMineNode } from '../src/game/core/mining';
 import { debt, payDebt, processDebtDay, startDebt } from '../src/game/core/debt';
 import { SHOPS, createSceneTapRouter } from '../src/game/engineInput';
 import { startEngine } from '../src/game/engine';
@@ -68,7 +69,7 @@ describe('QA Audit Stage 6 — Regression Suite (RED -> GREEN)', () => {
     expect(S.coins).toBeGreaterThan(coinsBefore);
     expect(fishRes.species.id).toBeTruthy();
 
-    // 2) Even if inbox is full of 40 old read messages, mining 3 cave nodes consecutively drops ZERO quartz parcels
+    // 2) With a full inbox and full bags, three guaranteed mine rewards still arrive as three lossless parcels
     const ms = ensureMailState();
     for (let i = 0; i < 40; i++) {
       ms.inbox.push({
@@ -83,14 +84,11 @@ describe('QA Audit Stage 6 — Regression Suite (RED -> GREEN)', () => {
       });
     }
     S.stamina = 150;
-    const quartzStrike = () => {
-      const rolls = [0.99, 0, 0.99, 0.99]; // غیرخالی + کوارتز + بدون پله/ریزش
-      return () => rolls.shift() ?? 0.99;
-    };
-    expect(harvestFrontierNode('cave', 0, quartzStrike())?.good).toBe('quartz');
-    expect(harvestFrontierNode('cave', 1, quartzStrike())?.good).toBe('quartz');
-    expect(harvestFrontierNode('cave', 2, quartzStrike())?.good).toBe('quartz');
-    const caveParcels = ensureMailState().inbox.filter((m) => m.id.startsWith('overflow:cave:'));
+    const quick = [0.45, 0.45, 0.45];
+    expect(completeMineNode(1, 0, quick)?.good).toBe('quartz');
+    expect(completeMineNode(1, 1, quick)?.good).toBe('quartz');
+    expect(completeMineNode(1, 2, quick)?.good).toBe('turquoise');
+    const caveParcels = ensureMailState().inbox.filter((m) => m.id.startsWith('overflow:mine-vein:'));
     expect(caveParcels.length).toBe(3);
   });
 

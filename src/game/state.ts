@@ -98,7 +98,7 @@ export interface Save {
   savedAt?: number;
 }
 export type Tool = 'hand' | 'till' | 'plant' | 'water' | 'harvest' | 'fert';
-export type Modal = null | 'seed' | 'market' | 'work' | 'animal' | 'inv' | 'menu' | 'auto' | 'pond' | 'hive' | 'achieve' | 'carp' | 'estate' | 'ledger' | 'quests' | 'museum' | 'home' | 'almanac' | 'mail' | 'fishing' | 'festival' | 'atlas';
+export type Modal = null | 'seed' | 'market' | 'work' | 'animal' | 'inv' | 'menu' | 'auto' | 'pond' | 'hive' | 'achieve' | 'carp' | 'estate' | 'ledger' | 'quests' | 'museum' | 'home' | 'almanac' | 'mail' | 'fishing' | 'festival' | 'atlas' | 'mining' | 'mineMap';
 export interface Toast { id: number; icon: string; text: string; locale?: 'fa' | 'en' }
 
 export const UI = {
@@ -123,7 +123,7 @@ export const UI = {
   portrait: false,
   profile: 'small' as 'small' | 'tall' | 'tablet' | 'desktop' | 'portrait',
 };
-// سرعت بازی همواره و قطعی ۱× است و قابلیت تند کردن بازی (۲× / ۳× / ۵×) به طور کامل غیرفعال است
+// ساعت و شبیه‌سازی جهان همیشه ۱× است؛ CFG.actionSpeed فقط انیمیشن کار بازیکن را تغییر می‌دهد، نه اقتصاد یا رشد را
 Object.defineProperty(UI, 'speed', {
   get: () => 1,
   set: () => { /* قفل دائمی سرعت روی ۱× */ },

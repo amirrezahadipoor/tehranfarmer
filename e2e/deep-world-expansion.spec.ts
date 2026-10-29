@@ -31,21 +31,44 @@ test.describe('Deep 4-Pillar Expansion Live Canvas & Interactive Gameplay E2E', 
     };
     await skipIfCutscene();
 
-    // 1. Navigate to Crystal Cavern via HUD world bar, skip intro if shown, and harvest crystal vein on live Canvas
+    // 1. Rebuilt mine: walk to a visible vein, land three real timing strikes, then clear a second vein.
     await page.locator('[data-nav="cave"]').click();
     await page.waitForTimeout(750);
     await skipIfCutscene();
     const canvas = page.locator('canvas').first();
     await expect(canvas).toBeVisible();
     await canvas.click({ position: { x: 305, y: 458 } });
-    await page.waitForTimeout(250);
+    const mining = page.locator('[data-mining-modal="1"]');
+    await expect(mining).toBeVisible({ timeout: 9000 });
+    for (let stage = 0; stage < 3; stage++) {
+      await page.waitForFunction(() => {
+        const marker = document.querySelector<HTMLElement>('[data-mine-marker="1"]');
+        const target = document.querySelector<HTMLElement>('[data-mine-target-center]');
+        if (!marker || !target) return false;
+        const markerPct = Number.parseFloat(marker.style.left || '0');
+        const targetPct = Number(target.dataset.mineTargetCenter || '-100');
+        return Math.abs(markerPct - targetPct) < 2.2;
+      }, undefined, { timeout: 6000 });
+      await page.locator('[data-mine-strike="1"]').click();
+      if (stage < 2) await expect(mining).toHaveAttribute('data-mine-stage', String(stage + 1));
+    }
+    await expect(mining).toHaveCount(0, { timeout: 4000 });
     await skipIfCutscene();
     await canvas.click({ position: { x: 468, y: 535 } });
-    await page.waitForTimeout(250);
+    await expect(mining).toBeVisible({ timeout: 9000 });
+    await page.locator('[data-mine-quick="1"]').click();
+    await expect(mining).toHaveCount(0);
     await skipIfCutscene();
-    // Descend stairs to Cavern Strata 2!
+
+    // Two completed veins power the physical lift. Verify level 2, then exercise map travel in both directions.
     await canvas.click({ position: { x: 1148, y: 456 } });
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(350);
+    await page.locator('[data-open-mine-map="1"]').click();
+    await expect(page.locator('[data-mine-map="1"]')).toBeVisible();
+    await expect(page.locator('[data-mine-travel="2"]')).toBeDisabled();
+    await page.locator('[data-mine-travel="1"]').click();
+    await page.locator('[data-open-mine-map="1"]').click();
+    await page.locator('[data-mine-travel="2"]').click();
     await skipIfCutscene();
 
     // 2. Navigate to Misty Forest via HUD world bar and gather wild mountain botanicals + bless at Shrine

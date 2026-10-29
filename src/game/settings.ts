@@ -8,6 +8,8 @@ export interface UserSettings {
   colorblind: boolean;
   shortBeat: boolean;
   locale: 'fa' | 'en';
+  /** فقط سرعت حرکت/انیمیشن کار بازیکن؛ شبیه‌سازی اقتصاد و زمان جهان ثابت می‌ماند. */
+  actionSpeed: 1 | 1.5 | 2;
 }
 
 export const SETTINGS_KEY = 'mazrae-rangi-settings-v1';
@@ -21,6 +23,7 @@ const DEFAULTS: UserSettings = {
   colorblind: false,
   shortBeat: false,
   locale: 'fa',
+  actionSpeed: 1,
 };
 
 export const CFG: UserSettings = { ...DEFAULTS };
@@ -45,6 +48,7 @@ export function loadSettings(): UserSettings {
     if (!raw) return CFG;
     const parsed = JSON.parse(raw) as Partial<UserSettings>;
     Object.assign(CFG, DEFAULTS, parsed);
+    if (![1, 1.5, 2].includes(CFG.actionSpeed)) CFG.actionSpeed = 1;
     applySettingsToDom();
   } catch (e) { setLastError(`settings-load-failed:${String((e as Error)?.message ?? e)}`, 'storage'); }
   return CFG;

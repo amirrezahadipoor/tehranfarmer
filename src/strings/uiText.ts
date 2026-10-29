@@ -223,6 +223,8 @@ export const UT_FA = {
   setMotion: "کاهش حرکت",
   setColorblind: "پالت پرکنتراست کوررنگی",
   setFont: "اندازهٔ نوشته",
+  setActionSpeed: "سرعت انیمیشن کار",
+  setActionSpeedHint: "فقط راه‌رفتن و ضربه‌های بازیکن سریع‌تر می‌شود؛ رشد محصول، ساعت و اقتصاد ثابت می‌ماند.",
   stateOn: "روشن",
   stateOff: "خاموش",
   closeBtn: "بستن پنجره",

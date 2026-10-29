@@ -2,6 +2,7 @@ import { fa } from '../strings/fa';
 import { GT } from '../strings/gameText';
 import { notePlayerAction } from '../story/engine';
 import { harvestFrontierNode } from './core/frontier';
+import { openMineEncounter } from './core/mining';
 import type { Task, Walker } from './engineRender';
 import { sfx } from './sound';
 import { activeFarm, toast } from './state';
@@ -20,6 +21,7 @@ export function strikeFrontierRock(
   pop: (x: number, y: number, icon: string, n?: number, text?: string) => void,
   dust: (x: number, y: number, col: string, n: number) => void,
 ) {
+  if (scene === 'cave') { openMineEncounter(node); return; }
   const res = harvestFrontierNode(scene, node);
   if (res?.qty) pop(x + 42, y - 58, res.good, Math.min(3, res.qty), '+' + fa(res.qty));
   dust(x + 42, y - 12, '#b7a59a', 10);

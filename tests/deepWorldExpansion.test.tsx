@@ -11,8 +11,11 @@ import {
   ROYAL_DECREES, activeCharter, activeFrontierNodes, checkSeamlessEdgePortal, chooseVillageCharter,
   completeFestivalContest, currentRegionalShock, ensureFrontier, fulfillRoyalDecree, harvestFrontierNode,
   hasMonocultureSaturation, isTownFestivalActive, judgeFestivalSubmission, redeemFestivalTokens,
-  ringTownFestivalBell, rollCaveGem, stepFrontierLayer, useFrontierLandmark,
+  ringTownFestivalBell, stepFrontierLayer, useFrontierLandmark,
 } from '../src/game/core/frontier';
+import {
+  activeMineNodes, completeMineNode, mineAccuracyAt, mineFloorProgress, mineWeakPoint, stepMineFloor, travelMineFloor,
+} from '../src/game/core/mining';
 import { caveBG, drawTownWorldExpansions, forestBG, renderFrontierScene } from '../src/game/frontierScenes';
 import { makeFarmer, PAL_PLAYER } from '../src/game/rig';
 import { SCENE_CHOICES, applyDialogueChoice } from '../src/story/socialVillagers';
@@ -158,10 +161,18 @@ describe('Deep 4-Pillar World, Skill Minigames, Branching Charters & Late-Game E
     expect(craftArtisan('turquoise-amulet', 1)).toBe(1);
   });
 
-  it('4a. Cave rolls allow empty strikes and make the rarest gem genuinely rare but possible', () => {
-    expect(rollCaveGem(1, () => 0)).toBeNull();
-    const rolls = [0.99, 0.999999999];
-    expect(rollCaveGem(1, () => rolls.shift() ?? 0.99)).toEqual({ good: 'diamond', qty: 1 });
+  it('4a. Rebuilt mine: visible guaranteed veins, deterministic weak points and skill-only bonuses', () => {
+    const nodes = activeMineNodes(1);
+    expect(new Set(nodes.map((n) => n.good)).size).toBeGreaterThan(1);
+    const target = mineWeakPoint(1, 0, 0);
+    expect(mineAccuracyAt(1, 0, 0, target.center)).toBe(1);
+    expect(mineAccuracyAt(1, 0, 0, target.center + target.width)).toBe(0);
+    S.stamina = 1000;
+    const quick = completeMineNode(1, 0, [0.45, 0.45, 0.45]);
+    expect(quick).toMatchObject({ good: 'quartz', qty: 1, perfect: false });
+    const precise = completeMineNode(1, 1, [0.97, 0.97, 0.97]);
+    expect(precise).toMatchObject({ good: 'quartz', qty: 3, perfect: true });
+    expect(S.stats.minePerfect).toBe(1);
   });
 
   it('4. Seamless 8-Region Portals + 3-Floor Crystal Cavern + 3-Glade Misty Forest + Canvas Render + Save/Load', () => {
@@ -175,18 +186,22 @@ describe('Deep 4-Pillar World, Skill Minigames, Branching Charters & Late-Game E
     expect(checkSeamlessEdgePortal('forest', 54, 590)).toBe('apiary');
 
     S.stamina = 1000;
-    expect(stepFrontierLayer('cave', 1)).toBe(false);
-    // ضربهٔ قطعی: غنیمت خالی + کشف پله؛ ظاهر سنگ همچنان خنثی می‌ماند.
-    expect(harvestFrontierNode('cave', 0, () => 0)?.qty).toBe(0);
+    expect(stepMineFloor(1)).toBe(false);
+    expect(completeMineNode(1, 0, [0.45, 0.45, 0.45])?.qty).toBe(1);
+    expect(mineFloorProgress(1).liftOpen).toBe(false);
+    expect(stepMineFloor(1)).toBe(false);
+    expect(completeMineNode(1, 1, [0.8, 0.8, 0.8])?.liftUnlocked).toBe(true);
     expect(ensureFrontier().stairsFound['cave:1']).toBe(true);
-    expect(stepFrontierLayer('cave', 1)).toBe(true);
+    expect(stepMineFloor(1)).toBe(true);
     expect(ensureFrontier().caveFloor).toBe(2);
-    expect(activeFrontierNodes('cave').every((n) => n.good === 'quartz')).toBe(true);
-    expect(harvestFrontierNode('cave', 0, () => 0)?.qty).toBe(0);
-    expect(ensureFrontier().stairsFound['cave:2']).toBe(true);
-    expect(stepFrontierLayer('cave', 1)).toBe(true);
+    expect(activeMineNodes().some((n) => n.good === 'amethyst')).toBe(true);
+    completeMineNode(2, 0, [0.45, 0.45, 0.45]);
+    completeMineNode(2, 1, [0.45, 0.45, 0.45]);
+    expect(stepMineFloor(1)).toBe(true);
     expect(ensureFrontier().caveFloor).toBe(3);
-    expect(useFrontierLandmark('cave')).toBe(false);
+    expect(travelMineFloor(2)).toBe(true);
+    expect(travelMineFloor(3)).toBe(true);
+    expect(completeMineNode(3, 5, [0.97, 0.97, 0.97, 0.97])).toMatchObject({ good: 'diamond', qty: 1, perfect: true });
 
     S.stamina = 150;
     expect(harvestFrontierNode('forest', 0)?.good).toBe('herb');

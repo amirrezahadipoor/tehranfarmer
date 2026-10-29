@@ -2,7 +2,7 @@
 import { useRef } from 'react';
 import { S, UI, exportSaveJson, importSaveJson, listBackupSlots, notify, restoreBackupSlot, toast } from '../game/state';
 import { CFG, resetSettings, updateSetting } from '../game/settings';
-import { fa } from '../strings/fa';
+import { fa, faDec } from '../strings/fa';
 import { sfx } from '../game/sound';
 import { GT } from '../strings/gameText';
 import { UT } from '../strings/uiText';
@@ -54,6 +54,7 @@ export function SettingsPanel() {
   };
 
   const scales: Array<1 | 1.1 | 1.2> = [1, 1.1, 1.2];
+  const actionSpeeds: Array<1 | 1.5 | 2> = [1, 1.5, 2];
   return (
     <div className="paper mx-auto mt-2 max-w-lg p-3" data-settings-panel="1">
       <div className="flex flex-wrap justify-center gap-1.5">
@@ -63,6 +64,15 @@ export function SettingsPanel() {
         {toggle('reduceMotion', UT.setMotion)}
         {toggle('colorblind', UT.setColorblind)}
         {toggle('shortBeat', UT.alwaysShort)}
+      </div>
+      <div data-action-speed-control="1" className="mt-2 rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1.5 text-center">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
+          <span>{UT.setActionSpeed}:</span>
+          {actionSpeeds.map((speed) => (
+            <button key={speed} data-action-speed={speed} aria-pressed={CFG.actionSpeed === speed} aria-label={`${UT.setActionSpeed} ${faDec(speed)}×`} className={'btn press !min-h-[48px] !px-3 !py-0.5 text-xs ' + (CFG.actionSpeed === speed ? 'y' : 'b')} onClick={() => { updateSetting('actionSpeed', speed); sfx.tap(); notify(); }}><span dir="ltr">{faDec(speed)}×</span></button>
+          ))}
+        </div>
+        <p className="mt-1 text-[.68rem] font-bold leading-4 text-[#67513d]">{UT.setActionSpeedHint}</p>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
         <span>{UT.setFont}:</span>

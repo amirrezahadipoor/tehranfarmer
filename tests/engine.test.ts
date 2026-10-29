@@ -4,6 +4,8 @@ import { S, UI, resetGame, advance } from './helpers/game';
 import { checkInvariants } from './helpers/invariants';
 import { plotsForFarm } from '../src/game/state';
 import { ensureFrontier } from '../src/game/core/frontier';
+import { closeMineEncounter, finishMineEncounter } from '../src/game/core/mining';
+import { CFG } from '../src/game/settings';
 
 let dom: ReturnType<typeof installDom>;
 let stop: (() => void) | null = null;
@@ -26,6 +28,7 @@ beforeEach(() => {
   UI.scene = 'farm';
   UI.modal = null;
   UI.tool = 'hand';
+  CFG.actionSpeed = 1;
   if (!stop) {
     canvas = makeCanvas();
     stop = startEngine(canvas);
@@ -112,15 +115,48 @@ describe('موتور headless', () => {
     }
   });
 
-  it('کلنگ فقط پس از راه‌رفتن به سنگ اجرا می‌شود', () => {
+  it('سرعت انیمیشن کار فقط مسیر/ضربهٔ بازیکن را سریع‌تر می‌کند و قفل سرعت جهان را باز نمی‌کند', () => {
+    UI.scene = 'cave';
+    S.story.prologueSeen = true;
+    S.story.seen['area-intro-cave'] = true;
+    S.story.seen['area-intro-river'] = true;
+    S.stamina = 500;
+    const framesToEncounter = () => {
+      let frames = 0;
+      while (UI.modal !== 'mining' && frames < 1400) { dom.pump(1); frames++; }
+      expect(UI.modal).toBe('mining');
+      return frames;
+    };
+    CFG.actionSpeed = 1;
+    dom.pump(2);
+    tap(canvas, 305, 478);
+    const slow = framesToEncounter();
+    closeMineEncounter();
+    cmd.travelTo('river'); dom.pump(240);
+    cmd.travelTo('cave'); dom.pump(240);
+    CFG.actionSpeed = 2;
+    tap(canvas, 305, 478);
+    const fast = framesToEncounter();
+    expect(fast).toBeLessThan(slow * 0.8);
+    expect(UI.speed).toBe(1);
+    closeMineEncounter();
+    CFG.actionSpeed = 1;
+  });
+
+  it('مینی‌گیم معدن فقط پس از راه‌رفتن باز می‌شود و نتیجهٔ آن واقعاً ذخیره می‌شود', () => {
     UI.scene = 'cave';
     dom.pump(2);
     S.stamina = 150;
     expect(ensureFrontier().nodesDone['cave:1:0']).toBeUndefined();
     tap(canvas, 305, 478);
     dom.pump(30);
+    expect(UI.modal).toBeNull();
     expect(ensureFrontier().nodesDone['cave:1:0']).toBeUndefined();
     dom.pump(1200);
+    expect(UI.modal).toBe('mining');
+    expect(ensureFrontier().nodesDone['cave:1:0']).toBeUndefined();
+    finishMineEncounter([0.45, 0.45, 0.45]);
+    expect(UI.modal).toBeNull();
     expect(ensureFrontier().nodesDone['cave:1:0']).toBe(true);
   });
 });
