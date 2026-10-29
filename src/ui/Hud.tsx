@@ -66,6 +66,8 @@ export function Hud() {
   const eu = ESTATE_UI[CFG.locale === 'en' ? 'en' : 'fa'];
   // منبع واحد شب: همان isNight موتور بازی (NIGHT_START_H=19.5 / NIGHT_END_H=5.5) تا آیکون HUD هرگز از منطق بازی جلو نزند
   const nightNow = isNight();
+  // یک محاسبه در هر رندر: آیکن و badge همیشه از یک وضعیت پستی یکسان استفاده می‌کنند.
+  const mailAttention = unreadMailCount();
   return (
     <>
       {/* نوار یکپارچهٔ بالای صفحه: چیدمان انعطاف‌پذیر، کم‌ارتفاع (آزاد بودن کامل سقف خانه و مزرعه) و صفر برخورد در هر عرض صفحه */}
@@ -170,14 +172,16 @@ export function Hud() {
             <button
               aria-label={MAIL_UI.title}
               data-open-mail="1"
+              data-mail-attention={mailAttention}
+              data-mail-icon={mailAttention > 0 ? 'mail' : 'mailopen'}
               className="btn y press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
               onClick={() => { sfx.paper(); UI.modal = 'mail'; notify(); }}
               title={MAIL_UI.title}
             >
-              <Ic n={unreadMailCount() > 0 ? 'mail' : 'mailopen'} s={UI.portrait ? 1.7 : 1.9} />
-              {unreadMailCount() > 0 && (
+              <Ic n={mailAttention > 0 ? 'mail' : 'mailopen'} s={UI.portrait ? 1.7 : 1.9} />
+              {mailAttention > 0 && (
                 <span data-mail-badge="1" className="absolute -left-1.5 -top-1.5 rounded-full border-2 border-[#503426] bg-[#e63935] px-1 text-[.68rem] font-black leading-none text-white">
-                  {fa(unreadMailCount())}
+                  {fa(mailAttention)}
                 </span>
               )}
             </button>

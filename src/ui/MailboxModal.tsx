@@ -60,17 +60,9 @@ export function MailboxModal() {
 
   const inbox = ensureMailState().inbox;
   const filtered = tab === 'all' ? inbox : inbox.filter((m) => m.category === tab);
-  const active = filtered.find((m) => m.id === selectedId)
-    ?? filtered.find((m) => hasPendingAction(m))
-    ?? filtered.find((m) => !m.read)
-    ?? filtered[0]
-    ?? null;
-
-  useEffect(() => {
-    if (active && !active.read) {
-      markMailRead(active.id);
-    }
-  }, [active]);
+  // Opening the postbox must not silently unseal a letter. Only an explicit row
+  // selection marks it read; changing tabs also cannot consume another unread letter.
+  const active = filtered.find((m) => m.id === selectedId) ?? null;
 
   const tabs: Array<{ id: FilterTab; label: string; ic: string }> = [
     { id: 'all', label: MAIL_UI.tabAll, ic: 'mail' },
@@ -113,7 +105,7 @@ export function MailboxModal() {
                 <button
                   key={tItem.id}
                   data-mail-tab={tItem.id}
-                  onClick={() => { sfx.tap(); setTab(tItem.id); }}
+                  onClick={() => { sfx.tap(); setTab(tItem.id); setSelectedId(''); }}
                   className={`btn press !px-2 !py-0.5 text-xs font-black ${on ? 'y ring-2 ring-[#503426]' : ''}`}
                 >
                   <Ic n={tItem.ic} s={1.2} />
@@ -147,23 +139,34 @@ export function MailboxModal() {
         ) : (
           <div className="grid gap-2 sm:grid-cols-12">
             {/* ستون فهرست پاکت‌های نامه با مهر موم رنگی */}
-            <div className="flex max-h-[42vh] flex-col gap-1.5 overflow-y-auto pr-0.5 sm:col-span-5 sm:max-h-[58vh]">
+            <div data-mail-list="1" className={`${active ? 'hidden sm:flex' : 'flex'} max-h-[42vh] flex-col gap-1.5 overflow-y-auto pr-0.5 sm:col-span-5 sm:max-h-[58vh]`}>
               {filtered.map((m) => {
                 const meta = SENDER_META[m.sender];
                 const txt = renderMailTemplate(m, mailItemLabel);
                 const selected = active?.id === m.id;
                 const actionReady = hasPendingAction(m);
+                const mailIcon = m.read ? 'mailopen' : 'mail';
+                const hasSealedParcel = Boolean(m.parcel?.length && !m.claimed);
                 return (
                   <button
                     key={m.id}
                     data-mail-row={m.id}
+                    data-mail-read={m.read ? '1' : '0'}
+                    data-mail-icon={mailIcon}
+                    aria-label={`${txt.subject} — ${m.read ? MAIL_UI.readTag : MAIL_UI.unreadTag}`}
+                    aria-expanded={selected}
                     onClick={() => { sfx.paper(); setSelectedId(m.id); markMailRead(m.id); }}
                     className={`paper press flex min-h-[48px] items-center gap-2 p-2 text-start transition ${
-                      selected ? '!bg-[#fff3ce] ring-2 ring-[#7a4b26]' : m.read ? 'opacity-90' : '!bg-[#fffaf0]'
+                      selected ? '!bg-[#fff3ce] ring-2 ring-[#7a4b26]' : m.read ? 'opacity-90' : '!bg-[#fffaf0] ring-1 ring-[#d5a54d]'
                     }`}
                   >
                     <div className="relative shrink-0">
-                      <Ic n={m.parcel?.length && !m.claimed ? 'parcel' : m.read ? 'mailopen' : 'mail'} s={2.35} />
+                      <Ic n={mailIcon} s={2.35} />
+                      {hasSealedParcel && (
+                        <span data-mail-parcel-indicator="1" className="absolute -left-1.5 -top-1.5 rounded-full border border-[#503426] bg-[#fff4d6] p-0.5">
+                          <Ic n="parcel" s={0.85} />
+                        </span>
+                      )}
                       <span
                         className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-[#503426]"
                         style={{ backgroundColor: meta.sealColor }}
@@ -174,7 +177,14 @@ export function MailboxModal() {
                         <span className="truncate font-extrabold text-[#4c2e16]">{en ? meta.nameEn : meta.nameFa}</span>
                         <span className="shrink-0">{MAIL_UI.postmarkDay(m.day, seasonLabel(m.season))}</span>
                       </div>
-                      <div className="truncate text-xs font-black text-[#2e1c0e]">{txt.subject}</div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="min-w-0 flex-1 truncate text-xs font-black text-[#2e1c0e]">{txt.subject}</div>
+                        {!m.read && (
+                          <span data-mail-unread-tag="1" className="shrink-0 rounded-full bg-[#cf3834] px-1.5 py-0.5 text-[.62rem] font-black leading-none text-white">
+                            {MAIL_UI.unreadTag}
+                          </span>
+                        )}
+                      </div>
                       {actionReady && (
                         <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.2 text-[.64rem] font-black text-amber-950 ring-1 ring-amber-400">
                           <Ic n={m.parcel?.length && !m.claimed ? 'parcel' : 'coin'} s={0.95} />
@@ -186,6 +196,15 @@ export function MailboxModal() {
                 );
               })}
             </div>
+
+            {/* روی دسکتاپ پیش‌نمایش خالی است تا هیچ نامه‌ای بدون انتخاب باز نشود؛ روی موبایل فقط فهرست دیده می‌شود. */}
+            {!active && (
+              <div data-mail-selection-empty="1" className="paper hidden flex-col items-center justify-center gap-2 border-2 border-dashed border-[#c6a675] !bg-[#fffaf0] p-6 text-center sm:col-span-7 sm:flex">
+                <Ic n="mail" s={4} />
+                <div className="text-sm font-black text-[#4c2e16]">{MAIL_UI.chooseLetter}</div>
+                <div className="max-w-sm text-xs font-bold leading-relaxed text-[#765334]">{MAIL_UI.sealedUntilOpened}</div>
+              </div>
+            )}
 
             {/* کاغذ دست‌ساز نامهٔ بازشده با مهر پستی، امضا، بستهٔ هدیه و دکمه‌های تعاملی */}
             {active && (() => {
@@ -200,6 +219,15 @@ export function MailboxModal() {
                   className="paper relative flex flex-col justify-between gap-3 border-2 border-[#b8955c] !bg-[#fffaf0] p-3.5 sm:col-span-7"
                 >
                   <div className="flex flex-col gap-2.5">
+                    <button
+                      data-mail-back="1"
+                      className="btn b press !min-h-[48px] w-full justify-start !px-3 !py-1 text-xs font-black sm:hidden"
+                      onClick={() => { sfx.tap(); setSelectedId(''); }}
+                    >
+                      <Ic n="mail" s={1.15} />
+                      <span>{MAIL_UI.backToLetters}</span>
+                    </button>
+
                     {/* سربرگ تمبر و مهر موم فرستنده */}
                     <div className="flex flex-wrap items-start justify-between gap-2 border-b-2 border-dashed border-[#d8be92] pb-2">
                       <div className="flex items-center gap-2">

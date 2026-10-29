@@ -275,11 +275,16 @@ describe('فاز ۹ — جداسازی کامل تنظیمات از سِیو و 
     expect(wf).toContain('artifacts/mazrae-rangi-release.apk');
   });
 
-  it('نسخهٔ package.json و build.gradle همگام‌اند و مستندات کامل انتشار (CHANGELOG, PRIVACY, RELEASE-CHECKLIST) موجودند (P10-09)', () => {
+  it('نسخهٔ package.json، package-lock.json و build.gradle همگام‌اند و مستندات کامل انتشار موجودند (P10-09)', () => {
     const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')) as { version: string };
+    const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8')) as { version: string; packages: Record<string, { version?: string }> };
     const gradle = fs.readFileSync('android/app/build.gradle', 'utf8');
+    const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+    expect(lock.version).toBe(pkg.version);
+    expect(lock.packages['']?.version).toBe(pkg.version);
     expect(gradle).toContain(`versionName "${pkg.version}"`);
-    expect(fs.readFileSync('CHANGELOG.md', 'utf8')).toContain(`[${pkg.version}]`);
+    expect(changelog).toContain(`[${pkg.version}]`);
+    expect(changelog.indexOf('[Unreleased]')).toBeLessThan(changelog.indexOf(`[${pkg.version}]`));
     expect(fs.readFileSync('PRIVACY.md', 'utf8')).toContain('android.permission.INTERNET');
     expect(fs.readFileSync('docs/RELEASE-CHECKLIST.md', 'utf8')).toContain('apksigner verify');
   });

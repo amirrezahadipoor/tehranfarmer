@@ -19,6 +19,16 @@ export function formatVersion(v: string = RAW_APP_VERSION): string {
 export const APP_VERSION = RAW_APP_VERSION;
 export const CHANGELOG: { v: string; note: string }[] = [
   {
+    get v() { return locText('۱۰٫۱٫۱', '10.1.1'); },
+    get note() {
+      return locText(
+        'اصلاح وضعیت پاکت نامه‌ها؛ نامهٔ جدید تا انتخاب بازیکن بسته می‌ماند و نمای موبایل فهرست/نامه بهبود یافت',
+        'Mail-state fix: new letters stay sealed until selected, with clearer mobile list and reading navigation',
+      );
+    },
+  },
+
+{
     get v() { return locText('۱۰٫۱٫۰', '10.1.0'); },
     get note() {
       return locText(

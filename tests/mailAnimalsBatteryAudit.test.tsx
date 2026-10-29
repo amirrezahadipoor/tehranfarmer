@@ -1,5 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { act } from 'react';
 import { renderToString } from 'react-dom/server';
+import { createRoot } from 'react-dom/client';
+import { createRequire } from 'node:module';
 import { installDom } from './helpers/dom';
 import { S, UI, resetGame, newDay, addGood, exportSaveJson, importSaveJson } from '../src/game/state';
 import { CFG } from '../src/game/settings';
@@ -19,6 +22,11 @@ import { MailboxModal } from '../src/ui/MailboxModal';
 import { Hud } from '../src/ui/Hud';
 
 const EMOJI_RE = /\p{Extended_Pictographic}/u;
+// jsdom is already a test dependency; this narrow structural type avoids adding
+// a second @types package solely for one interaction fixture.
+const { JSDOM } = createRequire(import.meta.url)('jsdom') as {
+  JSDOM: new (html: string) => { window: { document: Document; close(): void } };
+};
 
 beforeAll(() => {
   installDom();
@@ -149,6 +157,7 @@ describe('Animal Art Overhaul, Illustrated Village Postbox System & Lossless Bat
     const hudHtml = renderToString(<Hud />);
     expect(hudHtml).toContain('data-open-mail="1"');
     expect(hudHtml).toContain('data-mail-badge="1"');
+    expect(hudHtml).toContain('data-mail-icon="mail"');
     expect(EMOJI_RE.test(hudHtml)).toBe(false);
 
     for (let i = 0; i < 5; i++) newDay();
@@ -160,6 +169,48 @@ describe('Animal Art Overhaul, Illustrated Village Postbox System & Lossless Bat
       expect(EMOJI_RE.test(modalHtml)).toBe(false);
     }
     CFG.locale = 'fa';
+  });
+
+  it('keeps every new letter sealed until explicit selection, including parcel mail and tab changes', async () => {
+    const dom = new JSDOM('<!doctype html><html><body><div id="mail-root"></div></body></html>');
+    const host = dom.window.document.getElementById('mail-root') as unknown as HTMLDivElement;
+    const root = createRoot(host);
+    const actScope = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    const previousActSetting = actScope.IS_REACT_ACT_ENVIRONMENT;
+    actScope.IS_REACT_ACT_ENVIRONMENT = true;
+    try {
+      await act(async () => { root.render(<MailboxModal />); });
+      const welcome = S.mail!.inbox.find((m) => m.id === 'story:welcome')!;
+      const rowSelector = '[data-mail-row="story:welcome"]';
+      expect(welcome.read).toBe(false);
+      expect(host.querySelector('[data-mail-letter]')).toBeNull();
+      const initialRow = host.querySelector<HTMLButtonElement>(rowSelector)!;
+      expect(initialRow.dataset.mailRead).toBe('0');
+      expect(initialRow.dataset.mailIcon).toBe('mail');
+      expect(initialRow.querySelector('[data-mail-unread-tag="1"]')).not.toBeNull();
+      expect(initialRow.querySelector('[data-mail-parcel-indicator="1"]')).not.toBeNull();
+
+      await act(async () => { host.querySelector<HTMLButtonElement>('[data-mail-tab="story"]')!.click(); });
+      expect(welcome.read).toBe(false);
+      expect(host.querySelector('[data-mail-letter]')).toBeNull();
+      expect(host.querySelector<HTMLButtonElement>(rowSelector)!.dataset.mailIcon).toBe('mail');
+
+      await act(async () => { host.querySelector<HTMLButtonElement>(rowSelector)!.click(); });
+      expect(welcome.read).toBe(true);
+      expect(host.querySelector('[data-mail-letter="story:welcome"]')).not.toBeNull();
+      expect(host.querySelector<HTMLButtonElement>(rowSelector)!.dataset.mailIcon).toBe('mailopen');
+      expect(host.querySelector<HTMLButtonElement>(rowSelector)!.dataset.mailRead).toBe('1');
+
+      await act(async () => { host.querySelector<HTMLButtonElement>('[data-mail-back="1"]')!.click(); });
+      expect(host.querySelector('[data-mail-letter]')).toBeNull();
+      expect(host.querySelector<HTMLButtonElement>(rowSelector)!.dataset.mailRead).toBe('1');
+    } finally {
+      await act(async () => { root.unmount(); });
+      host.remove();
+      dom.window.close();
+      if (previousActSetting === undefined) delete actScope.IS_REACT_ACT_ENVIRONMENT;
+      else actScope.IS_REACT_ACT_ENVIRONMENT = previousActSetting;
+    }
   });
 
   it('keeps crops crew productive by collecting ripe ranch animal products when no field crop task is actionable', () => {

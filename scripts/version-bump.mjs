@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ===== همگام‌سازی نسخه در همهٔ جاها (رفع C-9/N-4) =====
-// قبلاً نسخه باید دستی در چهار جا تکرار می‌شد: package.json، android/app/build.gradle
-// (versionName + versionCode)، فایل CHANGELOG و آرایهٔ CHANGELOG در src/strings/version.ts.
+// قبلاً نسخه باید دستی در پنج جا تکرار می‌شد: package.json، package-lock.json،
+// android/app/build.gradle (versionName + versionCode)، فایل CHANGELOG و آرایهٔ CHANGELOG در src/strings/version.ts.
 // این اسکریپت همه را با هم و اتمیک به‌روز می‌کند تا ناهم‌خوانی ممکن نباشد.
 //
 // استفاده:
@@ -27,6 +27,7 @@ const target = (args[0] ?? 'patch').trim();
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const pkgPath = path.join(root, 'package.json');
+const lockPath = path.join(root, 'package-lock.json');
 const gradlePath = path.join(root, 'android/app/build.gradle');
 const versionTsPath = path.join(root, 'src/strings/version.ts');
 const changelogPath = path.join(root, 'CHANGELOG.md');
@@ -73,14 +74,22 @@ const edits = [];
 const pkgNext = { ...pkg, version: nextName };
 edits.push({ file: pkgPath, content: `${JSON.stringify(pkgNext, null, 2)}\n`, label: `package.json -> ${nextName}` });
 
-// ۲) android/app/build.gradle
+// ۲) package-lock.json — ریشه و package خود پروژه باید با package.json یکسان بمانند.
+if (fs.existsSync(lockPath)) {
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  lock.version = nextName;
+  if (lock.packages?.['']) lock.packages[''].version = nextName;
+  edits.push({ file: lockPath, content: `${JSON.stringify(lock, null, 2)}\n`, label: `package-lock.json -> ${nextName}` });
+}
+
+// ۳) android/app/build.gradle
 let gradle = fs.readFileSync(gradlePath, 'utf8');
 const beforeGradle = `${gradle.match(/versionCode\s+\d+/)?.[0]} / ${gradle.match(/versionName\s+"[^"]+"/)?.[0]}`;
 gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${nextCode}`);
 gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${nextName}"`);
 edits.push({ file: gradlePath, content: gradle, label: `build.gradle -> versionCode ${nextCode} / ${nextName} (بود: ${beforeGradle})` });
 
-// ۳) src/strings/version.ts — آرایهٔ CHANGELOG با getterهای دوزبانه
+// ۴) src/strings/version.ts — آرایهٔ CHANGELOG با getterهای دوزبانه
 if (fs.existsSync(versionTsPath)) {
   let vts = fs.readFileSync(versionTsPath, 'utf8');
   const idx = vts.indexOf('export const CHANGELOG');
@@ -110,11 +119,13 @@ if (fs.existsSync(versionTsPath)) {
   }
 }
 
-// ۴) CHANGELOG.md
+// ۵) CHANGELOG.md — بخش Unreleased همیشه باید بالای releaseهای numbered باقی بماند.
 if (fs.existsSync(changelogPath)) {
   const cl = fs.readFileSync(changelogPath, 'utf8');
   const header = `## [${nextName}] — ${jdate}\n\n- ${notes || `نسخهٔ ${nextName}`}\n\n`;
-  const idx = cl.indexOf('\n## ');
+  const firstHeading = cl.indexOf('\n## ');
+  const isUnreleasedFirst = firstHeading >= 0 && cl.slice(firstHeading).startsWith('\n## [Unreleased]');
+  const idx = isUnreleasedFirst ? cl.indexOf('\n## ', firstHeading + 4) : firstHeading;
   const updated = idx >= 0 ? `${cl.slice(0, idx + 1)}${header}${cl.slice(idx + 1)}` : `${cl}\n${header}`;
   edits.push({ file: changelogPath, content: updated, label: `CHANGELOG.md -> ${nextName}` });
 }
