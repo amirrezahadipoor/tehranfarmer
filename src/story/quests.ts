@@ -12,9 +12,11 @@ const machCount = () => Object.values(S.machines).filter((m) => (m ?? 0) >= 1).l
 const machMk2Count = () => Object.values(S.machines).filter((m) => (m ?? 0) >= 2).length;
 const en = () => CFG.locale === 'en';
 
+export type ChapterAction = 'farm' | 'carp' | 'estate' | 'work';
 export interface ChecklistItem {
   label: string;
   ok: boolean;
+  action: ChapterAction;
 }
 
 /** چک‌لیست شفاف و مرحله‌به‌مرحلهٔ پیش‌نیازهای توسعهٔ مزرعه برای هر فصل */
@@ -23,45 +25,45 @@ export function chapterChecklist(chapter: number): ChecklistItem[] {
   switch (chapter) {
     case 1:
       return [
-        { label: e ? 'Harvest 20 crops on your farm' : 'برداشت ۲۰ محصول از زمین مزرعه', ok: harv() >= 20 },
+        { label: e ? 'Harvest 20 crops on your farm' : 'برداشت ۲۰ محصول از زمین مزرعه', ok: harv() >= 20, action: 'farm' },
       ];
     case 2:
       return [
-        { label: e ? 'Build 2 animal pens at Town Carpentry' : 'ساخت ۲ حصار دام در نجاری شهر', ok: pens() >= 2 },
-        { label: e ? 'Claim Northern Meadow deed (54 plots) at Estate Office' : 'ثبت سند مزرعهٔ «دشت شمالی» (۵۴ کرت) در دفتر املاک', ok: S.lv.land >= 1 },
-        { label: e ? 'Upgrade at least 1 tool at Carpentry' : 'ارتقای حداقل ۱ ابزار در نجاری شهر', ok: toolUps() >= 1 },
-        { label: e ? 'Reach Farm Level 6' : 'رسیدن به سطح ۶ مزرعه', ok: lv() >= 6 },
+        { label: e ? 'Build 2 animal pens at Town Carpentry' : 'ساخت ۲ حصار دام در نجاری شهر', ok: pens() >= 2, action: 'carp' },
+        { label: e ? 'Claim Northern Meadow deed (54 plots) at Estate Office' : 'ثبت سند مزرعهٔ «دشت شمالی» (۵۴ کرت) در دفتر املاک', ok: S.lv.land >= 1, action: 'estate' },
+        { label: e ? 'Upgrade at least 1 tool at Carpentry' : 'ارتقای حداقل ۱ ابزار در نجاری شهر', ok: toolUps() >= 1, action: 'carp' },
+        { label: e ? 'Reach Farm Level 6' : 'رسیدن به سطح ۶ مزرعه', ok: lv() >= 6, action: 'farm' },
       ];
     case 3:
       return [
-        { label: e ? 'Build 2 fish ponds at Carpentry' : 'ساخت ۲ استخر پرورش ماهی در نجاری', ok: S.ponds.length >= 2 },
-        { label: e ? 'Build 2 beehives at Carpentry' : 'ساخت ۲ کندوی عسل در نجاری', ok: S.hives >= 2 },
-        { label: e ? 'Buy at least 2 machines at Town Workshop' : 'خرید حداقل ۲ ماشین در کارگاه شهر', ok: machCount() >= 2 },
-        { label: e ? 'Reach Farm Level 10' : 'رسیدن به سطح ۱۰ مزرعه', ok: lv() >= 10 },
+        { label: e ? 'Build 2 fish ponds at Carpentry' : 'ساخت ۲ استخر پرورش ماهی در نجاری', ok: S.ponds.length >= 2, action: 'carp' },
+        { label: e ? 'Build 2 beehives at Carpentry' : 'ساخت ۲ کندوی عسل در نجاری', ok: S.hives >= 2, action: 'carp' },
+        { label: e ? 'Buy at least 2 machines at Town Workshop' : 'خرید حداقل ۲ ماشین در کارگاه شهر', ok: machCount() >= 2, action: 'work' },
+        { label: e ? 'Reach Farm Level 10' : 'رسیدن به سطح ۱۰ مزرعه', ok: lv() >= 10, action: 'farm' },
       ];
     case 4:
       return [
-        { label: e ? 'Build a Glass Greenhouse at Carpentry' : 'ساخت گلخانه در نجاری شهر', ok: S.gh >= 1 },
-        { label: e ? 'Upgrade Deep Drip Well at Carpentry' : 'ارتقای چاه قطره‌ای در نجاری شهر', ok: S.wellLv >= 1 },
-        { label: e ? 'Restore Northern Qanat deed (Estate Tier 2)' : 'احیای قنات دشت شمالی (پلهٔ ۲ دفتر املاک)', ok: S.lv.land >= 2 },
-        { label: e ? 'Own at least 4 machines at Town Workshop' : 'داشتن حداقل ۴ ماشین خودکار از کارگاه', ok: machCount() >= 4 },
-        { label: e ? 'Reach Farm Level 14' : 'رسیدن به سطح ۱۴ مزرعه', ok: lv() >= 14 },
+        { label: e ? 'Build a Glass Greenhouse at Carpentry' : 'ساخت گلخانه در نجاری شهر', ok: S.gh >= 1, action: 'carp' },
+        { label: e ? 'Upgrade Deep Drip Well at Carpentry' : 'ارتقای چاه قطره‌ای در نجاری شهر', ok: S.wellLv >= 1, action: 'carp' },
+        { label: e ? 'Restore Northern Qanat deed (Estate Tier 2)' : 'احیای قنات دشت شمالی (پلهٔ ۲ دفتر املاک)', ok: S.lv.land >= 2, action: 'estate' },
+        { label: e ? 'Own at least 4 machines at Town Workshop' : 'داشتن حداقل ۴ ماشین خودکار از کارگاه', ok: machCount() >= 4, action: 'work' },
+        { label: e ? 'Reach Farm Level 14' : 'رسیدن به سطح ۱۴ مزرعه', ok: lv() >= 14, action: 'farm' },
       ];
     case 5:
       return [
-        { label: e ? 'Hire 3 farmhand workers at Estate Office' : 'استخدام ۳ کارگر از دفتر املاک', ok: S.workers >= 3 },
-        { label: e ? 'Build a Feed Silo at Carpentry' : 'ساخت سیلو در نجاری شهر', ok: S.silo >= 1 },
-        { label: e ? 'Claim Sunlit Valley deed (60 plots — Tier 3)' : 'ثبت سند «باغ‌درهٔ آفتاب» (۶۰ کرت — پلهٔ ۳ املاکی)', ok: S.lv.land >= 3 },
-        { label: e ? 'Own 5 machines (at least one Model 2)' : 'داشتن ۵ ماشین از کارگاه (حداقل یکی مدل ۲)', ok: machCount() >= 5 && machMk2Count() >= 1 },
-        { label: e ? 'Reach Farm Level 18' : 'رسیدن به سطح ۱۸ مزرعه', ok: lv() >= 18 },
+        { label: e ? 'Hire 3 farmhand workers at Estate Office' : 'استخدام ۳ کارگر از دفتر املاک', ok: S.workers >= 3, action: 'estate' },
+        { label: e ? 'Build a Feed Silo at Carpentry' : 'ساخت سیلو در نجاری شهر', ok: S.silo >= 1, action: 'carp' },
+        { label: e ? 'Claim Sunlit Valley deed (60 plots — Tier 3)' : 'ثبت سند «باغ‌درهٔ آفتاب» (۶۰ کرت — پلهٔ ۳ املاکی)', ok: S.lv.land >= 3, action: 'estate' },
+        { label: e ? 'Own 5 machines (at least one Model 2)' : 'داشتن ۵ ماشین از کارگاه (حداقل یکی مدل ۲)', ok: machCount() >= 5 && machMk2Count() >= 1, action: 'work' },
+        { label: e ? 'Reach Farm Level 18' : 'رسیدن به سطح ۱۸ مزرعه', ok: lv() >= 18, action: 'farm' },
       ];
     case 6:
       return [
-        { label: e ? 'Complete All 3 Estates Charter (154 plots — Tier 4)' : 'ثبت منشور یکپارچهٔ هر ۳ مزرعه (۱۵۴ کرت — پلهٔ ۴)', ok: S.lv.land >= 4 },
-        { label: e ? 'Upgrade Golden Soil at Carpentry' : 'ارتقای «خاک طلایی» در نجاری شهر', ok: S.lv.soil >= 1 },
-        { label: e ? 'Own at least 6 automated machines' : 'داشتن حداقل ۶ ماشین فعال مزرعه', ok: machCount() >= 6 },
-        { label: e ? 'Upgrade tools at least 3 times' : 'حداقل ۳ پله ارتقای ابزارها', ok: toolUps() >= 3 },
-        { label: e ? 'Reach Farm Level 22' : 'رسیدن به سطح ۲۲ مزرعه', ok: lv() >= 22 },
+        { label: e ? 'Complete All 3 Estates Charter (154 plots — Tier 4)' : 'ثبت منشور یکپارچهٔ هر ۳ مزرعه (۱۵۴ کرت — پلهٔ ۴)', ok: S.lv.land >= 4, action: 'estate' },
+        { label: e ? 'Upgrade Golden Soil at Carpentry' : 'ارتقای «خاک طلایی» در نجاری شهر', ok: S.lv.soil >= 1, action: 'carp' },
+        { label: e ? 'Own at least 6 automated machines' : 'داشتن حداقل ۶ ماشین فعال مزرعه', ok: machCount() >= 6, action: 'work' },
+        { label: e ? 'Upgrade tools at least 3 times' : 'حداقل ۳ پله ارتقای ابزارها', ok: toolUps() >= 3, action: 'carp' },
+        { label: e ? 'Reach Farm Level 22' : 'رسیدن به سطح ۲۲ مزرعه', ok: lv() >= 22, action: 'farm' },
       ];
     default:
       return [];

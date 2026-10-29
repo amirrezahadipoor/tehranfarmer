@@ -23,6 +23,8 @@ import { BootLoader } from './ui/BootLoader';
 import { isBootAlreadyWarm, runGenuinePreload } from './game/preloader';
 import { CFG, updateSetting } from './game/settings';
 import { resumeAudioFromBackground, sfx, suspendAudioForBackground } from './game/sound';
+import { readSavedFarmMeta } from './game/saveSummary';
+import { journeyCopy } from './strings/journeyText';
 
 function isNativeCapacitor(): boolean {
   return Boolean((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
@@ -42,20 +44,6 @@ function enterFullscreen() {
     const o = screen.orientation as ScreenOrientation & { lock?: (t: string) => Promise<void> };
     o?.lock?.('landscape')?.catch(() => {});
   } catch { /* تمام‌صفحه اختیاری است */ }
-}
-
-function readSavedDayCoins(): { day: number; coins: number } | null {
-  try {
-    for (const k of ['mazrae-rangi-save-v1', 'mazrae-rangi-save-v1-bak1', 'mazrae-rangi-save-v1-bak2', 'mazrae-rangi-save-v1-bak', 'mazrae-rangi-save-bak1', 'mazrae-rangi-save-bak2', 'mazrae-rangi-save-bak']) {
-      const raw = localStorage.getItem(k);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw) as { day?: unknown; coins?: unknown };
-      if (typeof parsed.day === 'number') {
-        return { day: Math.max(1, Math.floor(parsed.day)), coins: Math.max(0, Math.floor(Number(parsed.coins) || 0)) };
-      }
-    }
-  } catch { /* */ }
-  return null;
 }
 
 function SpeakerIcon({ on }: { on: boolean }) {
@@ -93,7 +81,8 @@ function acknowledgePortrait() {
 
 function Start() {
   const saved = hasSave();
-  const savedMeta = saved ? readSavedDayCoins() : null;
+  const savedMeta = saved ? readSavedFarmMeta() : null;
+  const journey = journeyCopy();
   const [loadErr, setLoadErr] = useState(false);
   const [vp, setVp] = useState(() => ({
     w: typeof window !== 'undefined' ? window.innerWidth : 1280,
@@ -180,13 +169,19 @@ function Start() {
         )}
 
         {savedMeta && (
-          <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border-2 border-[#503426]/65 bg-[#fff8df] px-3 py-0.5 text-xs font-black text-[#3d251a]">
-            <Ic n="star" s={1.35} />
-            <span>{UT.startSavedDay}{fa(savedMeta.day)}</span>
-            <span className="opacity-45">•</span>
-            <Ic n="coin" s={1.35} />
-            <span>{fa(savedMeta.coins)}</span>
-          </div>
+          <>
+            <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border-2 border-[#503426]/65 bg-[#fff8df] px-3 py-0.5 text-xs font-black text-[#3d251a]">
+              <Ic n="atlas" s={1.35} />
+              <span>{UT.startSavedDay}{fa(savedMeta.day)}</span>
+              <span className="opacity-45">•</span>
+              <Ic n="coin" s={1.35} />
+              <span>{fa(savedMeta.coins)}</span>
+            </div>
+            <div data-save-story="1" className="mt-1 flex max-w-full items-center justify-center gap-1.5 text-center text-[.72rem] font-black leading-snug text-[#6c4a2c]">
+              <Ic n="scroll" s={1.2} />
+              <span>{savedMeta.postgame ? journey.postgameTitle : journey.chapters[savedMeta.chapter].title}</span>
+            </div>
+          </>
         )}
 
         {/* دکمهٔ اصلی باید اولین <button> داخل Start بماند تا لمس مستقیم و تست‌های آفلاین آن را هدف بگیرند */}
@@ -320,12 +315,13 @@ export default function App() {
     if (__DEV_TOOLS__) {
       (window as unknown as { __gameApi?: unknown }).__gameApi = {
         openModal: (m: typeof UI.modal) => { UI.modal = m; notify(); },
-        setEnv: (patch: { scene?: typeof UI.scene; day?: number; hour?: number; weather?: number; postgame?: boolean; land?: number; soil?: number; coins?: number; infoIdx?: number | null }) => {
+        setEnv: (patch: { scene?: typeof UI.scene; day?: number; hour?: number; weather?: number; chapter?: number; postgame?: boolean; land?: number; soil?: number; coins?: number; infoIdx?: number | null }) => {
           if (cinema.active || S.story.pending) { UI.afterModal = null; UI.afterTalkNpc = null; clearSceneQueue(); skipActiveCutscene(); endSceneStage(); }
           if (patch.scene) { cmd.resetMotion(); UI.modal = null; UI.afterModal = null; UI.afterTalkNpc = null; UI.scene = patch.scene; }
           if (typeof patch.day === 'number') S.day = patch.day;
           if (typeof patch.hour === 'number') S.hour = patch.hour;
           if (typeof patch.weather === 'number') S.weather = patch.weather as 0 | 1 | 2 | 3;
+          if (typeof patch.chapter === 'number' && Number.isFinite(patch.chapter)) S.story.chapter = Math.max(0, Math.min(6, Math.floor(patch.chapter)));
           if (typeof patch.postgame === 'boolean') S.story.postgame = patch.postgame;
           if (typeof patch.land === 'number') S.lv.land = patch.land;
           if (typeof patch.soil === 'number') S.lv.soil = patch.soil;

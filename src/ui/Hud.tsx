@@ -164,7 +164,7 @@ export function Hud() {
               onClick={() => { sfx.tap(); UI.modal = 'atlas'; notify(); }}
               title={FT.atlasTitle}
             >
-              <Ic n="star" s={UI.portrait ? 1.7 : 1.9} />
+              <Ic n="atlas" s={UI.portrait ? 1.7 : 1.9} />
             </button>
             <button
               aria-label={MAIL_UI.title}
@@ -180,8 +180,8 @@ export function Hud() {
                 </span>
               )}
             </button>
-            <button aria-label={UT.u34} className="btn p press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'quests'; notify(); }} title={UT.u34}>
-              <Ic n="star" s={UI.portrait ? 1.7 : 1.9} />
+            <button data-open-quests="1" aria-label={UT.u34} className="btn p press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'quests'; notify(); }} title={UT.u34}>
+              <Ic n="scroll" s={UI.portrait ? 1.7 : 1.9} />
               {readyQuestCount() > 0 && (
                 <span className="absolute -left-1.5 -top-1.5 rounded-full border-2 border-[#503426] bg-[#ffd93b] px-1 text-[.68rem] font-black leading-none text-[#503426]">
                   {fa(readyQuestCount())}

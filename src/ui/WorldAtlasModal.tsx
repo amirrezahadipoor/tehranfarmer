@@ -36,7 +36,7 @@ export function WorldAtlasModal() {
   ];
 
   return (
-    <ModalShell title={FT.atlasTitle} icon="land" wide onClose={() => { UI.modal = null; notify(); }}>
+    <ModalShell title={FT.atlasTitle} icon="atlas" wide onClose={() => { UI.modal = null; notify(); }}>
       <div data-atlas-modal="1" className="space-y-2.5 pb-2">
         <div className="flex flex-wrap gap-1.5">
           {([

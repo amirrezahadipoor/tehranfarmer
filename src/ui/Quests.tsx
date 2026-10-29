@@ -3,7 +3,7 @@ import { GOOD } from '../game/data';
 import { cmd } from '../game/engine';
 import { S, UI, claimAllReadyQuests, deliverContract, holdCount, notify, readyQuestCount } from '../game/state';
 import { claim, ensureQuests, isClaimed, questDone, questLabelOf, questProgress, type QuestGoal } from '../story/dailyQuests';
-import { chapterChecklist, questOf, questProgress as storyQuestProgress } from '../story/quests';
+import { chapterChecklist, questOf, questProgress as storyQuestProgress, type ChapterAction } from '../story/quests';
 import { SECRETS, discoveredSecretCount } from '../story/secrets';
 import { offerContractBoard, signBoardContract } from '../story/socialVillagers';
 import { talkToSharkhar, talkToTownNpc } from '../story/engine';
@@ -16,6 +16,7 @@ import { NPC_QUEST_SPECS, isNpcQuestActive, npcHasQuestMarker } from '../story/n
 import { ESTATE_UI, NPC_ROLES } from '../strings/estateStoryText';
 import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
+import { journeyCopy } from '../strings/journeyText';
 
 function Card({ g, week }: { g: QuestGoal; week?: boolean }) {
   const p = questProgress(g, !!week);
@@ -51,6 +52,73 @@ function Card({ g, week }: { g: QuestGoal; week?: boolean }) {
 const ICON: Record<string, string> = {
   harvest: 'sickle', plant: 'seedbag', collect: 'egg', honey: 'honey', pond: 'fish', sell: 'coin', build: 'hammer', fish: 'fish', babies: 'nest',
 };
+const ACTION_ICON: Record<ChapterAction, string> = { farm: 'house', carp: 'hammer', estate: 'land', work: 'tractor' };
+const JOURNEY_STATUS_ICON: Record<string, string> = { done: 'check', current: 'scroll', upcoming: 'lock' };
+
+function goChapterAction(action: ChapterAction) {
+  UI.modal = null;
+  UI.afterModal = null;
+  UI.afterTalkNpc = null;
+  UI.info = null;
+  UI.seedTray = false;
+  sfx.tap();
+  if (action === 'farm') {
+    if (UI.scene !== 'farm') cmd.travelTo('farm');
+  } else if (UI.scene === 'town') {
+    UI.modal = action;
+  } else {
+    UI.afterModal = action;
+    cmd.travelTo('town');
+  }
+  notify();
+}
+
+function JourneyJournal({ chapter, postgame }: { chapter: number; postgame: boolean }) {
+  const J = journeyCopy();
+  const current = Math.max(1, Math.min(6, Math.floor(chapter)));
+  const summary = J.chapters[Math.max(0, Math.min(6, Math.floor(chapter)))];
+  return (
+    <section className="paper mb-3 flex flex-col gap-2 border-2 border-[#7897a4] p-2.5" data-journey-journal="1" aria-label={J.journeyTitle}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Ic n="atlas" s={1.8} />
+          <span className="ft text-base text-[#395865]">{J.journeyTitle}</span>
+        </div>
+        <span className="rounded-full bg-[#e4f2f4] px-2.5 py-0.5 text-[.68rem] font-black text-[#395865]">
+          {postgame ? J.done : chapter === 0 ? J.current : `${J.chapterWord} ${fa(current)}`}
+        </span>
+      </div>
+      <div className="grid grid-cols-6 gap-1" role="list">
+        {J.chapters.slice(1).map((item, idx) => {
+          const n = idx + 1;
+          const status = postgame || (chapter >= 1 && n < chapter) ? 'done' : !postgame && n === current ? 'current' : 'upcoming';
+          const statusText = status === 'done' ? J.done : status === 'current' ? J.current : J.upcoming;
+          return (
+            <div
+              key={item.title}
+              role="listitem"
+              data-journey-chapter={n}
+              data-status={status}
+              aria-current={status === 'current' ? 'step' : undefined}
+              aria-label={`${J.chapterWord} ${fa(n)}: ${statusText}`}
+              title={item.title}
+              className={'flex min-w-0 flex-col items-center justify-center rounded-lg border px-1 py-1 ' + (status === 'done'
+                ? 'border-[#7db867] bg-[#dff4ce] text-[#2f5d22]'
+                : status === 'current' ? 'border-[#c88d32] bg-[#ffe79c] text-[#5a3518]' : 'border-black/10 bg-white/55 opacity-65')}
+            >
+              <Ic n={JOURNEY_STATUS_ICON[status]} s={1.15} />
+              <span className="ft text-xs leading-none">{fa(n)}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="rounded-xl bg-[#f3f8ed] px-2.5 py-1.5" data-journey-recap="1">
+        <div className="text-xs font-black text-[#405b36]">{postgame ? J.postgameTitle : summary.title}</div>
+        <p className="mt-0.5 text-[.72rem] font-bold leading-relaxed text-[#5f6048]">{postgame ? J.postgameRecap : summary.recap}</p>
+      </div>
+    </section>
+  );
+}
 
 export function Quests() {
   ensureQuests();
@@ -59,6 +127,7 @@ export function Quests() {
   const checks = mainQ ? chapterChecklist(mainQ.chapter) : [];
   const foundSecrets = discoveredSecretCount();
   const loc = CFG.locale === 'en' ? 'en' : 'fa';
+  const J = journeyCopy();
   const eu = ESTATE_UI[loc];
   const activeNpcQuests = NPC_QUEST_SPECS.filter((sq) => isNpcQuestActive(sq));
   const waitingActors = (['grandma', 'sara', 'engineer', 'rancher', 'jahangir'] as const).filter((w) => npcHasQuestMarker(w));
@@ -71,6 +140,7 @@ export function Quests() {
           <span>{UT.claimAllQuests}</span>
         </button>
       )}
+      <JourneyJournal chapter={S.story.chapter} postgame={S.story.postgame} />
       {/* کارت هدف اصلی و پیش‌نیازهای توسعهٔ فصل جاری */}
       {mainQ && (
         <div className="paper mb-3 flex flex-col gap-1.5 border-2 border-[#c88d32] p-2.5" data-chapter-quest={mainQ.id}>
@@ -87,13 +157,20 @@ export function Quests() {
           <Bar v={storyQuestProgress(mainQ.chapter)} col="#56b847" />
           <div className="grid gap-1 pt-0.5 sm:grid-cols-2">
             {checks.map((c, idx) => (
-              <div
+              <button
                 key={idx}
-                className={'flex items-center gap-1.5 rounded-lg px-2 py-1 text-[.72rem] font-extrabold ' + (c.ok ? 'bg-[#dcf6c8] text-[#235216]' : 'bg-black/5 opacity-80')}
+                type="button"
+                data-chapter-action={c.action}
+                disabled={c.ok}
+                aria-label={c.ok ? c.label : `${J.actionHint}: ${c.label}`}
+                title={c.ok ? undefined : J.actionHint}
+                onClick={() => { if (!c.ok) goChapterAction(c.action); }}
+                className={'flex min-h-[48px] items-center gap-1.5 rounded-lg px-2 py-1 text-start text-[.72rem] font-extrabold ' + (c.ok ? 'bg-[#dcf6c8] text-[#235216]' : 'bg-black/5 hover:bg-[#fff0b8]')}
               >
-                <Ic n={c.ok ? 'star' : 'lock'} s={1.2} />
-                <span>{c.label}</span>
-              </div>
+                <Ic n={c.ok ? 'check' : ACTION_ICON[c.action]} s={1.2} />
+                <span className="flex-1">{c.label}</span>
+                {!c.ok && <Ic n="arrow" s={1} cls="opacity-60" />}
+              </button>
             ))}
           </div>
         </div>
