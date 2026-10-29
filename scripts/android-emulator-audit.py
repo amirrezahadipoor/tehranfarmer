@@ -251,6 +251,16 @@ def main() -> None:
     # 3b) Verify strict Landscape surface geometry (w > h)
     assert w_phys > h_phys, f"Expected landscape surface, got {w_phys}x{h_phys}"
 
+    # A fresh Android save starts the interactive tutorial. Dismiss it through its real
+    # accessible button so this audit can exercise the generic plot inspector rather than
+    # advancing the tutorial and unexpectedly opening its seed tray.
+    tutorial_skip = find_bounds(r3, "رد کردن آموزش")
+    if tutorial_skip is not None:
+        tap(tutorial_skip[0], tutorial_skip[1])
+        time.sleep(0.5)
+        r3, _ = wait_for_text("3-tutorial-dismissed", "شخم")
+        assert find_bounds(r3, "رد کردن آموزش") is None, "Tutorial did not close after its real skip button!"
+
     # 4) Modal open + Android hardware BACK button ('input keyevent 4') must close ONLY the modal without exiting!
     inv_btn = find_bounds(r3, "انبار")
     if inv_btn is not None:
@@ -262,7 +272,13 @@ def main() -> None:
         r_after_back, _ = wait_for_text("3c-after-back", "شخم")
         assert find_bounds(r_after_back, "بستن پنجره") is None, "Hardware BACK did not close modal cleanly!"
 
-    # 5) Real Canvas Plot #0 hardware tap -> 'شخم بزن' -> farmer tills soil cleanly!
+    # 5) Select the hand tool: a Canvas tap must open Plot #0 Inspector instead of
+    # immediately enqueueing whichever action tool happened to be selected previously.
+    _, hand_btn = wait_for_text("4-hand-tool", "نگاه")
+    tap(hand_btn[0], hand_btn[1])
+    time.sleep(0.4)
+
+    # Real Canvas Plot #0 hardware tap -> 'شخم بزن' -> farmer tills soil cleanly!
     sc = min(w_phys / 1280.0, h_phys / 720.0)
     tx = (w_phys - 1280.0 * sc) / 2.0
     ty = (h_phys - 720.0 * sc) * 0.48
