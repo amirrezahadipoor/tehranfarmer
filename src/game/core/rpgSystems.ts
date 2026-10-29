@@ -292,6 +292,8 @@ export function processMorningCompanionAndReport() {
     ripe,
     shown: S.custom?.morningCard === false || !UI.started,
   };
+  // حلقهٔ ۳۰ روز اخیر برای ضریب ثروتِ زمین (هر سحر یک پله جابه‌جا می‌شود)
+  S.earn30 = [...(S.earn30 ?? []), Math.max(0, Math.round(S.earned - prevEarned))].slice(-30);
   S.snapEarned = S.earned;
   S.snapGathered = curGather;
 }
@@ -307,6 +309,15 @@ export function toggleMorningCard() {
   S.custom ??= { farmerName: WX.defaultFarmerName, farmName: WX.defaultFarmName, outfit: 0, morningCard: true };
   S.custom.morningCard = !(S.custom.morningCard ?? true);
   if (S.morning && !S.custom.morningCard) S.morning.shown = true;
+  sfx.tap();
+  saveGame();
+  notify();
+}
+
+/** پیشنهاد بهبود (گزارش ۳۰۰X): حالت داستانِ فشرده — فاصلهٔ ضدِّرشِ باز شدنِ سند بعدی نصف می‌شود */
+export function toggleCompactStory() {
+  S.custom ??= { farmerName: WX.defaultFarmerName, farmName: WX.defaultFarmName, outfit: 0, morningCard: true };
+  S.custom.compactStory = !(S.custom.compactStory ?? false);
   sfx.tap();
   saveGame();
   notify();

@@ -123,7 +123,10 @@ export const penTotal = () => PEN_KINDS.reduce((t, k) => t + penCap(k), 0);
 export function landPrice(i: number): number {
   const base = LAND_PRICES[i];
   if (base === undefined) return Infinity;
-  const richMult = 1 + Math.min(WEALTH_MULT_CAP, S.earned / WEALTH_DIVISOR);
+  // پیشنهاد بهبود (گزارش ۳۰۰X): ضریب ثروت فقط از «درآمدِ ۳۰ روز اخیر» می‌آید تا
+  // بازیکنِ پس‌اندازکننده (درآمدِ عمری بالا، جریانِ فعلی عادی) به خاطر پساندازش تنبیه نشود.
+  const recent = (S.earn30 ?? []).reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+  const richMult = 1 + Math.min(WEALTH_MULT_CAP, recent / WEALTH_DIVISOR);
   return Math.round(base * richMult);
 }
 

@@ -446,7 +446,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     if (fishCast.active || fishCast.armed) fishCast.t += dt;
     const busy = !!trans;
     if (cinema.active || cinema.letterbox > 0.005) {
-      musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour); }
+      musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour, S.story?.chapter ?? 1); }
       stepCinemaStage(dt);
     }
     // کارگر جدید بدون نیاز به نجار خودش پای پیاده از جادهٔ دهکده وارد مزرعه می‌شود!
@@ -463,7 +463,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     syncAnimals();
     if (!frozen) {
       if (!busy) tickLiveClock(dt * UI.speed);
-      musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour); }
+      musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour, S.story?.chapter ?? 1); }
       updateBuilder(dt);
       // سپر ضد گیرکردن نجار حین ورود/خروج جادهٔ دهکده
       if (bph === 'walk' || bph === 'exit') {

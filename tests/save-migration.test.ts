@@ -25,6 +25,17 @@ describe('مهاجرت سِیو', () => {
     expect('debt' in d).toBe(true);
   });
 
+  it('نسخهٔ ۷ به ۸ حلقهٔ درآمدِ ۳۰ روز اخیر را می‌سازد و دادهٔ قدیمی را نگه می‌دارد', () => {
+    const d = migrateSave({ v: 7, coins: 999, day: 30, earn30: [10, 20, 30] })!;
+    expect(d.v).toBe(8);
+    expect(Array.isArray(d.earn30)).toBe(true);
+    expect((d.earn30 as number[]).slice(-3)).toEqual([10, 20, 30]);
+    const d2 = migrateSave({ v: 7, coins: 1, day: 2 })!;
+    expect(d2.v).toBe(8);
+    expect(Array.isArray(d2.earn30)).toBe(true);
+    expect((d2.earn30 as unknown[]).length).toBe(0);
+  });
+
   it('سِیو خراب یا نسخهٔ آینده رد می‌شود', () => {
     expect(migrateSave(null)).toBeNull();
     expect(migrateSave('x')).toBeNull();
@@ -43,7 +54,7 @@ describe('مهاجرت سِیو', () => {
 
   it('نسخهٔ ۶ به ۷ آرایه‌های ۵۴ و ۶۰ کرتی دو مزرعهٔ جدید را بدون آسیب به سِیو می‌سازد', () => {
     const d = migrateSave({ v: 6, coins: 1234, day: 18, lv: { hoe: 2, can: 2, bag: 2, stam: 2, land: 3, soil: 0 } })!;
-    expect(d.v).toBe(7);
+    expect(d.v).toBe(SAVE_VERSION);
     expect(Array.isArray(d.northPlots)).toBe(true);
     expect((d.northPlots as unknown[]).length).toBe(54);
     expect(Array.isArray(d.valleyPlots)).toBe(true);

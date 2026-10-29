@@ -130,7 +130,7 @@ describe('موتور صدای استودیویی کم‌حجم (.mp3 درون‌
   it('موسیقی CC0 واقعی در ۴ فصل و روز/شب لوپ می‌شود و با خاموش‌کردن متوقف می‌گردد (P7-02)', () => {
     musicPlayCount = 0;
     musicPauseCount = 0;
-    const track = fs.statSync('src/assets/music/peaceful-forest.mp3');
+    const track = fs.statSync('public/music/peaceful-forest.mp3');
     expect(track.size).toBeGreaterThan(100_000);
     expect(track.size).toBeLessThan(1_000_000);
     for (let sn = 0; sn < 4; sn++) {

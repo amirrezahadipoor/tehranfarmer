@@ -177,19 +177,24 @@ function onNotePaid() {
 }
 
 /** اگر سند فعلی تمام شده و کوئست فصل تمام است، سند بعدی باز می‌شود */
+/** فاصلهٔ ضدِّرشِ سند بعدی — در حالت داستانِ فشرده نصف می‌شود */
+function noteWaitDays(minDays: number): number {
+  return S.custom?.compactStory ? Math.ceil(minDays / 2) : minDays;
+}
+
 export function maybeOpenNextNote(): boolean {
   const d = debt();
   if (!d) return false;
   const n = NOTES[d.noteIdx];
   const willAdvance = !!n && d.remaining <= 0 && isQuestDone(n.chapter)
-    && (d.noteIdx >= NOTE_COUNT - 1 || today() - d.chapterStartDay >= NOTES[d.noteIdx + 1].minDays);
+    && (d.noteIdx >= NOTE_COUNT - 1 || today() - d.chapterStartDay >= noteWaitDays(NOTES[d.noteIdx + 1].minDays));
   checkStoryQuests(willAdvance);
   if (!n || d.remaining > 0) return false;
   if (!isQuestDone(n.chapter)) return false;
   if (d.noteIdx >= NOTE_COUNT - 1) { finishGame(); return false; }
   const next = NOTES[d.noteIdx + 1];
   const waited = today() - d.chapterStartDay;
-  if (waited < next.minDays) return false;
+  if (waited < noteWaitDays(next.minDays)) return false;
   d.noteIdx = next.idx;
   d.remaining = next.amount;
   d.paidThisCycle = 0;

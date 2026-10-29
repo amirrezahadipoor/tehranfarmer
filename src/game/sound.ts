@@ -200,8 +200,35 @@ export const sfx = {
   },
 };
 
-// ===== موسیقی آرام Peaceful Forest از Samza (CC0)، لوپ آفلاین و بدون نت‌های تکراری procedural =====
-const MUSIC_TRACK_URL = new URL('../assets/music/peaceful-forest.mp3', import.meta.url).href;
+// ===== موسیقی هر فصل — آثار رایگان CC0 از OpenGameArt (جزئیات در CREDITS.md) =====
+// فصل ۱: Peaceful Forest (Samza) · فصل ۲: Countryside (TAD) · فصل ۳: Feel-good ambient w/ beat (annandistance)
+// فصل ۴: Florist (TAD) · فصل ۵: A cup of tea (TAD) · فصل ۶: Town Theme (cynicmusic) · فصل ۷: Forest Ambience (TinyWorlds)
+// همه فشرده‌سازی شده‌اند (مونو، ۲۴–۳۲kbps، حدود ۹۰ تا ۱۴۰ ثانیه با فِیدِ نرم)
+const MUSIC_FILES: Record<number, string> = {
+  1: 'peaceful-forest.mp3',
+  2: 'ch2.mp3',
+  3: 'ch3.mp3',
+  4: 'ch4.mp3',
+  5: 'ch5.mp3',
+  6: 'ch6.mp3',
+  7: 'ch7.mp3',
+};
+// فایل‌ها در public/music هستند و با مسیرِ نسبیِ سند (نه import.meta.url) خوانده
+// می‌شوند چون این باندل داخلِ blob بوت‌استرپ می‌شود و blob پایهٔ معتبری برای
+// new URL(relative, import.meta.url) نیست.
+const musicUrlFor = (chapter: number) => {
+  const file = MUSIC_FILES[chapter] ?? MUSIC_FILES[1];
+  if (typeof document !== 'undefined') {
+    try {
+      return new URL(`music/${file}`, document.baseURI).href;
+    } catch {
+      // baseURI نامعتبر (مثل about:blank در jsdom) — مسیرِ نسبی خودِ مرورگر کافی است
+    }
+  }
+  return `music/${file}`; // محیطِ تست بدون DOM — پخشی در کار نیست
+};
+let musicChapter = 1;
+let musicSrcLoaded = '';
 let musicEl: HTMLAudioElement | null = null;
 let musicWanted = false;
 let musicBaseVolume = 0.27;
@@ -219,10 +246,17 @@ function syncMusicPlayback() {
     return;
   }
   if (typeof Audio === 'undefined') return;
+  const wantUrl = musicUrlFor(musicChapter);
   if (!musicEl) {
-    musicEl = new Audio(MUSIC_TRACK_URL);
+    musicEl = new Audio(wantUrl);
+    musicSrcLoaded = wantUrl;
     musicEl.loop = true;
     musicEl.preload = 'auto';
+  } else if (musicSrcLoaded !== wantUrl) {
+    // تعویض آهنگ هنگام تغییر فصل — بدون از دست رفتن تنظیمات صدا
+    musicEl.src = wantUrl;
+    musicSrcLoaded = wantUrl;
+    try { musicEl.currentTime = 0; } catch { /* پخش تازه از صفر */ }
   }
   updateMusicVolume();
   if (musicEl.paused) void musicEl.play().catch(() => { /* اولین لمس بعدی دوباره تلاش می‌کند */ });
@@ -235,10 +269,15 @@ export const ambient = {
     musicDuck = Math.max(0.18, Math.min(1, value));
     updateMusicVolume();
   },
-  note(_seasonIdx: number, hour: number) {
+  note(_seasonIdx: number, hour: number, chapter?: number) {
     if (!CFG.music || !CFG.sound || !snd.on) { this.stop(); return; }
     musicWanted = true;
     this.playing = true;
+    // هر فصل آهنگ خودش را دارد (پیشنهاد بهبود گزارش ۳۰۰X)
+    if (typeof chapter === 'number' && Number.isFinite(chapter)) {
+      const want = Math.max(1, Math.min(7, Math.round(chapter)));
+      if (want !== musicChapter) musicChapter = want;
+    }
     const night = hour >= NIGHT_START_H || hour < NIGHT_END_H;
     musicBaseVolume = night ? 0.2 : 0.27;
     updateMusicVolume();

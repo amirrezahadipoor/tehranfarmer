@@ -8,8 +8,8 @@ import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate
 import { MAIL_UI } from '../strings/mailText';
 import { questOf } from '../story/quests';
 import { Bar, Ic } from './parts';
-import { dueWarningText } from '../story/engine';
-import { activeNote, daysToDue, debt } from '../game/core/debt';
+import { dueWarningText, standingBadgeText } from '../story/engine';
+import { activeNote, daysToDue, debt, minPay, standingBand } from '../game/core/debt';
 import { buildJobLabel } from '../game/core/build';
 import { economicHint } from '../game/core/advisor';
 import { fa as faNum, faPct } from '../strings/fa';
@@ -292,6 +292,7 @@ export function Hud() {
         const wageNight = S.workers > 0 && S.coins < Math.round(WORKER_WAGE * S.workers * (hasSkill('trade-3') ? 0.7 : 1));
         const dueIn = daysToDue();
         const d0 = debt();
+        const dueShort = d0 ? Math.max(0, Math.ceil(minPay() - (d0.paidThisCycle ?? 0))) : 0;
         const raidTip = d0?.lastVisit?.kind === 'raid' && d0.lastVisit.day === S.day;
         return (
           <div
@@ -316,15 +317,15 @@ export function Hud() {
                       ? `${WX.hotMarketLabel} ×${faPct(Math.round(topHot[1] * 100))}`
                       : ''}
               </div>
-              {(thirsty || wageNight || (S.debt && dueIn <= 3) || raidTip) && (
+              {(thirsty || wageNight || (S.debt && dueIn <= 10) || raidTip) && (
                 <div className="mt-0.5 flex flex-col gap-y-0.5 text-[.68rem] font-black">
                   {thirsty && (
                     <span className="text-[#c2410c]">!{fa(thirsty.n)}{WX.morningThirsty}{fa(thirsty.h)}{WX.morningThirstyEta}</span>
                   )}
                   {raidTip && <span className="text-[#b45309]">{WX.morningRaidTip}</span>}
                   {wageNight && <span className="text-[#b45309]">!{WX.morningWage}</span>}
-                  {S.debt && dueIn <= 3 && (
-                    <span className="text-[#b91c1c]">!{dueIn === 0 ? WX.morningDue0 : `${WX.morningDue}${fa(dueIn)}${WX.plotDaysUnit}`}</span>
+                  {S.debt && dueIn <= 10 && (
+                    <span className="text-[#b91c1c]">!{dueIn === 0 ? WX.morningDue0 : `${WX.morningDue}${fa(dueIn)}${WX.plotDaysUnit}`}{dueShort > 0 ? ` · ${WX.morningNeed}${fa(dueShort)}` : ''}</span>
                   )}
                 </div>
               )}
@@ -365,6 +366,9 @@ function DebtChip() {
   const days = daysToDue();
   const warn = dueWarningText(days);
   const note = activeNote();
+  const stBand = standingBand();
+  const stVal = Math.max(0, Math.min(100, Math.round(d.standing ?? 60)));
+  const stColor = stBand === 'bad' ? '#c8433a' : stBand === 'good' ? '#2e8b3a' : '#d9a03c';
   return (
     <>
       <button
@@ -376,6 +380,10 @@ function DebtChip() {
         <span className="flex flex-1 flex-col leading-none">
           <span className="text-[.72rem] font-black opacity-70">{UT.u37} {faNum(d.noteIdx + 1)}</span>
           <span className="ft text-base">{faNum(Math.max(0, Math.round(d.remaining)))}</span>
+          {/* نوارِ اعتبار (پیشنهاد گزارش ۳۰۰X): مرزها و اثرش بر سود با تولتیپ */}
+          <span className="mt-1 block h-1.5 w-full overflow-hidden rounded-full bg-black/15" title={standingBadgeText()}>
+            <span className="block h-full rounded-full transition-[width]" style={{ width: `${stVal}%`, background: stColor }} />
+          </span>
         </span>
         <span className="flex flex-col items-end leading-none">
           <span className="text-[.72rem] font-black opacity-70">{UT.u38}</span>

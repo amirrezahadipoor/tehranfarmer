@@ -40,6 +40,24 @@ function packInlineModule(): Plugin {
   };
 }
 
+/**
+ * خودداری از inline شدنِ موسیقی: پلاگین singlefile سقف را `() => true` می‌کند
+ * و فایل‌های صوتیِ بزرگ را در html می‌ریزد. موسیقی حالا در public/music است
+ * و اصلاً از مسیرِ باندل رد نمی‌شود؛ این پلاگین برای هر assetِ mp3ِ باقی‌مانده
+ * (خارج از public) نیز سقف را می‌بندد تا html در بودجهٔ ۲۰۴۸KB بماند.
+ */
+function audioInlineGuard(): Plugin {
+  return {
+    name: 'audio-inline-guard',
+    enforce: 'post',
+    config(config) {
+      if (!config.build) config.build = {};
+      config.build.assetsInlineLimit = (filePath: string, content: Buffer) =>
+        !filePath.includes('assets/music') && content.length < 2000000;
+    },
+  };
+}
+
 export default defineConfig({
   server: { host: '0.0.0.0', allowedHosts: true, port: 5173 },
   preview: { host: '0.0.0.0', allowedHosts: true },
@@ -58,7 +76,7 @@ export default defineConfig({
       process.env.VITE_DEV_TOOLS === '1' || process.env.VITE_E2E_ASSETS === '1',
     ),
   },
-  plugins: [react(), tailwindcss(), viteSingleFile({ removeViteModuleLoader: true }), packInlineModule()],
+  plugins: [react(), tailwindcss(), viteSingleFile({ removeViteModuleLoader: true }), packInlineModule(), audioInlineGuard()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

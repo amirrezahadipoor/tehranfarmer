@@ -1,5 +1,9 @@
-const CACHE_NAME = 'mazrae-rangi-offline-v14';
-const CORE_ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const CACHE_NAME = 'mazrae-rangi-offline-v15';
+const CORE_ASSETS = [
+  './', './index.html', './manifest.webmanifest', './icon.svg',
+  './music/peaceful-forest.mp3', './music/ch2.mp3', './music/ch3.mp3',
+  './music/ch4.mp3', './music/ch5.mp3', './music/ch6.mp3', './music/ch7.mp3',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

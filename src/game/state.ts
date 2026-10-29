@@ -80,7 +80,7 @@ export interface Save {
   farmSeeds?: Partial<Record<FarmSceneId, CropId | 'auto'>>;
   crewRole?: 'balanced' | 'crops' | 'ranch';
   skills?: Record<string, boolean>;
-  custom?: { farmerName: string; farmName: string; outfit: number; morningCard: boolean };
+  custom?: { farmerName: string; farmName: string; outfit: number; morningCard: boolean; compactStory?: boolean };
   decor?: Record<string, boolean>;
   fishLog?: Record<string, number>;
   springDay?: number;
@@ -90,6 +90,7 @@ export interface Save {
   morning?: { day: number; earned: number; gathered: number; ripe: number; shown: boolean } | null;
   snapEarned?: number;
   snapGathered?: number;
+  earn30?: number[]; // حلقهٔ درآمدِ ۳۰ روز اخیر — مبنای ضریب ثروتِ زمین (مهاجرت سیو v8)
   mail?: MailState;
   cauldron?: { day: number; counts: Record<string, number> };
   frontier?: FrontierState;
@@ -288,11 +289,10 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.farmSeeds = S.farmSeeds ?? {};
   S.crewRole = S.crewRole ?? 'balanced';
   S.skills = S.skills ?? {};
-  S.decor = S.decor ?? {};
-  S.fishLog = S.fishLog ?? {};
+  S.decor = S.decor ?? {}; S.fishLog = S.fishLog ?? {};
   S.affinity = S.affinity ?? {};
   S.giftedDay = S.giftedDay ?? {};
-  S.morning = S.morning ?? null;
+  S.morning = S.morning ?? null; S.earn30 = Array.isArray(S.earn30) ? S.earn30 : [];
   syncPlayerOutfitPalette();
   // جنسیت پیش‌فرض قطعی از شناسه (نه RNG): بارگذاری، جریان تصادفی بازی را دست‌کاری نمی‌کند
   S.animals = (S.animals ?? []).map((a) => ({ ...a, sex: a.sex ?? (a.id % 2 === 0 ? 'm' : 'f'), grown: a.grown ?? 0 }));

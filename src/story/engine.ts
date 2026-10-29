@@ -4,6 +4,7 @@ import { CFG } from '../game/settings';
 import { nodeById } from './story';
 import type { StoryNode, StoryCtx } from './types';
 import { startDebt, minPay, standingBand } from '../game/core/debt';
+import { STAND_BAD, STAND_GOOD, STAND_BAD_INTEREST_MULT, STAND_GOOD_INTEREST_MULT } from './debtData';
 import { sharkharNodeId, type SharkharMood } from './sharkhar';
 import { TOWN_ACTORS } from './townNpc';
 import { pickNpcQuestScene } from './npcQuests';
@@ -196,15 +197,35 @@ export function queueNode(id: string) {
   triggerCutscene(id, { forceReplay: true });
 }
 
-export function dueWarningText(days: number): string | null {
-  if (days > 3 || days < 0) return null;
-  if (CFG.locale === 'en') return days === 0 ? 'Installment due today!' : `Installment due in ${fa(days)}d`;
-  return days === 0 ? 'امروز روز قسط است!' : `تا روز قسط ${fa(days)} روز مانده`;
+export function dueWarningText(days: number, shortfall?: number): string | null {
+  // پیشنهاد بهبود (گزارش ۳۰۰X): از ۱۰ روز قبل؛ پسوندِ کمبود فقط وقتی خواسته شود
+  // (کارت صبح/تست) تا چیپ HUD جمع‌وکوچک بماند و روی تابلوی جادهٔ راست‌چینِ مزرعه نیفتد.
+  if (days > 10 || days < 0) return null;
+  const short = shortfall ?? 0;
+  const shortTxt = short > 0 ? (CFG.locale === 'en' ? ` · ${fa(short)} short` : ` — ${fa(short)} کم داری`) : '';
+  if (CFG.locale === 'en') return days === 0 ? `Installment due today!${shortTxt}` : `Installment due in ${fa(days)}d${shortTxt}`;
+  return days === 0 ? `امروز روز قسط است!${shortTxt}` : `تا روز قسط ${fa(days)} روز مانده${shortTxt}`;
+}
+
+/** برچسبِ کوچکِ نوارِ اعتبار کنار دفتر (راهنمای مرزها و اثرش بر سود) */
+export function standingBadgeText(): string {
+  const d = S.debt;
+  if (!d) return '';
+  const st = Math.round(d.standing ?? 60);
+  const band = standingBand();
+  const mult = band === 'good' ? STAND_GOOD_INTEREST_MULT : band === 'bad' ? STAND_BAD_INTEREST_MULT : 1;
+  const label = CFG.locale === 'en'
+    ? `${band} · credit ${st}/100 · interest ×${mult}`
+    : `${band === 'good' ? 'خوش‌حساب' : band === 'bad' ? 'بدحساب' : 'عادی'} · اعتبار ${fa(st)} از ۱۰۰ (مرزها: ${fa(STAND_BAD)} و ${fa(STAND_GOOD)}) · سود سند ×${fa(mult)}`;
+  return label;
 }
 
 export function playerMood(): SharkharMood {
   if (standingBand() === 'bad') return 'bad';
-  if (S.coins >= Math.max(1500, minPay() * 2)) return 'rich';
+  const ch = S.story.postgame ? 7 : Math.max(1, S.story.chapter || 1);
+  // پیشنهاد بهبود (گزارش ۳۰۰X): سقفِ غنیِ فصل ۱ سقفِ ثابتِ کوچک (روزهای اول عملاً دست‌نیافتنی بود) و فصل ۶ متعادل‌تر
+  const richNeed = ch === 1 ? 2500 : ch >= 6 ? Math.max(1500, Math.round(minPay() * 1.25)) : Math.max(1500, minPay() * 2);
+  if (S.coins >= richNeed) return 'rich';
   return 'debt';
 }
 

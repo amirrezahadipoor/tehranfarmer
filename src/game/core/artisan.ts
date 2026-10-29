@@ -246,7 +246,8 @@ export function performPlayerPlotSweep(
     if (canActFn(kind, idx, false, undefined, undefined, isExtraCell) !== '') return;
     const res = doActFn(kind, idx, false, undefined, isExtraCell, undefined, isExtraCell);
     let golden = false;
-    const goldChance = 0.1 + S.lv.soil * 0.025 + (S.skills?.['crop-2'] ? 0.12 : 0);
+    // ضریب خاک با پله‌های جدید (۵ پله) بازنشانی شد تا سقف طلاییِ قبلی حفظ شود: ۵×۰٫۰۱۵ = ۳×۰٫۰۲۵
+    const goldChance = 0.1 + S.lv.soil * 0.015 + (S.skills?.['crop-2'] ? 0.12 : 0);
     if (kind === 'harvest' && res.crop && (res.qty ?? 0) > 0 && randFn() < goldChance) {
       const exA = addPack(res.crop, res.qty!); // پاداش طلایی هم اول به کولهٔ بازیکن
       const extra = exA + (exA < res.qty! ? addGood(res.crop, res.qty! - exA) : 0);

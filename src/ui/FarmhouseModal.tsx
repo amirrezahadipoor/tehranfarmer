@@ -3,7 +3,7 @@ import { GOOD, SEASONS, fa } from '../game/data';
 import {
   DECOR_ITEMS, OUTFIT_THEMES, SKILL_DEFS, S, UI, buyCourtyardDecor, farmLevel, hasDecor, hasSkill,
   isNight, notify, setHomesteadNames, setPlayerOutfit, skillPointsAvailable,
-  sleepToMorning, toggleMorningCard, unlockSkill, type SkillBranch,
+  sleepToMorning, toggleMorningCard, toggleCompactStory, unlockSkill, type SkillBranch,
 } from '../game/state';
 import { VILLAGER_PROFILES, canGiftVillagerToday, findBestGiftInBag, giftVillager, villagerHearts } from '../story/socialVillagers';
 import { daysToDue, debt } from '../game/core/debt';
@@ -127,6 +127,15 @@ export function FarmhouseModal() {
               >
                 <Ic n="sun" s={1.4} />
                 <span>{WX.morningToggleOff}</span>
+              </button>
+              <button
+                type="button"
+                title={WX.storyCompactHint}
+                className={'btn press w-full !py-1.5 text-xs font-black ' + ((S.custom?.compactStory ?? false) ? 'g' : '')}
+                onClick={() => toggleCompactStory()}
+              >
+                <Ic n="scroll" s={1.4} />
+                <span>{WX.storyCompact}</span>
               </button>
               <button
                 type="button"
