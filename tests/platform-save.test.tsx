@@ -174,12 +174,13 @@ describe('فاز ۹ — جداسازی کامل تنظیمات از سِیو و 
     }
   });
 
-  it('تک‌فایل dist/index.html با موسیقی آفلاین زیر بودجهٔ ۲MB است و صفر لینک بیرونی دارد (P9-09)', () => {
+  it('تک‌فایل dist/index.html با هر ۷ آهنگ درون‌خطی و بدون asset همراه زیر بودجهٔ ۶MiB است (P9-09)', () => {
     if (!fs.existsSync('dist/index.html')) return;
     const html = fs.readFileSync('dist/index.html', 'utf8');
     const kb = Math.round(html.length / 1024);
-    expect(kb).toBeLessThan(2048);
-    expect(kb).toBeLessThanOrEqual(2000);
+    expect(kb).toBeLessThan(6144);
+    expect(html).toContain('<!-- offline-music-pack:7 -->');
+    expect(fs.existsSync('dist/music')).toBe(false);
   });
 
   it('ممیزی سورس حریم خصوصی صفر فراخوانی شبکه/تله‌متری در کل src تأیید می‌کند (P9-10)', async () => {

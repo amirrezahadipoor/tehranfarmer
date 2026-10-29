@@ -213,11 +213,14 @@ const MUSIC_FILES: Record<number, string> = {
   6: 'ch6.mp3',
   7: 'ch7.mp3',
 };
-// فایل‌ها در public/music هستند و با مسیرِ نسبیِ سند (نه import.meta.url) خوانده
-// می‌شوند چون این باندل داخلِ blob بوت‌استرپ می‌شود و blob پایهٔ معتبری برای
-// new URL(relative, import.meta.url) نیست.
+// در بیلد production هر هفت آهنگ داخل همان bootstrap فشرده‌اند؛ مسیر public فقط
+// برای dev و پشتیبانِ اجرای بدون pack باقی می‌ماند و artifact تک‌فایل به آن نیاز ندارد.
 const musicUrlFor = (chapter: number) => {
   const file = MUSIC_FILES[chapter] ?? MUSIC_FILES[1];
+  if (typeof window !== 'undefined') {
+    const packed = (window as unknown as { __MUSIC_PACK__?: Record<string, string> }).__MUSIC_PACK__?.[file];
+    if (packed) return packed;
+  }
   if (typeof document !== 'undefined') {
     try {
       return new URL(`music/${file}`, document.baseURI).href;

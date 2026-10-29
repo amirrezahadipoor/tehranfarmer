@@ -16,7 +16,13 @@ for (const m of html.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)) {
 }
 for (const m of html.matchAll(/@import\s+["']([^"']+)["']/g)) bad.push(m[1]);
 if (bad.length) { console.error('[ERR] منابع خارجی:'); bad.forEach((b) => console.error('  ' + b)); process.exit(1); }
+if (!html.includes('<!-- offline-music-pack:7 -->')) {
+  console.error('[ERR] نشانهٔ بستهٔ هفت‌آهنگهٔ درون‌خطی در HTML نیست'); process.exit(1);
+}
+if (fs.existsSync('dist/music')) {
+  console.error('[ERR] پوشهٔ music در artifact باقی است؛ بیلد باید مستقل از فایل‌های همراه باشد'); process.exit(1);
+}
 const kb = Math.round(html.length / 1024);
-// موسیقی CC0 واقعی نیز درون همان فایل است؛ بودجهٔ ۲MB همچنان برای دانلود و WebView موبایل سبک است.
-if (kb > 2048) { console.error(`[ERR] بیلد ${kb}KB است — بودجهٔ ۲۰۴۸KB رد شد`); process.exit(1); }
-console.log(`[OK] بیلد آفلاین و تک‌فایل است — ${kb}KB`);
+// هفت MP3 با کیفیت اصلی + کد/فونت/تصاویر در همان فایل‌اند؛ سقف ۶MiB برای WebView موبایل.
+if (kb > 6144) { console.error(`[ERR] بیلد ${kb}KB است — بودجهٔ ۶۱۴۴KB رد شد`); process.exit(1); }
+console.log(`[OK] بیلد آفلاین، تک‌فایل و همراه با هر ۷ آهنگ است — ${kb}KB`);
