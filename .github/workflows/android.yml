@@ -148,6 +148,19 @@ jobs:
           name: mazrae-rangi-debug-apk
           path: artifacts
 
+      - name: آماده‌سازی کتابخانه‌های emulator و KVM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0
+          if [ -e /dev/kvm ]; then
+            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+            sudo udevadm control --reload-rules
+            sudo udevadm trigger --name-match=kvm
+            ls -l /dev/kvm
+          else
+            echo "::warning::/dev/kvm در این runner در دسترس نیست؛ emulator با شتاب نرم‌افزاری اجرا می‌شود."
+          fi
+
       - name: بوت Android 14 و آزمون تاچ، Back، Resume و Save
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -156,6 +169,7 @@ jobs:
           target: google_apis
           avd-name: mazrae-rangi-api34
           emulator-options: -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader_indirect
+          emulator-boot-timeout: 900
           disable-animations: true
           script: python3 scripts/android-emulator-audit.py
 
