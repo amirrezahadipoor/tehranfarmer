@@ -435,6 +435,7 @@ function Toolbar() {
         return (
           <button
             key={t.k}
+            data-tool={t.k}
             onClick={() => {
               if (tutToolBlocked(t.k)) { sfx.err(); return; } // حین آموزش فقط ابزار همان گام انتخاب می‌شود
               sfx.tap();

@@ -290,7 +290,9 @@ const SHOP_META: Record<string, { cx: number; modal: NonNullable<SceneScript['af
   'shop-intro-estate': { cx: 1150, modal: 'estate' },
 };
 
-function defaultPropFor(_who: Actor): string {
+function defaultPropFor(who: Actor): string {
+  // جهانگیر همیشه «مهربان» (چماق ابری) در دست دارد — club-point/club-swing قبلاً با دستِ خالی می‌آمد
+  if (who === 'jahangir') return 'club';
   return '';
 }
 

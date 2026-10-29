@@ -127,28 +127,28 @@ export const EN_LINES: Record<string, string[]> = {
   ...EN_SEASONAL_NPC_LINES,
   p1: [
     'We made it—Grandpa’s home at last!',
-    'Welcome back, son. See Jahangir first to sort out the farm’s deed.',
+    'Welcome back, son! I have waited so long for you—come here and let me hug you!',
   ],
   p2: [
-    'Alright, we made it back to Grandpa’s place. Where should I start?',
-    'Welcome home, son! Before tilling the soil, stop by the Estate Office and see Agha Jahangir.',
+    'Hello, Grandma! Where should I start?',
+    'I am Grandma Nosrat, your grandfather’s next-door neighbor. Welcome, son—eat some fresh bread first and catch your breath.',
   ],
   p3: [
-    'I am Grandma Nosrat, your grandfather’s next-door neighbor. A heavy old debt still sits on this farm’s deed.',
-    'Go talk with Jahangir to sort out the installments—I will bake fresh bread while you are there.',
+    'Before I forget: a heavy old debt still sits on this farm’s deed.',
+    'Jahangir knows everything—go to his office to sort out the installments. I will bake fresh bread for you!',
   ],
   p4: [
-    'I split the six-million debt into six installments—one every 28 days—and you must not sell the land.',
+    'Six million coins of debt, six separate deeds registered against this farm—and you must not sell the land.',
   ],
   p5: [
-    'Six million coins of old loans and upkeep are registered against this farm, with the main deed held as collateral.',
+    'You pay one small installment every 28 days; keep up and the deed clears and you can relax.',
     'Six million coins?! All I have right now is this old hoe and tiny savings!',
     'Easy now—nobody pays all at once. I am fair; even this soft foam club is named "Gentle," strictly for friendly reminders!',
   ],
   p6: [
-    'I split the whole debt into six separate deeds—one per chapter—and the first one is very light.',
-    'An installment is due every 28 days. Pay on time and your credit rises; miss it and I visit your farm myself!',
-    'What happens if I come up short on due day?',
+    'The whole debt is split into six separate deeds—one per chapter—and the first one is very light.',
+    'Behave and your credit rises; fall behind and I will visit your farm myself with "Gentle"!',
+    'What happens if I come up short at month end?',
     'One harmless boop from "Gentle," part of your pocket cash credited toward the debt, plus a small late fee!',
   ],
   p7: [
