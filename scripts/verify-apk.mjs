@@ -12,9 +12,10 @@ const unsignedReleaseArtifact = path.resolve('artifacts/mazrae-rangi-release-uns
 const releaseArtifact = fs.existsSync(unsignedReleaseArtifact) && !fs.existsSync(signedReleaseArtifact)
   ? unsignedReleaseArtifact
   : signedReleaseArtifact;
+const existingArtifacts = [debugArtifact, releaseArtifact].filter((p) => fs.existsSync(p));
 const apks = targets.length
   ? targets.map((p) => path.resolve(p))
-  : [debugArtifact, releaseArtifact];
+  : (existingArtifacts.length ? existingArtifacts : [debugArtifact, releaseArtifact]);
 
 const sdkCandidates = [
   process.env.ANDROID_HOME,

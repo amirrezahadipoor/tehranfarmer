@@ -90,12 +90,7 @@ jobs:
         run: rm -f "$RUNNER_TEMP/release.jks"
 
       - name: بازرسی خودکار باینری APK (ساختار، امضای v2/v3، مانیفست)
-        run: |
-          if [ "${{ github.event_name == 'push' || inputs.build_release }}" = "true" ]; then
-            npm run android:verify
-          else
-            npm run android:verify -- artifacts/mazrae-rangi-debug.apk
-          fi
+        run: npm run android:verify
 
       - name: بارگذاری APK نسخهٔ debug
         uses: actions/upload-artifact@v4
@@ -137,3 +132,38 @@ jobs:
             echo "- اگر Secret های امضا تنظیم شوند، فایل release با کلید خودتان امضا و با apksigner تأیید می‌شود."
             echo "- فایل release-unsigned فقط برای آزمون است؛ تگ رسمی بدون امضا شکست می‌خورد."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  emulator:
+    name: آزمون APK واقعی روی Android 14 KVM
+    runs-on: ubuntu-latest
+    needs: apk
+    timeout-minutes: 25
+    steps:
+      - name: دریافت اسکریپت آزمون
+        uses: actions/checkout@v4
+
+      - name: دریافت APK ساخته‌شده در همین commit
+        uses: actions/download-artifact@v4
+        with:
+          name: mazrae-rangi-debug-apk
+          path: artifacts
+
+      - name: بوت Android 14 و آزمون تاچ، Back، Resume و Save
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          avd-name: mazrae-rangi-api34
+          emulator-options: -no-snapshot-save -noaudio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: python3 scripts/android-emulator-audit.py
+
+      - name: بارگذاری screenshot، UI XML و logcat امولاتور
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-14-emulator-proof
+          path: /tmp/apk-proof/
+          if-no-files-found: warn
+          retention-days: 14

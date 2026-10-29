@@ -2,6 +2,8 @@
 node_modules/
 dist/
 *.log
+__pycache__/
+*.pyc
 .DS_Store
 
 # رمزها و کلیدها — هرگز در گیت نروند

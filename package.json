@@ -3,12 +3,15 @@
   "private": true,
   "version": "10.1.1",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit && npm run --silent lint:fa && npm run --silent lint:magic && npm run --silent privacy:audit && npm run --silent audit:agents && npm run --silent test && npm run --silent build && npm run --silent verify:offline && npm run --silent icons:audit && npm run --silent audit:play",
-    "audit:play": "vite-node scripts/audit-playthrough.ts",
+    "audit:play": "tsx scripts/run-audit-playthrough.ts",
     "audit:mobile": "node scripts/mobile-audit.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -22,6 +25,7 @@
     "android:release": "node scripts/android-build.mjs release",
     "android:assets": "node scripts/generate-android-assets.mjs",
     "android:verify": "node scripts/verify-apk.mjs",
+    "android:emulator": "python3 scripts/android-emulator-audit.py",
     "test:visual": "npm run build:e2e && playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "lint:magic": "node scripts/lint-magic.mjs",
@@ -43,7 +47,7 @@
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.3",
-    "@capacitor/cli": "^8.5.3",
+    "@capacitor/cli": "^8.6.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
@@ -57,7 +61,7 @@
     "typescript": "5.9.3",
     "vite": "^7.3.7",
     "vite-plugin-singlefile": "2.3.0",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "tinypool": "2.1.2"

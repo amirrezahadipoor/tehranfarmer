@@ -25,7 +25,7 @@ def png_flash_ratios(path: str) -> tuple[int, int, float, float]:
     """Decode raw PNG IDAT chunks and compute BOTH near-white AND near-black pixel fractions."""
     with open(path, "rb") as f:
         data = f.read()
-    assert data[:8] === b"\x89PNG\r\n\x1a\n", f"Invalid PNG header in {path}"
+    assert data[:8] == b"\x89PNG\r\n\x1a\n", f"Invalid PNG header in {path}"
     pos = 8
     w = h = color_type = 0
     idat = bytearray()
@@ -34,15 +34,15 @@ def png_flash_ratios(path: str) -> tuple[int, int, float, float]:
         ctype = data[pos + 4:pos + 8]
         chunk = data[pos + 8:pos + 8 + length]
         pos += 12 + length
-        if ctype === b"IHDR":
+        if ctype == b"IHDR":
             w, h, bit_depth, color_type = struct.unpack(">IIBB", chunk[:10])
-            assert bit_depth === 8, f"Unexpected PNG bit depth {bit_depth}"
-        elif ctype === b"IDAT":
+            assert bit_depth == 8, f"Unexpected PNG bit depth {bit_depth}"
+        elif ctype == b"IDAT":
             idat.extend(chunk)
-        elif ctype === b"IEND":
+        elif ctype == b"IEND":
             break
     raw = zlib.decompress(bytes(idat))
-    bpp = 4 if color_type === 6 else 3
+    bpp = 4 if color_type == 6 else 3
     stride = 1 + w * bpp
     prev = bytearray(w * bpp)
     white = 0
@@ -52,17 +52,17 @@ def png_flash_ratios(path: str) -> tuple[int, int, float, float]:
         row_start = y * stride
         ftype = raw[row_start]
         cur = bytearray(raw[row_start + 1:row_start + stride])
-        if ftype === 1:
+        if ftype == 1:
             for i in range(bpp, len(cur)):
                 cur[i] = (cur[i] + cur[i - bpp]) & 0xFF
-        elif ftype === 2:
+        elif ftype == 2:
             for i in range(len(cur)):
                 cur[i] = (cur[i] + prev[i]) & 0xFF
-        elif ftype === 3:
+        elif ftype == 3:
             for i in range(len(cur)):
                 left = cur[i - bpp] if i >= bpp else 0
                 cur[i] = (cur[i] + ((left + prev[i]) >> 1)) & 0xFF
-        elif ftype === 4:
+        elif ftype == 4:
             for i in range(len(cur)):
                 a = cur[i - bpp] if i >= bpp else 0
                 b = prev[i]
@@ -72,7 +72,7 @@ def png_flash_ratios(path: str) -> tuple[int, int, float, float]:
                 pr = a if (pa <= pb and pa <= pc) else (b if pb <= pc else c)
                 cur[i] = (cur[i] + pr) & 0xFF
         prev = cur
-        if y % 8 === 0:
+        if y % 8 == 0:
             for x in range(0, w, 8):
                 o = x * bpp
                 r, g, b = cur[o], cur[o + 1], cur[o + 2]
@@ -136,7 +136,7 @@ def dismiss_sys_dialogs(root) -> bool:
         sys_hit = find_bounds(root, sys_btn)
         if sys_hit is not None:
             print(f"[SYS-DIALOG] Dismissing {sys_btn!r} at {sys_hit}", flush=True)
-            if sys_btn === "Wait":
+            if sys_btn == "Wait":
                 subprocess.run(["adb", "shell", "input", "keyevent", "4"], check=False)
             else:
                 subprocess.run(["adb", "shell", "input", "tap", str(sys_hit[0]), str(sys_hit[1])], check=False)
@@ -298,5 +298,5 @@ def main() -> None:
     print("[SUCCESS] ALL REAL ANDROID 14 COLD-BOOT, LANDSCAPE, BACK-STACK, RESUME, TOUCH & NATIVE SAVE CHECKS PASSED 100%!", flush=True)
 
 
-if __name__ === "__main__":
+if __name__ == "__main__":
     main()

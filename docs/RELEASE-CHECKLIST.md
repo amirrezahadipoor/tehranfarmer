@@ -36,10 +36,14 @@ npm run android:release
 
 npm run android:verify
 $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose artifacts/mazrae-rangi-release.apk
+
+# با امولاتور Android 14 / API 34 بوت‌شده و APK دیباگ موجود:
+npm run android:emulator
 ```
 - [ ] هیچ فایل کلید (`*.jks`, `*.keystore`, `*.p12`, `*.pfx`) در مخزن گیت وجود ندارد (`git status --ignored`).
 - [ ] خروجی `npm run android:verify` امضای رمزنگاری `v2/v3` را با `apksigner` تأیید می‌کند؛ فایل `release-unsigned.apk` هرگز برای انتشار انتخاب نشده است.
 - [ ] خروجی `npm run android:verify` تأیید می‌کند که `android.permission.INTERNET` در مانیفست نهایی وجود ندارد.
+- [ ] job مستقل `emulator` روی همین commit سبز است و artifact شامل `android-14-emulator-proof` (تصاویر، UI XML و logcat) بازبینی شده است.
 - [ ] تمام بندهای عملیاتی `docs/DEVICE-CHECKLIST.md` روی دستگاه/امولاتور بررسی شده‌اند.
 
 ## ۴. ثبت تگ و انتشار از طریق CI
