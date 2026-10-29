@@ -38,6 +38,7 @@ npm run android:verify
 $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose artifacts/mazrae-rangi-release.apk
 ```
 - [ ] هیچ فایل کلید (`*.jks`, `*.keystore`, `*.p12`, `*.pfx`) در مخزن گیت وجود ندارد (`git status --ignored`).
+- [ ] خروجی `npm run android:verify` امضای رمزنگاری `v2/v3` را با `apksigner` تأیید می‌کند؛ فایل `release-unsigned.apk` هرگز برای انتشار انتخاب نشده است.
 - [ ] خروجی `npm run android:verify` تأیید می‌کند که `android.permission.INTERNET` در مانیفست نهایی وجود ندارد.
 - [ ] تمام بندهای عملیاتی `docs/DEVICE-CHECKLIST.md` روی دستگاه/امولاتور بررسی شده‌اند.
 
@@ -46,4 +47,5 @@ $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose artifacts/mazrae-ran
 git tag -a v10.0.0 -m "انتشار نسخهٔ ۱۰.۰.۰ مزرعه رنگی"
 git push origin main --tags
 ```
+- [ ] چهار Secret امضا در محیط انتشار تنظیم شده‌اند؛ guard تگ رسمی بدون امضا عمداً شکست می‌خورد.
 - [ ] گردش‌کار `.github/workflows/android.yml` سبز شده و هر سه بسته (`mazrae-rangi-release-apk`، `mazrae-rangi-debug-apk` و `mazrae-rangi-web-singlefile`) قابل دانلودند.

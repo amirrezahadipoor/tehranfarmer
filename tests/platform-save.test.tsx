@@ -183,6 +183,18 @@ describe('فاز ۹ — جداسازی کامل تنظیمات از سِیو و 
     expect(fs.existsSync('dist/music')).toBe(false);
   });
 
+  it('APK بدون امضا نمی‌تواند خود را release رسمی جا بزند و تگ رسمی guard امضا دارد', () => {
+    const build = fs.readFileSync('scripts/android-build.mjs', 'utf8');
+    const verify = fs.readFileSync('scripts/verify-apk.mjs', 'utf8');
+    const workflow = fs.readFileSync('.github/workflows/android.yml', 'utf8');
+    expect(build).toContain('mazrae-rangi-release-unsigned.apk');
+    expect(build).toContain("process.env.REQUIRE_SIGNED_RELEASE === '1'");
+    expect(verify).toContain("['verify', '--verbose', apk]");
+    expect(verify).toContain('Verified using v[23] scheme');
+    expect(workflow).toContain("startsWith(github.ref, 'refs/tags/')");
+    expect(workflow).toContain('REQUIRE_SIGNED_RELEASE:');
+  });
+
   it('ممیزی سورس حریم خصوصی صفر فراخوانی شبکه/تله‌متری در کل src تأیید می‌کند (P9-10)', async () => {
     const { execFileSync } = await import('node:child_process');
     const out = execFileSync(process.execPath, ['scripts/privacy-audit.mjs'], { encoding: 'utf8' });

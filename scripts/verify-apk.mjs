@@ -6,9 +6,15 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 
 const targets = process.argv.slice(2);
+const debugArtifact = path.resolve('artifacts/mazrae-rangi-debug.apk');
+const signedReleaseArtifact = path.resolve('artifacts/mazrae-rangi-release.apk');
+const unsignedReleaseArtifact = path.resolve('artifacts/mazrae-rangi-release-unsigned.apk');
+const releaseArtifact = fs.existsSync(unsignedReleaseArtifact) && !fs.existsSync(signedReleaseArtifact)
+  ? unsignedReleaseArtifact
+  : signedReleaseArtifact;
 const apks = targets.length
   ? targets.map((p) => path.resolve(p))
-  : ['artifacts/mazrae-rangi-debug.apk', 'artifacts/mazrae-rangi-release.apk'].map((p) => path.resolve(p));
+  : [debugArtifact, releaseArtifact];
 
 const sdkCandidates = [
   process.env.ANDROID_HOME,
@@ -17,12 +23,15 @@ const sdkCandidates = [
   path.join(process.env.HOME ?? '', 'Android/Sdk'),
 ].filter(Boolean);
 
-function findAapt2() {
+function findBuildTool(name) {
   for (const sdk of sdkCandidates) {
     const bt = path.join(sdk, 'build-tools');
     if (!fs.existsSync(bt)) continue;
     for (const ver of fs.readdirSync(bt).sort().reverse()) {
-      const bin = path.join(bt, ver, process.platform === 'win32' ? 'aapt2.exe' : 'aapt2');
+      const executable = process.platform === 'win32'
+        ? (name === 'apksigner' ? 'apksigner.bat' : `${name}.exe`)
+        : name;
+      const bin = path.join(bt, ver, executable);
       if (fs.existsSync(bin)) return bin;
     }
   }
@@ -66,7 +75,8 @@ function extractEntry(buf, entry) {
   throw new Error(`روش فشرده‌سازی ناشناخته در APK: ${entry.method}`);
 }
 
-const aapt2 = findAapt2();
+const aapt2 = findBuildTool('aapt2');
+const apksigner = findBuildTool('apksigner');
 
 for (const apk of apks) {
   if (!fs.existsSync(apk)) {
@@ -75,6 +85,29 @@ for (const apk of apks) {
   }
   const buf = fs.readFileSync(apk);
   const entries = readZipCentral(buf);
+  const explicitlyUnsigned = path.basename(apk) === 'mazrae-rangi-release-unsigned.apk';
+  if (!explicitlyUnsigned) {
+    if (!apksigner) {
+      console.error(`[ERR] برای اثبات امضای ${path.basename(apk)} ابزار apksigner در Android Build-Tools لازم است.`);
+      process.exit(1);
+    }
+    let signatureReport = '';
+    try {
+      signatureReport = execFileSync(apksigner, ['verify', '--verbose', apk], {
+        encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    } catch (error) {
+      console.error(`[ERR] امضای رمزنگاری ${path.basename(apk)} معتبر نیست: ${error.stderr?.toString() || error.message}`);
+      process.exit(1);
+    }
+    if (!/Verified using v[23] scheme[^\n]*: true/.test(signatureReport)) {
+      console.error(`[ERR] ${path.basename(apk)} امضای مدرن v2/v3 ندارد و برای توزیع تأیید نمی‌شود.`);
+      process.exit(1);
+    }
+    console.log(`[OK] امضای رمزنگاری v2/v3 برای ${path.basename(apk)} تأیید شد.`);
+  } else {
+    console.log(`[i] ${path.basename(apk)} صریحاً بدون امضا است و برای انتشار رسمی مجاز نیست.`);
+  }
 
   const required = [
     'AndroidManifest.xml',

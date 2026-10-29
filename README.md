@@ -17,8 +17,8 @@ npm run roadmap:progress           # به‌روزرسانی جدول پیشرف
 ```bash
 npm run android:assets             # تولید خودکار آیکون‌های تطبیقی و اسپلش در تمام چگالی‌ها
 npm run android:debug              # ساخت artifacts/mazrae-rangi-debug.apk
-npm run android:release            # ساخت artifacts/mazrae-rangi-release.apk (امضاشده در صورت تنظیم متغیرهای کلید)
-npm run android:verify             # بازرسی باینری APK، نسخه و نبود مجوز INTERNET با aapt2
+npm run android:release            # release.apk امضاشده، یا release-unsigned.apk صریحاً بدون امضا
+npm run android:verify             # ساختار + امضای v2/v3 با apksigner + نسخه و مجوزها با aapt2
 ```
 برای امضای نسخهٔ Release بیرون از گیت، راهنمای [`docs/KEYSTORE.md`](docs/KEYSTORE.md) را ببینید.
 

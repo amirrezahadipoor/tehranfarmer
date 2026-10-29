@@ -44,7 +44,7 @@ KEY_PASSWORD="YOUR_STRONG_PASSWORD" \
 npm run android:release
 ```
 
-فایل نهایی در مسیر `artifacts/mazrae-rangi-release.apk` ذخیره می‌شود و با هر سه طرح امضای اندروید (`v1 + v2 + v3`) امضا شده است.
+فایل نهایی در مسیر `artifacts/mazrae-rangi-release.apk` ذخیره می‌شود و با هر سه طرح امضای اندروید (`v1 + v2 + v3`) امضا شده است. بدون کلید، خروجی عمداً `artifacts/mazrae-rangi-release-unsigned.apk` نام دارد تا با فایل آمادهٔ انتشار اشتباه نشود. با `REQUIRE_SIGNED_RELEASE=1 npm run android:release` ساخت بدون امضا با خطا متوقف می‌شود؛ این guard برای تگ‌های رسمی CI نیز فعال است.
 
 ## ۵. بررسی صحت امضای دیجیتال با `apksigner`
 
@@ -63,4 +63,4 @@ $ANDROID_HOME/build-tools/35.0.0/apksigner verify --verbose --print-certs artifa
    - `KEYSTORE_PASSWORD`
    - `KEY_ALIAS`
    - `KEY_PASSWORD`
-3. گردش‌کار `.github/workflows/android.yml` هنگام وجود این Secretها فایل کلید موقت را در `$RUNNER_TEMP` بازگشایی کرده، `artifacts/mazrae-rangi-release.apk` را امضا می‌کند و بلافاصله پس از ساخت، فایل موقت را پاک می‌کند.
+3. گردش‌کار `.github/workflows/android.yml` هنگام وجود این Secretها فایل کلید موقت را در `$RUNNER_TEMP` بازگشایی کرده، `artifacts/mazrae-rangi-release.apk` را امضا می‌کند و بلافاصله پس از ساخت، فایل موقت را پاک می‌کند. `npm run android:verify` امضای رمزنگاری `v2/v3` را با `apksigner` می‌سنجد و تگ رسمی بدون Secret معتبر سبز نمی‌شود.

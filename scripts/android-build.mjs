@@ -74,8 +74,22 @@ if (!apks.length) {
 
 const srcApk = path.join(outDir, apks[0]);
 const signedTag = apks[0].includes('unsigned') ? 'unsigned' : 'signed';
-fs.mkdirSync('artifacts', { recursive: true });
-const destApk = path.resolve('artifacts', `mazrae-rangi-${mode}.apk`);
+if (mode === 'release' && signedTag === 'unsigned' && process.env.REQUIRE_SIGNED_RELEASE === '1') {
+  console.error('[ERR] انتشار رسمی با APK بدون امضا ممنوع است؛ Secrets امضا را تنظیم کنید.');
+  process.exit(1);
+}
+const artifactsDir = path.resolve(rootDir, 'artifacts');
+fs.mkdirSync(artifactsDir, { recursive: true });
+const destName = mode === 'release' && signedTag === 'unsigned'
+  ? 'mazrae-rangi-release-unsigned.apk'
+  : `mazrae-rangi-${mode}.apk`;
+const destApk = path.join(artifactsDir, destName);
+// خروجی اجرای قبلی نباید به‌جای artifact تازه، مسیر امضاشده/بدون‌امضا را مبهم کند.
+if (mode === 'release') {
+  for (const stale of ['mazrae-rangi-release.apk', 'mazrae-rangi-release-unsigned.apk']) {
+    if (stale !== destName) fs.rmSync(path.join(artifactsDir, stale), { force: true });
+  }
+}
 fs.copyFileSync(srcApk, destApk);
 
 const buf = fs.readFileSync(destApk);

@@ -41,13 +41,13 @@
 | `KEY_ALIAS` | نام کلید (alias) |
 | `KEY_PASSWORD` | رمز کلید |
 
-> اگر Secret ها تنظیم نشوند، گردش‌کار همچنان **APK نسخهٔ debug** را می‌سازد (برای تست روی گوشی خودتان)، ولی برای آپلود در استور باید release **امضاشده** باشد.
+> اگر Secret ها تنظیم نشوند، گردش‌کار در اجرای غیررسمی debug و `mazrae-rangi-release-unsigned.apk` را برای آزمون می‌سازد؛ فایل unsigned برای استور مجاز نیست. تگ رسمی بدون امضا شکست می‌خورد و فقط `mazrae-rangi-release.apk` با تأیید `apksigner` قابل آپلود است.
 
 ### ۲-۳. اجرای ساخت APK از گیت‌هاب — [کار شما]
 1. به تب **Actions** برو و گردش‌کار **Android APK** را انتخاب کن.
 2. دکمهٔ **Run workflow** را بزن (شاخه: `main`).
 3. پس از پایان، از بخش **Artifacts** این‌ها را دانلود کن:
-   - `mazrae-rangi-release-apk` (فایل نصب نهایی)
+   - `mazrae-rangi-release-apk` (فقط فایل داخلِ آن با نام `mazrae-rangi-release.apk` نصب نهایی است؛ `release-unsigned` ممنوع)
    - `mazrae-rangi-debug-apk` (فقط برای تست داخلی)
    - `mazrae-rangi-web-singlefile` (نسخهٔ وب تک‌فایل)
 

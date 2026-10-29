@@ -82,14 +82,20 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') && '1' || '0' }}
         run: npm run android:release
 
       - name: پاک‌سازی فوری کلید موقت
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - name: بازرسی خودکار باینری APK (اندازه، امضا، مانیفست)
-        run: npm run android:verify
+      - name: بازرسی خودکار باینری APK (ساختار، امضای v2/v3، مانیفست)
+        run: |
+          if [ "${{ github.event_name == 'push' || inputs.build_release }}" = "true" ]; then
+            npm run android:verify
+          else
+            npm run android:verify -- artifacts/mazrae-rangi-debug.apk
+          fi
 
       - name: بارگذاری APK نسخهٔ debug
         uses: actions/upload-artifact@v4
@@ -107,7 +113,7 @@ jobs:
           path: |
             artifacts/mazrae-rangi-release.apk
             artifacts/mazrae-rangi-release-unsigned.apk
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 90
 
       - name: بارگذاری نسخهٔ تک‌فایل وب آفلاین (نصب‌شدنی روی هر گوشی)
@@ -128,5 +134,6 @@ jobs:
             echo ""
             echo "- debug: با ابزارهای تست (F9) ساخته می‌شود و صرفاً برای آزمون است."
             echo "- release: بیلد production واقعی؛ ابزارهای توسعه در آن حذف شده‌اند."
-            echo "- اگر Secret های امضا تنظیم شوند، فایل release با کلید خودتان امضا می‌شود."
+            echo "- اگر Secret های امضا تنظیم شوند، فایل release با کلید خودتان امضا و با apksigner تأیید می‌شود."
+            echo "- فایل release-unsigned فقط برای آزمون است؛ تگ رسمی بدون امضا شکست می‌خورد."
           } >> "$GITHUB_STEP_SUMMARY"
