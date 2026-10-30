@@ -7,6 +7,7 @@ import {
   TUT_PLOT, syncTut, tutActive, tutExpectedTool, tutMaybeStart, tutOnLedger, tutOnPlotAction, tutOnSale, tutOnSleep, tutSkip, tutStep, tutTapOk, tutToolBlocked, tutToolHi,
 } from '../src/game/tutorial';
 import { TutorialOverlay } from '../src/ui/TutorialOverlay';
+import { CFG } from '../src/game/settings';
 
 beforeAll(() => { installDom(); });
 beforeEach(() => {
@@ -21,7 +22,7 @@ beforeEach(() => {
 });
 
 describe('آموزش تعاملی روز اول — عمل روی کرت و راهنمای اختیاری ادامهٔ مسیر', () => {
-  it('شروع خودکار: ابزارِ گامِ اول انتخاب می‌شود و فقط کرت هدف با ابزار درست باز است', () => {
+  it('شروع خودکار: ابزار آماده است اما هیچ کرت یا ابزار دیگری قفل نمی‌شود', () => {
     tutMaybeStart();
     expect(tutActive()).toBe(true);
     expect(tutStep()).toBe(0);
@@ -29,13 +30,14 @@ describe('آموزش تعاملی روز اول — عمل روی کرت و را
     expect(UI.tool).toBe('till'); // بازیکن نیازی به انتخاب ندارد — خودش روشن می‌شود
 
     expect(tutTapOk(TUT_PLOT)).toBe(true);
-    expect(tutTapOk(1)).toBe(false); // کرت دیگر پاسخ نمی‌دهد
+    expect(tutTapOk(1)).toBe(true); // گشت‌وگذار و تمرین روی بقیهٔ کرت‌ها آزاد است
     UI.tool = 'water';
-    expect(tutTapOk(TUT_PLOT)).toBe(false); // ابزار غلط هم پاسخ نمی‌دهد
-    UI.tool = 'till';
+    syncTut();
+    expect(UI.tool).toBe('water'); // راهنما انتخاب تازهٔ بازیکن را پس نمی‌گیرد
     expect(tutTapOk(TUT_PLOT)).toBe(true);
+    UI.tool = 'till';
 
-    expect(tutToolBlocked('water')).toBe(true);
+    expect(tutToolBlocked('water')).toBe(false);
     expect(tutToolBlocked('till')).toBe(false);
     expect(tutToolHi('till')).toBe(true);
     expect(tutToolHi('plant')).toBe(false);
@@ -48,7 +50,7 @@ describe('آموزش تعاملی روز اول — عمل روی کرت و را
     tutOnPlotAction(TUT_PLOT); // پس از ثبتِ شخم
     expect(tutStep()).toBe(1);
     expect(UI.tool).toBe('plant');
-    expect(UI.seedTray).toBe(true); // سینی بذر خودش باز می‌شود
+    expect(UI.seedTray).toBe(false); // بذر آماده است؛ یک پنجرهٔ اضافه جلوی عمل را نمی‌گیرد
     expect(UI.seed).toBe('wheat');
 
     tutOnPlotAction(TUT_PLOT); // کاشت
@@ -64,7 +66,7 @@ describe('آموزش تعاملی روز اول — عمل روی کرت و را
 
     tutOnPlotAction(TUT_PLOT); // آبیاری
     expect(tutStep()).toBe(3);
-    expect(UI.tool).toBe('hand');
+    expect(UI.tool).toBe('harvest');
 
     // ورود به گام برداشت: کرت آموزشی بلافاصله می‌رسد تا حلقهٔ کامل همان روز تمرین شود
     S.plots[TUT_PLOT].st = 2;
@@ -114,7 +116,19 @@ describe('آموزش تعاملی روز اول — عمل روی کرت و را
     tutMaybeStart();
     const html = renderToString(<TutorialOverlay />);
     expect(html).toContain('data-tutorial="1"');
-    expect(html).toContain('رد کردن آموزش'); // فقط aria/title — هیچ متنِ دیدنی‌ای در کار نیست
+    expect(html).toContain('رد کردن آموزش'); // کنترل خروج با متنِ دیدنی، نه یک ضربدرِ بی‌توضیح
+    expect(html).toContain('کرت را شخم بزن');
+    expect(html).toContain('بیل آماده است');
+    expect(html).toContain('role="progressbar"');
+    expect(html).toContain('جمع کردن راهنما');
+    const locale = CFG.locale;
+    try {
+      CFG.locale = 'en';
+      const english = renderToString(<TutorialOverlay />);
+      expect(english).toContain('Till the plot');
+      expect(english).toContain('The hoe is ready');
+      expect(english).not.toContain('کرت را شخم بزن');
+    } finally { CFG.locale = locale; }
 
     tutSkip();
     expect(S.tut!.done).toBe(true);

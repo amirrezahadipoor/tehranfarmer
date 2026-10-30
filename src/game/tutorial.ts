@@ -1,28 +1,26 @@
-// ===== آموزش تعاملی روز اول: کرت، فروش، دفترکل و استراحت =====
-// همان مسیر در مرورگر کاربر و Playwright اجرا می‌شود؛ هیچ شاخهٔ navigator.webdriver وجود ندارد.
+// ===== راهنمای غیرمسدودکنندهٔ روز اول: چهار عمل واقعی، فروش، دفتر و استراحت =====
+// مسیر مرورگر و Playwright یکسان است؛ راهنما فقط پیشنهاد می‌دهد و آزادی بازی را نمی‌گیرد.
 import { S, UI, notify, saveGame, type Plot, type Tool } from './state';
 import { sfx } from './sound';
 
 export const TUT_PLOT = 0;
 export const TUT_STEP_COUNT = 7;
-const STEP_TOOLS = ['till', 'plant', 'water', 'hand'] as const;
+const STEP_TOOLS = ['till', 'plant', 'water', 'harvest'] as const;
 const storyQuiet = () => !S.story.pending;
 const running = () => Boolean(S.tut && S.tut.active && !S.tut.done && storyQuiet() && UI.started && S.day === 1 && !S.story.postgame);
 
-/** Overlay remains available for the sale/ledger/rest legs; farm gating is only steps 0–3. */
+/** Overlay and target markers stay out of dialogs and unrelated farm scenes. */
 export function tutActive(): boolean {
   const t = S.tut;
-  if (!t || !running() || S.day !== 1 || S.story.postgame || UI.modal) return false;
+  if (!t || !running() || UI.modal) return false;
   return t.step >= 4 || UI.scene === 'farm';
 }
 export const tutStep = (): number => S.tut?.step ?? TUT_STEP_COUNT;
 export function tutExpectedTool(): Tool { return STEP_TOOLS[Math.min(3, tutStep())]; }
 
-export function tutTapOk(i: number): boolean {
-  if (!tutActive() || tutStep() >= 4) return true;
-  return i === TUT_PLOT && UI.tool === tutExpectedTool();
-}
-export const tutToolBlocked = (k: string): boolean => tutActive() && tutStep() < 4 && k !== tutExpectedTool();
+/** Free exploration is deliberate: the coach never rejects another plot or tool. */
+export function tutTapOk(_i: number): boolean { return true; }
+export const tutToolBlocked = (_k: string): boolean => false;
 export const tutToolHi = (k: string): boolean => tutActive() && tutStep() < 4 && k === tutExpectedTool();
 
 function stepDone(step: number, p: Plot): boolean {
@@ -32,13 +30,33 @@ function stepDone(step: number, p: Plot): boolean {
   return false;
 }
 
+function ripenPracticeCrop(): void {
+  const p = S.plots[TUT_PLOT];
+  if (p?.st === 2 && p.crop && !p.ripe && !p.dead) {
+    p.prog = 1;
+    p.ripe = true;
+    p.dry = 0;
+    p.water = 1;
+  }
+}
+
+/** Equip only on entry to a step; afterwards the player may freely inspect other tools. */
+function prepareStep(step: number): void {
+  UI.info = null;
+  UI.seedTray = false;
+  if (step >= 4) return;
+  if (step === 1) UI.seed = 'wheat';
+  UI.tool = STEP_TOOLS[Math.min(3, step)];
+  if (step === 3) ripenPracticeCrop();
+}
+
 export function tutMaybeStart(): void {
   const t = S.tut;
   if (!t || t.done || t.active) return;
   if (S.day !== 1 || S.story.postgame || !UI.started || UI.modal || UI.scene !== 'farm' || !storyQuiet()) return;
   t.active = true;
   t.step = 0;
-  syncTut();
+  prepareStep(0);
   saveGame();
   notify();
 }
@@ -47,23 +65,18 @@ export function syncTut(): void {
   if (!tutActive()) return;
   const t = S.tut!;
   const p = S.plots[TUT_PLOT];
+  const before = t.step;
   while (t.step < 3 && stepDone(t.step, p)) t.step++;
-  if (t.step >= 4) {
-    if (UI.seedTray) UI.seedTray = false;
-    return;
-  }
-  if (t.step === 1) UI.seed = 'wheat';
-  if (t.step === 3 && p.st === 2 && p.crop && !p.ripe && !p.dead) { p.prog = 1; p.ripe = true; p.dry = 0; p.water = 1; }
-  const tray = t.step === 1;
-  const tool = tutExpectedTool();
-  if (UI.seedTray !== tray) UI.seedTray = tray;
-  if (UI.tool !== tool) { UI.tool = tool; UI.info = null; notify(); }
+  if (t.step !== before) prepareStep(t.step);
+  if (t.step >= 4) { UI.seedTray = false; return; }
+  if (t.step === 3) ripenPracticeCrop();
 }
 
 function persistStep(step: number): void {
   const t = S.tut;
   if (!t) return;
   t.step = step;
+  prepareStep(step);
   saveGame();
   notify();
 }
@@ -71,15 +84,8 @@ function persistStep(step: number): void {
 export function tutOnPlotAction(i: number): void {
   if (!tutActive() || tutStep() >= 4 || i !== TUT_PLOT || UI.tool !== tutExpectedTool()) return;
   const t = S.tut!;
-  if (t.step >= 3) {
-    persistStep(4);
-    sfx.coin();
-    return;
-  }
-  t.step++;
-  syncTut();
-  saveGame();
-  notify();
+  persistStep(t.step + 1);
+  if (t.step === 4) sfx.coin();
 }
 
 export function tutOnSale(): void {
@@ -94,7 +100,7 @@ export function tutOnLedger(): void {
   sfx.tap();
 }
 
-/** Sleeping finishes the seventh step, or cleanly ends an unfinished first-day tutorial. */
+/** Sleeping finishes the seventh step, or cleanly ends an unfinished first-day guide. */
 export function tutOnSleep(): void {
   if (!running()) return;
   const t = S.tut!;

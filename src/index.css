@@ -151,6 +151,47 @@ html[data-reduce-motion="1"] .press,
 html[data-reduce-motion="1"] .btn,
 html[data-reduce-motion="1"] .bar > i { transition: none !important; }
 
+/* ===== First-day coach: a readable, non-modal objective card and a calm target frame ===== */
+.tutorial-coach {
+  position: fixed;
+  right: max(.5rem, var(--safe-right));
+  bottom: calc(var(--safe-bottom) + 88px);
+  width: min(340px, calc(100vw - 1rem - var(--safe-left) - var(--safe-right)));
+  max-width: calc(100vw - 1rem - var(--safe-left) - var(--safe-right));
+  border-color: #503426;
+  box-shadow: 0 .35rem 0 rgba(80,52,38,.55), 0 .8rem 2rem rgba(43,26,16,.24);
+}
+.tutorial-step-icon { width: 28px !important; height: 28px !important; }
+.tutorial-target {
+  position: fixed;
+  pointer-events: none;
+  border: 3px solid #fff2a0;
+  outline: 2px solid rgba(80,52,38,.9);
+  outline-offset: 1px;
+  border-radius: 12px;
+  background: rgba(255,217,59,.08);
+  box-shadow: 0 0 0 5px rgba(255,217,59,.22), inset 0 0 1.2rem rgba(255,217,59,.18);
+}
+.tutorial-target::after {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%);
+  border: 2px solid #503426;
+  border-radius: 999px;
+  background: #ffd93b;
+  box-shadow: 0 0 0 3px rgba(255,244,216,.7);
+}
+@media (min-width: 901px) and (min-height: 500px) {
+  .tutorial-coach { bottom: calc(var(--safe-bottom) + 140px); width: 360px; }
+}
+@media (orientation: portrait) {
+  .tutorial-coach { bottom: calc(var(--safe-bottom) + 164px); }
+}
+
 /* Keyboard/screen-reader scene mirror: visually out of the way until focused,
    then a high-contrast, scrollable control panel with 44px minimum targets. */
 .scene-a11y {

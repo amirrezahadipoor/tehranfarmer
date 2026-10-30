@@ -26,7 +26,7 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
   test.use({ bypassCSP: true, hasTouch: true });
 
   test('all 23 dialogs pass WCAG A/AA automated checks and keep keyboard focus contained', async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(150_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.setViewportSize({ width: 1280, height: 720 });
@@ -75,7 +75,7 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
   });
 
   test('English dialogs and every festival tab are translated and pass the same WCAG gate', async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(150_000);
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
     await page.locator('button').first().click();
@@ -254,6 +254,14 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await page.locator('button').first().click();
     await page.locator('button:has-text("رد کردن صحنه")').click();
     await expect(page.locator('[data-tutorial="1"]')).toBeVisible();
+    await expect(page.locator('[data-tutorial-title="1"]')).toHaveText('کرت را شخم بزن');
+    await expect(page.locator('[data-tutorial-progress="1"]')).toHaveAttribute('aria-valuenow', '1');
+    await expect(page.locator('[data-tutorial-target="1"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'رد کردن آموزش' })).toBeVisible();
+    await page.getByRole('button', { name: 'جمع کردن راهنما' }).click();
+    await expect(page.locator('[data-tutorial-card="1"]')).toHaveCount(0);
+    await page.getByRole('button', { name: 'باز کردن راهنمای روز اول' }).click();
+    await expect(page.locator('[data-tutorial-card="1"]')).toBeVisible();
 
     for (const step of [1, 2, 3]) {
       await page.locator('canvas').click({ position: { x: 478, y: 282 } });
@@ -265,6 +273,7 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     }
     await page.locator('canvas').click({ position: { x: 478, y: 282 } });
     await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '4');
+    await expect(page.locator('[data-tutorial-title="1"]')).toHaveText('گندم را بفروش');
     await page.waitForTimeout(2800);
 
     // Sell one harvested wheat through the actual town and market controls.
@@ -288,15 +297,10 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await page.getByRole('button', { name: 'بستن پنجره' }).click();
     await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '6');
 
-    await page.locator('[data-nav="farm"]').click();
-    await expect(page.locator('[data-nav="farm"]')).toBeDisabled();
-    await page.locator('canvas').click({ position: { x: 190, y: 180 } });
-    const sleep = page.locator('[data-home-sleep="1"]');
-    await expect(sleep).toBeVisible({ timeout: 15_000 });
-    expect(await page.locator('[data-modal-scroll="1"]').evaluate((el) => el.scrollTop)).toBe(0);
-    const sleepBox = await sleep.boundingBox();
-    expect(sleepBox!.y).toBeGreaterThanOrEqual(0);
-    expect(sleepBox!.y + sleepBox!.height).toBeLessThanOrEqual(720);
+    await expect(page.locator('[data-tutorial-title="1"]')).toHaveText('به فردا برو');
+    const sleep = page.locator('[data-rest-anytime="1"]');
+    await expect(sleep).toBeVisible();
+    await expect(page.locator('[data-tutorial-target="1"]')).toBeVisible();
     await sleep.click();
     await expect(page.locator('[data-tutorial="1"]')).toHaveCount(0);
 
@@ -309,6 +313,60 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     expect(result.earned).toBeGreaterThan(0);
     expect(result.harvests).toBeGreaterThan(0);
     expect(result.day).toBe(2);
+    expect(errors).toEqual([]);
+  });
+
+  test('small-screen first-day guide stays clear and completes through the real Atlas route', async ({ page }) => {
+    test.setTimeout(90_000);
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.setViewportSize({ width: 640, height: 360 });
+    await page.goto('/');
+    await page.locator('button').first().click();
+    await page.locator('button:has-text("رد کردن صحنه")').click();
+    await expect(page.locator('[data-tutorial-card="1"]')).toBeVisible();
+    const geometry = await page.evaluate(() => {
+      const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
+      const card = box('[data-tutorial-card="1"]');
+      const target = box('[data-tutorial-target="1"]');
+      const tool = box('[data-tool="till"]');
+      const intersects = (a: DOMRect, b: DOMRect) => Math.max(a.left, b.left) < Math.min(a.right, b.right) && Math.max(a.top, b.top) < Math.min(a.bottom, b.bottom);
+      const fonts = [...document.querySelectorAll('[data-tutorial-card="1"] *')].map((el) => parseFloat(getComputedStyle(el).fontSize)).filter(Number.isFinite);
+      return {
+        inside: card.left >= 0 && card.top >= 0 && card.right <= innerWidth && card.bottom <= innerHeight,
+        coversTarget: intersects(card, target), coversTool: intersects(card, tool), minFont: Math.min(...fonts),
+      };
+    });
+    expect(geometry).toEqual({ inside: true, coversTarget: false, coversTool: false, minFont: 11 });
+
+    for (const step of [1, 2, 3]) {
+      await page.locator('canvas').click({ position: { x: 239, y: 141 } });
+      await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', String(step));
+      await page.waitForTimeout(2800);
+    }
+    await page.locator('canvas').click({ position: { x: 239, y: 141 } });
+    await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '4');
+    await page.waitForTimeout(2800);
+
+    await page.locator('[data-mobile-atlas="1"]').click();
+    await page.locator('[data-atlas-go="town"]').click();
+    const townSkip = page.locator('button:has-text("رد کردن صحنه")');
+    await expect(townSkip).toBeVisible({ timeout: 5000 });
+    await townSkip.click();
+    await page.locator('canvas').click({ position: { x: 175, y: 150 } });
+    const marketSkip = page.locator('button:has-text("رد کردن صحنه")');
+    await expect(marketSkip).toBeVisible({ timeout: 5000 });
+    await marketSkip.click();
+    await page.locator('[data-sell-one="wheat"]').click();
+    await page.getByRole('button', { name: 'بستن پنجره' }).click();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '5');
+    await page.locator('[data-open-ledger="1"]').click();
+    await page.getByRole('button', { name: 'بستن پنجره' }).click();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '6');
+    await page.locator('[data-rest-anytime="1"]').click();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveCount(0);
+    const day = await page.evaluate(() => JSON.parse(localStorage.getItem('mazrae-rangi-save-v1')!).day);
+    expect(day).toBe(2);
     expect(errors).toEqual([]);
   });
 
@@ -449,8 +507,10 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await expect(page.getByRole('button', { name: 'حالا بچرخان' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(portraitContinue).toBeFocused();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveCount(0);
     await portraitContinue.click();
     await expect(portraitContinue).toHaveCount(0);
+    await expect(page.locator('[data-tutorial-card="1"]')).toBeVisible();
     await page.waitForTimeout(4400);
     const tutorialSkip = page.getByRole('button', { name: 'رد کردن آموزش' });
     if (await tutorialSkip.isVisible()) await tutorialSkip.click();

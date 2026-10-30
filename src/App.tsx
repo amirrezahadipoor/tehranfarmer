@@ -377,7 +377,7 @@ export default function App() {
           />
         )}
         {UI.started && !inCinema && <Hud />}
-        {UI.started && !inCinema && <TutorialOverlay />}
+        {UI.started && !inCinema && !portraitGateOpen && <TutorialOverlay />}
       </div>
       <Modals />
       {UI.started && <VisitGate />}

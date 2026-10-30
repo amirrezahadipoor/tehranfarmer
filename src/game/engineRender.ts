@@ -6,8 +6,6 @@ import { drawThirstLeft } from './thirstWarn';
 import { FIELD_X, FIELD_Y, HIVE_SLOTS, OX, OY, PLOT_DX, PLOT_DY, RIVER_SPOTS, BW, BH, getSceneSource } from './scenes';
 import { S, UI, season, unreadMailCount } from './state';
 import { isReducedMotion } from './settings';
-import { TUT_PLOT, tutActive } from './tutorial';
-import { drawTutGuide } from './tutorialArt';
 import { faPct } from '../strings/fa';
 import { cinema, drawCinemaForegroundUI, drawCinemaWorldExtras, isActorStagedInScene } from './cinemaStage';
 import { drawAnimalStatusExtra, drawFieldUpgradesAndHover, drawFullScarecrow, liveAnimalScale } from './farmVisuals';
@@ -408,12 +406,6 @@ export function createSceneRenderer(
     // Full-body hand-drawn scarecrow cleanly in South-East corner below Valley signpost
     if (vx1 >= 1120) {
       list.push({ y: 628, f: () => drawFullScarecrow(ctx, 1196, 628, t, S.debt?.scarecrow ?? 0) });
-    }
-    // حلقهٔ پِرتاپِرِ آموزش روز اول + فلشِ کمدیِ راهنما با نشانِ شمارهٔ گام (کارهای اول به‌ترتیب)
-    if (tutActive()) { const { cx, cy } = plotC(TUT_PLOT);
-      ctx.save(); ctx.strokeStyle = `rgba(255,214,10,${0.55 + 0.4 * Math.sin(t * 5)})`; ctx.lineWidth = 4; ctx.setLineDash([10, 7]);
-      ctx.strokeRect(cx - PLOT_DX / 2 + 4, cy - PLOT_DY / 2 + 4, PLOT_DX - 8, PLOT_DY - 8); ctx.restore();
-      drawTutGuide(ctx, cx, cy, PLOT_DY, t);
     }
     for (let i = 0; i < COLS * ROWS; i++) {
       const p = S.plots[i];

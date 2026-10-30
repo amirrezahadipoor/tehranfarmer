@@ -2,8 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  // ۳ worker: اسپک سنگین صحنه‌ها به سه تست پروفایل شکسته شده و موازی اجرا می‌شود
-  workers: process.env.CI ? 2 : 3,
+  // اجرای محلی تک‌worker: رندر نرم‌افزاری Chromium زیر صحنه‌های سنگین canvas/axe قابل‌اتکا می‌ماند؛ CI دو worker دارد.
+  workers: process.env.CI ? 2 : 1,
   // زیر CI یک تلاش مجدد برای پوشش لرزش‌های رانر کند (کد واقعی بازی همین است؛ فقط اجرای تصادفی مرورگر تکرار می‌شود)
   retries: process.env.CI ? 1 : 0,
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',

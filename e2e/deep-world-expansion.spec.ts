@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Deep 4-Pillar Expansion Live Canvas & Interactive Gameplay E2E', () => {
   test('plays River Skill Angling, Multi-Layer Cavern & Misty Forest, Town Square Festival Booths & 8-Region Atlas Charters with 0 errors', async ({ page }) => {
+    test.setTimeout(120_000);
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
     page.on('console', (msg) => {
@@ -33,8 +34,9 @@ test.describe('Deep 4-Pillar Expansion Live Canvas & Interactive Gameplay E2E', 
 
     // 1. Rebuilt mine: walk to a visible vein, land three real timing strikes, then clear a second vein.
     await page.locator('[data-nav="cave"]').click();
-    await page.waitForTimeout(750);
+    await expect(page.locator('[data-scene-id="area-intro-cave"]')).toBeVisible({ timeout: 15_000 });
     await skipIfCutscene();
+    await expect(page.locator('[data-scene-id="area-intro-cave"]')).toHaveCount(0);
     const canvas = page.locator('canvas').first();
     await expect(canvas).toBeVisible();
     await canvas.click({ position: { x: 305, y: 458 } });

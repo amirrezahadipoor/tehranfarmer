@@ -71,7 +71,7 @@ export interface Save {
   /** سطح چاه و آبیاری قطره‌ای ۰..۳ */
   wellLv: number;
   /** قرارداد فعال فروش در بازار */
-  contract: MarketContract | null; tut?: { step: number; active: boolean; done: boolean }; // آموزش تعاملی روز اول (بدون متن)
+  contract: MarketContract | null; tut?: { step: number; active: boolean; done: boolean }; // راهنمای تعاملی و غیرمسدودکنندهٔ روز اول
   /** آیا تندیس/موزهٔ پایان‌بازی دیده شده */
   museumVisited: boolean;
   /** رازهای پنهان کشف‌شده */

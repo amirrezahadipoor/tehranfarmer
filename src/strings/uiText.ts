@@ -371,7 +371,7 @@ export const UT_FA = {
   tutLedger: "باز کردن دفترکل",
   tutLedgerHint: "روی کارت سند و بدهی بالای صفحه بزن تا دفترکل باز شود.",
   tutSleep: "استراحت تا فردا",
-  tutSleepHint: "در خانه دکمهٔ «استراحت تا فردا صبح» را بزن؛ بدون اسکرول همیشه دیده می‌شود.",
+  tutSleepHint: "دکمهٔ ماه بالای صفحه را بزن تا فردا با نیروی کامل شروع شود.",
 } as const;
 
 export const UT: Record<keyof typeof UT_FA, string> = new Proxy(UT_FA as Record<keyof typeof UT_FA, string>, {

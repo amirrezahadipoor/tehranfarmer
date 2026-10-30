@@ -70,7 +70,7 @@ export function createSceneTapRouter(d: SceneInputDeps) {
       if (!first && i === d.getDragLast()) return;
       d.setDragLast(i);
       if (!isUnlocked(i, S.lv.land)) { if (first) d.reasonToast('locked'); return; }
-      if (!tutTapOk(i)) { if (first) sfx.err(); return; } // آموزش روز اول: فقط کرت هدف با ابزار درست
+      if (!tutTapOk(i)) { if (first) sfx.err(); return; } // راهنمای جدید هیچ کرتی را مسدود نمی‌کند
       if (UI.tool === 'hand') {
         const pl = S.plots[i];
         if (pl && pl.st === 2 && pl.ripe && !pl.dead) {

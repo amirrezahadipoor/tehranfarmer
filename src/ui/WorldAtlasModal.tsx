@@ -76,7 +76,7 @@ export function WorldAtlasModal() {
                 data-atlas-go={n.id}
                 aria-label={n.label}
                 style={{ left: `${n.x}%`, top: `${n.y}%` }}
-                className={'btn press static w-full min-w-0 translate-x-0 translate-y-0 !px-1.5 !py-1 text-[.7rem] font-black sm:absolute sm:w-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:!px-2.5 ' + (UI.scene === n.id ? 'y' : 'g')}
+                className={'btn press static w-full min-w-0 translate-x-0 translate-y-0 !px-1.5 !py-1 text-[.7rem] font-black sm:absolute sm:w-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:!px-2.5 ' + (UI.scene === n.id ? 'y ' : 'g ') + (S.tut?.active && S.tut.step === 4 && n.id === 'town' ? 'ring-4 ring-amber-300' : '')}
                 onClick={() => { UI.modal = null; cmd.travelTo(n.id); notify(); }}
               >
                 <Ic n={n.ic} s={1.3} />

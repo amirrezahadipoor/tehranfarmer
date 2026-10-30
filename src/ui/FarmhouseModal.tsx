@@ -38,7 +38,7 @@ export function FarmhouseModal() {
       actions={(
         <button
           type="button"
-          className="btn b press w-full !py-1.5 text-sm font-black"
+          className={'btn b press w-full !py-1.5 text-sm font-black ' + (S.tut?.active && S.tut.step === 6 ? 'ring-4 ring-amber-300' : '')}
           data-home-sleep="1"
           onClick={() => { tutOnSleep(); sleepToMorning(); sfx.buy(); close(); }}
         >

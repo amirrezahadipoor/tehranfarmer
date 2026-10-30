@@ -96,7 +96,7 @@ export function Hud() {
             )}
           </div>
           <div className="pointer-events-auto flex flex-wrap items-start justify-end gap-1">
-            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={() => { tutOnSleep(); sleepToMorning(); sfx.tap(); }}>
+            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} data-rest-anytime="1" className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={() => { tutOnSleep(); sleepToMorning(); sfx.tap(); }}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
             </button>
             <button aria-label={UT.u133} data-open-inventory="1" className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
@@ -411,7 +411,7 @@ function Toolbar() {
             aria-label={t.fa}
             aria-pressed={on}
             onClick={() => {
-              if (tutToolBlocked(t.k)) { sfx.err(); return; } // حین آموزش فقط ابزار همان گام انتخاب می‌شود
+              if (tutToolBlocked(t.k)) { sfx.err(); return; } // سیاست راهنمای جدید غیرمسدودکننده است؛ ابزارها آزاد می‌مانند
               sfx.tap();
               if (t.k === 'plant') UI.seedTray = UI.tool === 'plant' ? !UI.seedTray : true;
               else UI.seedTray = false;
@@ -419,7 +419,7 @@ function Toolbar() {
             }}
             className={'press relative flex min-h-[48px] min-w-[48px] flex-col items-center justify-center rounded-xl border-[.18rem] px-1 pb-0.5 '
               + (UI.portrait ? 'w-[3.2rem] ' : 'w-[3.45rem] md:w-[4.15rem] ')
-              + (tutToolHi(t.k) ? 'animate-pulse !border-amber-500 ring-[.22rem] ring-amber-400 ' : '')
+              + (tutToolHi(t.k) ? '!border-amber-500 ring-[.22rem] ring-amber-300/80 ' : '')
               + (on ? 'border-[#503426] bg-[#ffd93b] -translate-y-1.5 shadow-[0_.22rem_0_rgba(80,52,38,.7)]' : 'border-transparent')}
           >
             <Ic n={t.ic} s={UI.portrait ? (on ? 2.5 : 2.2) : (on ? 3 : 2.6)} />
