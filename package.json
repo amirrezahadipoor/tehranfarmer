@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "sim:balance": "tsx scripts/sim-balance.ts",
     "sim:story": "tsx scripts/sim-story.ts",
+    "sim:live": "tsx scripts/sim-live.ts",
     "roadmap:progress": "node scripts/roadmap-progress.mjs",
     "icons:audit": "node scripts/icon-audit.mjs",
     "verify:offline": "node scripts/verify-offline.mjs",

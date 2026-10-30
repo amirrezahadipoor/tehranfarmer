@@ -178,7 +178,7 @@ describe('۸ الزام جدید توسعهٔ جهان، مکالمهٔ بدون
     expect(npcHasQuestMarker('jahangir')).toBe(false);
 
     // وقتی کوئست فصل ۱ انجام شده و سکهٔ تسویهٔ سند آماده است، علامت تعجب زرد بالای نام جهانگیر روشن می‌شود!
-    S.stats.harv = 50;
+    S.stats['cropHarv:farm'] = 50;
     S.coins = 50_000;
     expect(isQuestDone(1)).toBe(true);
     expect(npcHasQuestMarker('jahangir')).toBe(true);
@@ -204,7 +204,7 @@ describe('۸ الزام جدید توسعهٔ جهان، مکالمهٔ بدون
     expect(isNpcQuestActive(grandmaSpec)).toBe(true);
     // ۵۰ برداشت قبل از پذیرش، کوئست را فوری کامل نمی‌کند؛ فقط ۱۲ برداشت تازه علامت تحویل را روشن می‌کند.
     expect(npcHasQuestMarker('grandma')).toBe(false);
-    S.stats.harv = (S.stats.harv ?? 0) + 12;
+    S.stats['cropHarv:farm'] = (S.stats['cropHarv:farm'] ?? 0) + 12;
     expect(npcHasQuestMarker('grandma')).toBe(true);
     const doneNode = talkToTownNpc(0)!;
     expect(doneNode.id).toBe('npc-q-grandma-1-done');

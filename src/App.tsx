@@ -3,6 +3,7 @@ import { cmd, startEngine } from './game/engine';
 import { S, UI, hasSave, loadGame, notify, resetGame as resetGameFn, saveGame, useGame } from './game/state';
 import { Hud } from './ui/Hud';
 import { TutorialOverlay } from './ui/TutorialOverlay';
+import { SceneA11y } from './ui/SceneA11y';
 import { Modals } from './ui/Modals';
 import { Ic, useDialogFocus } from './ui/parts';
 import { Cutscene, VisitGate } from './ui/Cutscene';
@@ -362,7 +363,19 @@ export default function App() {
   return (
     <div className="fixed inset-0" dir={CFG.locale === 'en' ? 'ltr' : 'rtl'}>
       <div className="contents" inert={bgInert}>
-        {bootReady && <canvas ref={ref} className="absolute inset-0 h-full w-full" />}
+        {UI.started && !inCinema && <SceneA11y />}
+        {bootReady && (
+          <canvas
+            id="game-canvas"
+            ref={ref}
+            className="absolute inset-0 h-full w-full outline-offset-[-4px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-[#ffd93b]"
+            role="application"
+            tabIndex={0}
+            aria-label={cmd.sceneAnnouncement()}
+            aria-describedby={UI.started ? 'scene-keyboard-help' : undefined}
+            onKeyDown={(e) => { if (cmd.canvasKey(e.key)) e.preventDefault(); }}
+          />
+        )}
         {UI.started && !inCinema && <Hud />}
         {UI.started && !inCinema && <TutorialOverlay />}
       </div>

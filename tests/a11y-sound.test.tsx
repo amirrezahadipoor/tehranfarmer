@@ -139,7 +139,7 @@ describe('موتور صدای استودیویی کم‌حجم (.mp3 درون‌
     }
     expect(ambient.playing).toBe(true);
     expect(musicPlayCount).toBeGreaterThan(0);
-    expect(lastMusic?.loop).toBe(true);
+    expect(lastMusic?.loop).toBe(false); // پایان طبیعی قطعه، آهنگ مکمل را فعال می‌کند
     expect(lastMusic?.volume).toBeLessThanOrEqual(0.2);
 
     CFG.music = false;

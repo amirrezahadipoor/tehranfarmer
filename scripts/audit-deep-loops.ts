@@ -445,12 +445,11 @@ export function runLoop5MultiSeedSaveAndAllModalVisibleTextBot(report: Reporter)
 // و مقیاس خوانایی و لمس موبایل (عمودی و افقی)
 // ============================================================================
 export function runLoop6StoryClarityPlaytimeHoursAndMobileScaleBot(report: Reporter) {
-  // ۱. بررسی استاندارد ساعات واقعی بازی کامل (حداقل ۶۰ ساعت گیم‌پلی کامل کمپین اصلی تا پایان‌بازی)
+  // ۱. پایداری کمپین در مدل روز؛ ساعت دیواری فقط با runner زنده و بدون ضریب ثابت سنجیده می‌شود.
   const normalCampaign = runSim('normal', 3000, 1001, true);
-  const fullHours = Math.round(((normalCampaign.days * 192) / 3600) * 10) / 10;
-  console.log(`[PLAYTIME] طول کمپین کامل بازیکن معمولی: ${normalCampaign.days} روز = ${fullHours} ساعت گیم‌پلی کامل استاندارد`);
-  if (!normalCampaign.postgameDay || fullHours < 60 || fullHours > 85) {
-    report('L6-PLAYTIME-OUT-OF-STANDARD', 'balance/dayLoop', `مدت زمان بازی کامل (${fullHours} ساعت) خارج از استاندارد ۶۰ تا ۸۵ ساعت بازی کامل است!`);
+  console.log(`[PLAYTIME] کمپین مدل روز: ${normalCampaign.days} روز؛ ساعت دیواری با npm run sim:live گزارش می‌شود.`);
+  if (!normalCampaign.postgameDay) {
+    report('L6-PLAYTIME-OUT-OF-STANDARD', 'balance/dayLoop', 'کمپین بازیکن معمولی در مدل روز به پایان‌بازی نرسید!');
   }
 
   // ۲. بررسی مقیاس خوانایی فونت پایه در همهٔ ابعاد موبایل (پرتره ۳۶۰×۷۴۰ و افقی ۶۴۰×۳۶۰ / ۸۰۰×۳۶۰)

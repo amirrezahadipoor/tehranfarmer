@@ -150,3 +150,59 @@ html[data-reduce-motion="1"] .animate-pulse { animation: none !important; }
 html[data-reduce-motion="1"] .press,
 html[data-reduce-motion="1"] .btn,
 html[data-reduce-motion="1"] .bar > i { transition: none !important; }
+
+/* Keyboard/screen-reader scene mirror: visually out of the way until focused,
+   then a high-contrast, scrollable control panel with 44px minimum targets. */
+.scene-a11y {
+  position: fixed;
+  z-index: 38;
+  top: max(.5rem, var(--safe-top));
+  inset-inline-start: max(.5rem, var(--safe-left));
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.scene-a11y:focus-within,
+.scene-a11y[data-pinned="1"] {
+  width: min(27rem, calc(100vw - 1rem));
+  height: auto;
+  max-height: min(88dvh, 46rem);
+  overflow: auto;
+  clip-path: none;
+  white-space: normal;
+  border: 3px solid #503426;
+  border-radius: 1rem;
+  background: #fff4d8;
+  color: #3d251a;
+  padding: .75rem;
+  box-shadow: 0 .5rem 1.5rem #2b1a1066;
+  overscroll-behavior: contain;
+}
+.scene-a11y button,
+.scene-a11y select {
+  min-height: 44px;
+}
+/* A collapsed mirror must not duplicate every HUD button in the accessibility
+   tree or geometry audits. Its single keyboard-focusable toggle stays available;
+   focusing it reveals the complete structural alternative. */
+.scene-a11y:not(:focus-within):not([data-pinned="1"]) > div {
+  display: none;
+}
+.scene-a11y:not(:focus-within):not([data-pinned="1"]) > [data-scene-a11y-toggle="1"] {
+  width: 1px;
+  min-width: 1px;
+  height: 1px;
+  min-height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.scene-a11y :focus-visible {
+  outline: 3px solid #155e75;
+  outline-offset: 2px;
+}

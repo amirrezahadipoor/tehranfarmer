@@ -127,7 +127,7 @@ export function Modal({ title, icon, onClose, children, coins, actions }: {
       <div
         className="paper popin flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-1rem)] w-[min(94vw,46rem)] max-w-[calc(100vw-var(--safe-left)-var(--safe-right)-1rem)] flex-col p-2 sm:p-2.5"
       >
-        <div className="mb-1.5 flex items-center gap-2">
+        <div className="mb-1.5 flex shrink-0 items-center gap-2">
           <div className="paper-dark flex min-w-0 flex-1 items-center gap-1.5 px-2.5 py-0.5 text-[#fff4d8] sm:flex-initial">
             <Ic n={icon} s={2.05} />
             <span className="ft text-xl sm:truncate sm:text-2xl">{title}</span>

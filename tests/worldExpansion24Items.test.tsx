@@ -224,9 +224,9 @@ describe('ممیزی کامل ۲۴ ویژگی مصوب توسعهٔ جهان (#�
     expect(ARTISAN_RECIPES.length).toBeGreaterThanOrEqual(14);
   });
 
-  it('مورد #۲۴: هیچ میانبر حرکتی WASD/عددی وجود ندارد و شنونده‌های صفحه‌کلید فقط برای ناوبری، دسترس‌پذیری و ابزار توسعه‌اند', () => {
+  it('مورد #۲۴: حرکت آزاد WASD/عددی ممنوع است و کلیدهای جهت‌دار فقط برای دسترس‌پذیری و کنترل‌های مجازند', () => {
     // Esc در androidNav، F9 در SceneDebugMenu و Tab trap در parts شنونده‌های واقعی و مستندند.
-    // Space/ArrowUp فقط در دو کنترل «نگه‌داشتن» ماهی‌گیری و دیگ جشن مجازند؛ هیچ‌کدام حرکت بازیکن نیستند.
+    // کلیدهای جهت‌دار در engine فقط کرت را برای دسترس‌پذیری انتخاب می‌کنند و مختصات بازیکن را مستقیم تغییر نمی‌دهند.
     const srcFiles = walkSrcFiles(path.resolve(__dirname, '../src'));
     expect(srcFiles.length).toBeGreaterThan(40);
     const listeners: string[] = [];
@@ -236,13 +236,19 @@ describe('ممیزی کامل ۲۴ ویژگی مصوب توسعهٔ جهان (#�
       if (/addEventListener\(\s*['"](keydown|keyup|keypress)['"]/.test(code)) listeners.push(rel);
       // مقایسهٔ مقدار دقیق کلید، نه تطبیق سطحی KeyDown با KeyD؛ WASD/حرکت/اعداد همچنان ممنوعند.
       const accessibleHold = rel === 'ui/FishingModal.tsx' || rel === 'ui/FestivalModal.tsx';
-      const forbidden = accessibleHold
-        ? /['"](?:ArrowDown|ArrowLeft|ArrowRight|Key[WASD]|Digit[0-9]|Space)['"]/
-        : /['"](?:ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Key[WASD]|Digit[0-9]|Space)['"]/;
+      const accessiblePlot = rel === 'game/engine.ts' || rel === 'game/engineA11y.ts';
+      const forbidden = accessiblePlot
+        ? /['"](?:Key[WASD]|Digit[0-9])['"]/
+        : accessibleHold
+          ? /['"](?:ArrowDown|ArrowLeft|ArrowRight|Key[WASD]|Digit[0-9]|Space)['"]/
+          : /['"](?:ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Key[WASD]|Digit[0-9]|Space)['"]/;
       expect(code, `میانبر حرکتی در ${file} ممنوع است`).not.toMatch(forbidden);
       expect(code, `window.onkey* در ${file} ممنوع است`).not.toMatch(/window\.onkey(down|up|press)\s*=/);
     }
     expect(listeners.sort()).toEqual(['game/androidNav.ts', 'ui/SceneDebugMenu.tsx', 'ui/parts.tsx']);
+    const controllerCode = fs.readFileSync(path.resolve(__dirname, '../src/game/engineA11y.ts'), 'utf8');
+    expect(controllerCode).toContain('d.activateTarget(`plot:${keyboardPlot}`)');
+    expect(controllerCode).toContain('!isFarmScene(UI.scene)');
     expect(fs.readFileSync(path.resolve(__dirname, '../src/App.tsx'), 'utf8')).toContain('DEV_TOOLS');
   });
 

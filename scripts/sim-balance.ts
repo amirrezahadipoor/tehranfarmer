@@ -13,14 +13,12 @@ const MAX_DAYS = Number(process.env.MAX_DAYS ?? 3000);
 interface Agg extends SimMetrics {
   runs: number;
   avgDays: number;
-  avgHours: number;
   avgLevel30: number | null;
   avgPost: number | null;
   avgShare: number[];
 }
 
 const avg = (a: number[]) => (a.length ? Math.round((a.reduce((x, y) => x + y, 0) / a.length) * 10) / 10 : 0);
-const toHours = (days: number) => Math.round((days * 192) / 3600 * 10) / 10;
 
 // خط پایهٔ بدون بدهی برای سنجش اثر بدهی بر زمان سطح ۳۰
 const noDebtRuns: SimMetrics[] = [];
@@ -39,7 +37,6 @@ for (const policy of POLICIES) {
     ...runs[0],
     runs: runs.length,
     avgDays,
-    avgHours: toHours(avgDays),
     avgLevel30: runs.every((m) => m.level30Day) ? avg(runs.map((m) => m.level30Day!)) : null,
     avgPost: runs.every((m) => m.postgameDay) ? avg(runs.map((m) => m.postgameDay!)) : null,
     beatings: avg(runs.map((m) => m.beatings)),
@@ -54,11 +51,11 @@ for (const policy of POLICIES) {
 
 console.log('\n=== شبیه‌ساز بالانس «مزرعه رنگی» (با بدهی) ===');
 console.log(`بدهی کل: ${fa(TOTAL_DEBT)} · ${NOTES.length} سند · ${RUNS} اجرا · سطح ۳۰ بدون بدهی: ${noDebtLv30} روز\n`);
-console.log('سیاست      | میانگین روز | ساعت×۱ | سطح۳۰ (روز) | پایان (روز) | کتک  | پرداخت     | سند | فصل | قفل‌نرم');
+console.log('سیاست      | میانگین روز | سطح۳۰ (روز) | پایان (روز) | کتک  | پرداخت     | سند | فصل | قفل‌نرم');
 for (const p of POLICIES) {
   const r = results[p];
   console.log(
-    `${p.padEnd(10)} | ${String(r.avgDays).padStart(10)} | ${String(r.avgHours).padStart(6)} | ` +
+    `${p.padEnd(10)} | ${String(r.avgDays).padStart(10)} | ` +
     `${String(r.avgLevel30 ?? '—').padStart(11)} | ${String(r.avgPost ?? '—').padStart(11)} | ` +
     `${String(r.beatings).padStart(4)} | ${String(r.paidTotal).padStart(10)} | ` +
     `${String(r.notesOpened).padStart(3)} | ${String(r.chapter).padStart(3)} | ${String(r.softLockDays).padStart(7)}`,
@@ -72,9 +69,9 @@ console.log('  normal:', results.normal.avgShare.join(' · '));
 
 // ===== پوشش دیاگنوستیک هر دو قطب رشد مزارع ماهواره‌ای (خودکارِ پیش‌فرض در برابر قفل بذر) =====
 const lockedRun = runSim('normal', MAX_DAYS, 1000, true, { satelliteLocks: true });
-const lockedHours = toHours(lockedRun.days);
+const lockedDays = lockedRun.days;
 const poleRatio = lockedRun.days / Math.max(1, results.normal.avgDays);
-console.log(`\nقطب سریع (قفل بذر دشت/دره): ${lockedHours}h ≈ ${Math.round(poleRatio * 100)}٪ مسیر خودکار — بازهٔ سالم: ۴۵٪ تا ۱۰۵٪.`);
+console.log(`\nقطب سریع (قفل بذر دشت/دره): ${lockedDays} روز مدل ≈ ${Math.round(poleRatio * 100)}٪ مسیر خودکار — بازهٔ سالم: ۴۵٪ تا ۱۰۵٪.`);
 
 // ===== معیارهای پذیرش کامل DEBT_DESIGN و فاز ۵ =====
 const checks: Array<[string, boolean, string]> = [];
@@ -89,9 +86,7 @@ checks.push(['هیچ سکهٔ منفی/NaN/Infinity', Object.values(results).eve
 // بازیکن بهینه درآمد بیشتری در همان فصل تولید می‌کند؛ سهم کمترِ سند در این سیاست طبیعی است.
 // کف بازه‌ها پس از بند F گزارش رنج: سیل دیگر کود را نمی‌سوزاند، درآمد کل کمی بالاتر است و سهم سند کمی پایین‌تر می‌آید
 checks.push(['سهم هر سند در بازهٔ هدف سیاست خودش (بهینه ۰٫۳۰–۰٫۴۵ · خوش‌حساب ۰٫۳۴–۰٫۴۵ · معمولی ۰٫۲۱–۰٫۴۵)', good.avgShare.every((s) => s >= 0.34 && s <= 0.45) && opt.avgShare.every((s) => s >= 0.30 && s <= 0.45) && normal.avgShare.every((s) => s >= 0.21 && s <= 0.45), `good: ${good.avgShare.join(', ')} · optimal: ${opt.avgShare.join(', ')} · normal: ${normal.avgShare.join(', ')}`]);
-checks.push(['هر دو قطب رشد مزارع ماهواره‌ای سالم (قفل‌بذر سریع‌تر از خودکار و نه کندتر از ۴۵٪)', poleRatio >= 0.45 && poleRatio <= 1.05, `قفل‌شده ${lockedHours}h = ${Math.round(poleRatio * 100)}٪ مسیر خودکار`]);
-// معیار طراحی بر حسب ساعت کامل است؛ ۵۹٫۶ ساعت همان ۶۰ ساعت گردشده است، نه کمبود محتوا.
-checks.push(['طول داستان ۶۰ تا ۸۵ ساعت', Math.round(normal.avgHours) >= 60 && normal.avgHours <= 85 && Math.round(good.avgHours) >= 60 && good.avgHours <= 85, `معمولی ${normal.avgHours}h · خوش‌حساب ${good.avgHours}h`]);
+checks.push(['هر دو قطب رشد مزارع ماهواره‌ای سالم (قفل‌بذر سریع‌تر از خودکار و نه کندتر از ۴۵٪)', poleRatio >= 0.45 && poleRatio <= 1.05, `قفل‌شده ${lockedDays} روز = ${Math.round(poleRatio * 100)}٪ مسیر خودکار`]);
 checks.push(['تعداد کتک معمولی ۲۰ تا ۲۸', normal.beatings >= BEATINGS_MIN && normal.beatings <= BEATINGS_MAX, `${normal.beatings} کتک`]);
 checks.push(['خوش‌حساب ≥ ۱۵٪ سریع‌تر از معمولی', goodGain >= 0.145, `${Math.round(goodGain * 1000) / 10}٪ سریع‌تر`]);
 checks.push(['بدحساب ≥ ۲۵٪ کندتر از معمولی', badSlow >= 0.25, `${Math.round(badSlow * 100)}٪ کندتر`]);
@@ -104,21 +99,23 @@ for (const [name, ok, detail] of checks) {
   if (!ok) fail++;
 }
 
-const out = { generatedAt: new Date().toISOString(), runs: RUNS, maxDays: MAX_DAYS, noDebtLv30, results, checks };
+const out = { generatedAt: new Date().toISOString(), timeModel: 'day-based economic simulation; use live-balance-report.json for wall time', runs: RUNS, maxDays: MAX_DAYS, noDebtLv30, results, checks };
 fs.writeFileSync('docs/balance-report.json', JSON.stringify(out, null, 2));
 
 const md = [
-  '# گزارش بالانس — شبیه‌ساز بدهی (خودکار)',
+  '# گزارش بالانس — مدل روز و اقتصاد بدهی',
+  '',
+  '> این سند ساعت دیواری نیست و هیچ ضریب ثابت روزبه‌ساعت ندارد. زمان واقعی با سیاست‌های معمولی/بهینه/خواب پی‌درپی در `docs/LIVE-BALANCE-REPORT.md` ثبت شده است.',
   '',
   `> تولید خودکار با \`STRICT=1 npm run sim:balance\` · بدهی کل: ${fa(TOTAL_DEBT)} سکه (${NOTES.length} سند) · پایهٔ سطح ۳۰ بدون بدهی: ${fa(noDebtLv30)} روز.`,
   '',
   '## خلاصهٔ سیاست‌ها',
-  '| سیاست | میانگین روز | ساعت ×۱ | سطح ۳۰ (روز) | کتک | پرداخت کل | سند | فصل | قفل نرم |',
-  '|---|---|---|---|---|---|---|---|---|',
+  '| سیاست | میانگین روز مدل | سطح ۳۰ (روز) | کتک | پرداخت کل | سند | فصل | قفل نرم |',
+  '|---|---|---|---|---|---|---|---|',
   ...POLICIES.map((p) => {
     const r = results[p];
     const pFa = { optimal: 'بهینه', good: 'خوش‌حساب', normal: 'معمولی', bad: 'بدحساب' }[p];
-    return `| ${pFa} | ${fa(r.avgDays)} | ${fa(r.avgHours)} | ${r.avgLevel30 ? fa(r.avgLevel30) : '—'} | ${fa(r.beatings)} | ${fa(r.paidTotal)} | ${fa(r.notesOpened)} | ${fa(r.chapter)} | ${fa(r.softLockDays)} |`;
+    return `| ${pFa} | ${fa(r.avgDays)} | ${r.avgLevel30 ? fa(r.avgLevel30) : '—'} | ${fa(r.beatings)} | ${fa(r.paidTotal)} | ${fa(r.notesOpened)} | ${fa(r.chapter)} | ${fa(r.softLockDays)} |`;
   }),
   '',
   '## نسبت هر سند به درآمد ناخالص فصل (هدف: ۴۰٪ ± ۵٪)',
@@ -127,10 +124,10 @@ const md = [
   ...NOTES.map((n, i) => `| ${fa(n.chapter)} | ${n.name} | ${fa(n.amount)} | ${fa(Math.round(good.avgShare[i] * 100))}٪ | ${fa(Math.round(normal.avgShare[i] * 100))}٪ |`),
   '',
   '## قطب‌های رشد مزارع ماهواره‌ای (پوشش دیاگنوستیک)',
-  '| مسیر رشد | ساعت (سیاست معمولی) | نسبت به مسیر خودکار |',
+  '| مسیر رشد | روز مدل (سیاست معمولی) | نسبت به مسیر خودکار |',
   '|---|---|---|',
-  `| خودکار (پیش‌فرض بات) | ${fa(results.normal.avgHours)} | ۱۰۰٪ |`,
-  `| قفل بذر (سریع) | ${fa(lockedHours)} | ${fa(Math.round(poleRatio * 100))}٪ |`,
+  `| خودکار (پیش‌فرض بات) | ${fa(results.normal.avgDays)} | ۱۰۰٪ |`,
+  `| قفل بذر (سریع) | ${fa(lockedDays)} | ${fa(Math.round(poleRatio * 100))}٪ |`,
   '',
   '## معیارهای پذیرش',
   '| معیار | وضعیت | جزئیات |',

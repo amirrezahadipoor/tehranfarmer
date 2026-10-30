@@ -19,12 +19,12 @@ export interface QuestsState {
 
 export function metric(kind: QKind): number {
   switch (kind) {
-    case 'harvest': return S.stats.harv ?? 0;
+    case 'harvest': return S.stats.cropHarv ?? 0;
     case 'plant': return S.stats.plants ?? 0;
     case 'collect': return S.stats.collect ?? 0;
     case 'honey': return S.stats.honey ?? 0;
     case 'pond': return S.stats.pondH ?? 0;
-    case 'sell': return S.earned ?? 0;
+    case 'sell': return S.stats.marketEarned ?? 0;
     case 'build': return S.stats.builds ?? 0;
     case 'fish': return S.stats.fish ?? 0;
     case 'babies': return S.stats.babies ?? 0;

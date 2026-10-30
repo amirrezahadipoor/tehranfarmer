@@ -22,7 +22,7 @@ test('the isolated index.html really plays embedded music with zero companion fi
     w.__offlinePlays = 0;
     const original = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
-      if (this.loop && this instanceof HTMLAudioElement) {
+      if (this instanceof HTMLAudioElement && this.preload === 'auto') {
         w.__offlinePlays += 1;
         w.__offlineMusic = this;
       }

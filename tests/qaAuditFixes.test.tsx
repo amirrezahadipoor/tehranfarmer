@@ -417,7 +417,7 @@ describe('QA Audit Stage 6 — Regression Suite (RED -> GREEN)', () => {
     S.story.prologueSeen = true;
     startDebt(0);
     S.coins = 20000;
-    S.stats.harv = 50;
+    S.stats['cropHarv:farm'] = 50;
     S.stats.plants = 50;
     S.xp = 1200;
     const d0 = debt()!;

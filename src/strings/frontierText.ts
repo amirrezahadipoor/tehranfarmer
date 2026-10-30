@@ -240,6 +240,8 @@ export const FT = {
   get decreeDeliver() { return en() ? 'Dispatch Royal Convoy' : 'تحویل کاروان فرمان شاهی'; },
   get decreeDone() { return en() ? 'Fulfilled This Week' : 'در این هفته تسویه شد'; },
   get charterEnactBtn() { return en() ? 'Ratify in Village Council' : 'تصویب در شورای دهکده'; },
+  charterSwitchBtn(cost: number) { return en() ? `Ratify new branch · ${fa(cost)} coins` : `تصویب مسیر تازه · ${fa(cost)} سکه`; },
+  charterCooldown(days: number) { return en() ? `Council review: ${fa(days)} day(s) remaining` : `بررسی شورا: ${fa(days)} روز باقی مانده`; },
   get charterLockedHint() { return en() ? 'Unlocks at Chapter' : 'باز شدن در فصل'; },
   get placeFarm() { return en() ? 'Main Farm' : 'مزرعهٔ اصلی'; },
   get placeNorth() { return en() ? 'North Meadow' : 'دشت شمالی'; },

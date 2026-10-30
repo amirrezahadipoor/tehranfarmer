@@ -232,9 +232,9 @@ describe('باز شدن سند بعدی و پایان بازی', () => {
   });
 
   it('کوئست فصل ۱ با ۲۰ برداشت تمام می‌شود', () => {
-    S.stats.harv = 19;
+    S.stats['cropHarv:farm'] = 19;
     expect(isQuestDone(1)).toBe(false);
-    S.stats.harv = 20;
+    S.stats['cropHarv:farm'] = 20;
     expect(isQuestDone(1)).toBe(true);
   });
 });

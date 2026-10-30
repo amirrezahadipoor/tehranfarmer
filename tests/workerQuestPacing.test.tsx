@@ -73,15 +73,15 @@ describe('worker continuity and activation-based NPC quest pacing', () => {
 
   it('starts cumulative NPC progress at acceptance, even with a large lifetime history', () => {
     const q = NPC_QUEST_SPECS.find((x) => x.id === 'npc-q-grandma-1')!;
-    S.stats.harv = 500;
+    S.stats['cropHarv:farm'] = 500;
     const coins = S.coins;
     expect(pickNpcQuestScene('grandma')).toBe('npc-q-grandma-1-start');
     expect(S.story.questBase?.[q.id]).toBe(500);
     expect(npcQuestProgress(q)).toEqual([0, 12]);
     expect(isNpcQuestReadyToTurnIn(q)).toBe(false);
-    S.stats.harv += 11;
+    S.stats['cropHarv:farm'] += 11;
     expect(npcQuestProgress(q)).toEqual([11, 12]);
-    S.stats.harv += 1;
+    S.stats['cropHarv:farm'] += 1;
     expect(isNpcQuestReadyToTurnIn(q)).toBe(true);
     expect(pickNpcQuestScene('grandma')).toBe('npc-q-grandma-1-done');
     expect(S.coins - coins).toBeGreaterThanOrEqual(q.rewardCoins);
@@ -93,7 +93,7 @@ describe('worker continuity and activation-based NPC quest pacing', () => {
   it('preserves legacy active quests and never makes maxed state upgrades impossible', () => {
     const legacy = NPC_QUEST_SPECS.find((x) => x.id === 'npc-q-grandma-1')!;
     S.story.seen[legacy.id + '-active'] = true;
-    S.stats.harv = 500;
+    S.stats['cropHarv:farm'] = 500;
     expect(npcQuestProgress(legacy)).toEqual([12, 12]);
     expect(isNpcQuestReadyToTurnIn(legacy)).toBe(true);
 
@@ -110,7 +110,7 @@ describe('worker continuity and activation-based NPC quest pacing', () => {
       story: { chapter: 1, seen: {}, prologueSeen: true, postgame: false, pending: null, questDone: {}, questBase: { good: 12, bad: -4 } },
     });
     expect(raw?.v).toBe(SAVE_VERSION);
-    expect(SAVE_VERSION).toBe(9);
+    expect(SAVE_VERSION).toBe(10);
     expect(raw?.story).toMatchObject({ questBase: { good: 12 } });
   });
 

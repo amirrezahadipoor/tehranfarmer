@@ -6,7 +6,7 @@ import {
   SKILL_RANCH3_MULT, SKILL_TRADE1_MULT, STAM_CAP, TILEPOOL_BONUS_CAN, TROUGH_CAP, WEALTH_DIVISOR, WEALTH_MULT_CAP,
   XP, type AnimalKind, type CropId,
 } from '../data';
-import { S, notify, saveGame, toast, farmLevel, addXp, checkAch, wellBonusCan } from '../state';
+import { S, notify, saveGame, toast, farmLevel, addStat, addXp, checkAch, wellBonusCan } from '../state';
 import { animalQualityMult } from './farmDeep';
 import { frontierGoodMult, recordMarketSaleVolume } from './frontier';
 import { hasDecor, hasSkill } from './rpgSystems';
@@ -157,6 +157,7 @@ export function sellGood(id: string, n: number): number {
   }
   if (left > 0 && s !== 'pack') { S.inv[id] -= left; if (S.inv[id] <= 0) delete S.inv[id]; }
   S.coins += sum; S.earned += sum;
+  addStat('marketEarned', sum);
   addXp(sum / XP.sellPer);
   sfx.coin(); saveGame(); notify();
   return sum;

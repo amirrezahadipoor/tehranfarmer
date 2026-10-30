@@ -41,7 +41,7 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardXp: 35,
     canActivate: () => !!S.story?.prologueSeen,
     cumulative: true,
-    progress: () => [S.stats.harv ?? 0, 12],
+    progress: () => [S.stats['cropHarv:farm'] ?? 0, 12],
   },
   {
     id: 'npc-q-rancher-1',
@@ -69,7 +69,7 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardXp: 85,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 3,
     cumulative: true,
-    progress: () => [Math.floor(S.earned ?? 0), 2500],
+    progress: () => [Math.floor(S.stats.marketEarned ?? 0), 2500],
   },
   {
     id: 'npc-q-engineer-1',
@@ -157,8 +157,8 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     icon: 'fish',
     titleFa: 'صیاد زبردست رودخانه و حوضچه',
     titleEn: 'Master of River & Pond',
-    descFa: 'مجموع صید ماهی رودخانه یا برداشت حوضچه را به ۱۲ برسان و نزد عمو مراد برو.',
-    descEn: 'Reach 12 total river catches or pond harvests and report to Uncle Morad.',
+    descFa: 'پس از پذیرش مأموریت، ۱۲ صید ماهی رودخانه یا برداشت حوضچه انجام بده و نزد عمو مراد برو.',
+    descEn: 'After accepting, catch 12 river fish or harvest 12 pond yields and report to Uncle Morad.',
     rewardCoins: 12000,
     rewardXp: 480,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 11 && !!S.story.seen['npc-q-rancher-2-done'],
@@ -204,7 +204,7 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardXp: 1100,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 18 && !!S.story.seen['npc-q-grandma-3-done'],
     cumulative: true,
-    progress: () => [S.stats.harv ?? 0, 400],
+    progress: () => [S.stats.cropHarv ?? 0, 400],
   },
   {
     id: 'npc-q-rancher-4',

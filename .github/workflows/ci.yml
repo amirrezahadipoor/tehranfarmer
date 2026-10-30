@@ -31,6 +31,8 @@ jobs:
         run: npm run check
       - name: شبیه‌ساز بالانس اقتصادی (سخت‌گیرانه)
         run: STRICT=1 RUNS=3 npm run sim:balance
+      - name: سنجش ساعت زندهٔ کمپین و جلوگیری از فرار با خواب
+        run: STRICT=1 LIVE_RUNS=3 npm run sim:live
       - name: شبیه‌ساز داستان (سخت‌گیرانه)
         run: STRICT=1 RUNS=2 npm run sim:story
       - name: بارگذاری گزارش بالانس
@@ -41,6 +43,9 @@ jobs:
           path: |
             docs/BALANCE-REPORT.md
             docs/balance-report.json
+            docs/LIVE-BALANCE-REPORT.md
+            docs/live-balance-report.json
+            docs/live-balance-runs.jsonl
           if-no-files-found: warn
           retention-days: 14
 

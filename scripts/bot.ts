@@ -20,6 +20,7 @@ import { QUESTS, checkStoryQuests, isQuestDone } from '../src/story/quests';
 import { advanceNode, maybeStartPrologue, pendingNode } from '../src/story/engine';
 import { claim, ensureQuests, questDone } from '../src/story/dailyQuests';
 import { setSeed } from '../src/game/rng';
+import type { FarmSceneId } from '../src/game/estates';
 
 export type Policy = 'normal' | 'good' | 'bad' | 'optimal';
 
@@ -103,7 +104,7 @@ export function bestSeed(): { id: CropId; score: number } | null {
   return list[0] ? { id: list[0].id, score: list[0].score } : null;
 }
 
-function tendAnimalsAndPonds(policy: Policy = 'normal') {
+export function tendAnimalsAndPonds(policy: Policy = 'normal') {
   if (policy !== 'bad' && S.animals.some((a) => a.sick) && S.coins > 300) cureAllAnimals();
   if (S.animals.some((a) => ANIMALS[a.kind].eat > 0) && S.trough < troughCap() * 0.5) {
     let space = troughCap() - S.trough;
@@ -133,7 +134,7 @@ function tendAnimalsAndPonds(policy: Policy = 'normal') {
   if (S.hives > 0) harvestHoney(true);
 }
 
-function smartSell(policy: Policy, forceAll = false) {
+export function smartSell(policy: Policy, forceAll = false) {
   if (forceAll || policy === 'bad' || invCount() >= invCap() * 0.85) {
     sellAll();
     return;
@@ -152,7 +153,7 @@ function smartSell(policy: Policy, forceAll = false) {
   }
 }
 
-function restockSeeds(policy: Policy) {
+export function restockSeeds(policy: Policy) {
   const diversity = policy === 'bad' ? 1 : policy === 'normal' ? 2 : 3;
   const topOut = rankedSeeds(false).slice(0, diversity);
   const topGh = S.gh > 0 && policy !== 'bad' ? rankedSeeds(true).slice(0, 2) : [];
@@ -189,7 +190,9 @@ function restockSeeds(policy: Policy) {
   }
 }
 
-function workPlots(budgetActions: number, workerPass = false, policy: Policy = 'normal') {
+export type PlotActionObserver = (kind: string, farm: FarmSceneId, index: number) => void;
+
+export function workPlots(budgetActions: number, workerPass = false, policy: Policy = 'normal', onAction?: PlotActionObserver) {
   let acts = 0;
   const outRanks = rankedSeeds(false);
   const ghRanks = S.gh > 0 ? rankedSeeds(true) : outRanks;
@@ -199,6 +202,7 @@ function workPlots(budgetActions: number, workerPass = false, policy: Policy = '
     const arr = plotsForFarm(farm);
     for (let i = 0; i < arr.length && acts < budgetActions; i++) {
       if (canAct('harvest', i, workerPass, undefined, farm) === '') {
+        onAction?.('harvest', farm, i);
         doAct('harvest', i, workerPass, undefined, true, farm);
         acts++;
         if (invCount() >= invCap() - 2) smartSell(policy, true);
@@ -208,18 +212,21 @@ function workPlots(budgetActions: number, workerPass = false, policy: Policy = '
       if (p.st === 2 && p.crop && !p.dead && p.water < 0.55 && acts < budgetActions) {
         if (!workerPass && S.can <= 0) S.can = 8;
         if (canAct('water', i, workerPass, undefined, farm) === '') {
+          onAction?.('water', farm, i);
           doAct('water', i, workerPass, undefined, true, farm);
           acts++;
         }
       }
       if ((policy === 'good' || policy === 'optimal') && p.st === 2 && p.crop && !p.dead && p.fert < 0.8 && S.fert > 0 && acts < budgetActions) {
         if (canAct('fert', i, workerPass, undefined, farm) === '') {
+          onAction?.('fert', farm, i);
           doAct('fert', i, workerPass, undefined, true, farm);
           acts++;
         }
       }
       if (acts >= budgetActions) break;
       if (canAct('till', i, workerPass, undefined, farm) === '') {
+        onAction?.('till', farm, i);
         doAct('till', i, workerPass, undefined, true, farm);
         acts++;
       }
@@ -228,6 +235,7 @@ function workPlots(budgetActions: number, workerPass = false, policy: Policy = '
         const avail = useGh ? availGh : availOut;
         const pick = avail.length ? avail[i % avail.length] : undefined;
         if (pick && canAct('plant', i, workerPass, pick.id, farm) === '') {
+          onAction?.('plant', farm, i);
           doAct('plant', i, workerPass, pick.id, true, farm);
           acts++;
           if ((S.seeds[pick.id] ?? 0) <= 0) {
@@ -249,7 +257,7 @@ export function drainStory() {
 }
 
 /** تخصیص روزانهٔ سهم بدهی (۴۰٪ درآمد ناخالص روز) پیش از خرج‌کردن بقیه در توسعهٔ مزرعه (۶۰٪) */
-function allocateDebtBudget(policy: Policy, chPaidSoFar: number, chEarnedSoFar: number, cycleIdx: number) {
+export function allocateDebtBudget(policy: Policy, chPaidSoFar: number, chEarnedSoFar: number, cycleIdx: number) {
   const d = debt();
   if (!d) return;
   const note = activeNote();
@@ -303,7 +311,7 @@ function allocateDebtBudget(policy: Policy, chPaidSoFar: number, chEarnedSoFar: 
   }
 }
 
-function buyPhase(policy: Policy) {
+export function buyPhase(policy: Policy) {
   const lv = farmLevel();
   const d = debt();
   const needFeed = S.animals.length * 2 + S.ponds.length * 3;

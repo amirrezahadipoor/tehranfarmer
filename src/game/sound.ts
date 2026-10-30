@@ -242,6 +242,8 @@ const musicUrlFor = (chapter: number) => {
   return `music/${file}`; // محیطِ تست بدون DOM — پخشی در کار نیست
 };
 let musicChapter = 1;
+let musicTrackChapter = 1;
+let musicCompanion = false;
 let musicSrcLoaded = '';
 let musicEl: HTMLAudioElement | null = null;
 let musicWanted = false;
@@ -252,6 +254,10 @@ function updateMusicVolume() {
   if (musicEl) musicEl.volume = Math.max(0, Math.min(0.6, musicBaseVolume * musicDuck));
 }
 
+// هر فصل یک آهنگ مکمل دارد؛ تعویض در پایان طبیعی قطعه، بدون timer و بدون مصرف
+// منابع هم‌زمان، از تکرار بی‌پایان همان ۹۰–۱۴۰ ثانیه جلوگیری می‌کند.
+const MUSIC_COMPANION: Record<number, number> = { 1: 7, 2: 5, 3: 6, 4: 2, 5: 1, 6: 3, 7: 4 };
+
 function syncMusicPlayback() {
   const hidden = typeof document !== 'undefined' && document.hidden;
   const shouldPlay = musicWanted && CFG.music && CFG.sound && snd.on && !bgAudioPaused && !hidden;
@@ -260,12 +266,19 @@ function syncMusicPlayback() {
     return;
   }
   if (typeof Audio === 'undefined') return;
-  const wantUrl = musicUrlFor(musicChapter);
+  const wantUrl = musicUrlFor(musicTrackChapter);
   if (!musicEl) {
     musicEl = new Audio(wantUrl);
     musicSrcLoaded = wantUrl;
-    musicEl.loop = true;
+    musicEl.loop = false;
     musicEl.preload = 'auto';
+    musicEl.onended = () => {
+      if (!musicWanted || !musicEl) return;
+      musicCompanion = !musicCompanion;
+      musicTrackChapter = musicCompanion ? MUSIC_COMPANION[musicChapter] : musicChapter;
+      musicEl.currentTime = 0;
+      syncMusicPlayback();
+    };
   } else if (musicSrcLoaded !== wantUrl) {
     // تعویض آهنگ هنگام تغییر فصل — بدون از دست رفتن تنظیمات صدا
     musicEl.src = wantUrl;
@@ -290,7 +303,11 @@ export const ambient = {
     // هر فصل آهنگ خودش را دارد (پیشنهاد بهبود گزارش ۳۰۰X)
     if (typeof chapter === 'number' && Number.isFinite(chapter)) {
       const want = Math.max(1, Math.min(7, Math.round(chapter)));
-      if (want !== musicChapter) musicChapter = want;
+      if (want !== musicChapter) {
+        musicChapter = want;
+        musicTrackChapter = want;
+        musicCompanion = false;
+      }
     }
     const night = hour >= NIGHT_START_H || hour < NIGHT_END_H;
     musicBaseVolume = night ? 0.2 : 0.27;

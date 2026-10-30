@@ -33,7 +33,9 @@ function log(...a) { console.log('•', ...a); }
 async function prepPreview() {
   const b = spawnSync('node', [path.join(ROOT, 'scripts', 'e2e-build.mjs')], { cwd: ROOT, stdio: 'inherit' });
   if (b.status !== 0) throw new Error('e2e build failed');
-  const prev = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--host', '127.0.0.1', '--strictPort'], {
+  // Spawn Vite itself (not the npx shim) so cleanup cannot orphan the preview child.
+  const viteBin = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+  const prev = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--host', '127.0.0.1', '--strictPort'], {
     cwd: ROOT, stdio: 'ignore', detached: false,
   });
   for (let i = 0; i < 60; i++) {
@@ -47,9 +49,25 @@ async function prepPreview() {
 async function measure(page) {
   return page.evaluate(() => {
     const out = { overflowX: document.documentElement.scrollWidth - window.innerWidth, smallButtons: [], tinyText: [], overlaps: [] };
+    const visibleRect = (el) => {
+      const r = el.getBoundingClientRect();
+      let left = r.left, right = r.right, top = r.top, bottom = r.bottom;
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        const s = getComputedStyle(p);
+        if (s.overflowX === 'visible' && s.overflowY === 'visible') continue;
+        const pr = p.getBoundingClientRect();
+        left = Math.max(left, pr.left); right = Math.min(right, pr.right);
+        top = Math.max(top, pr.top); bottom = Math.min(bottom, pr.bottom);
+      }
+      return { left, right, top, bottom, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+    };
     const btns = [...document.querySelectorAll('button')].filter((b) => {
       const r = b.getBoundingClientRect();
-      return r.width > 0 && r.height > 0 && getComputedStyle(b).visibility !== 'hidden' && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
+      const style = getComputedStyle(b);
+      // Standard screen-reader-only controls are intentionally 1px and clipped;
+      // they are keyboard-revealed, not defective visible touch targets.
+      const visuallyHidden = r.width <= 1 && r.height <= 1 && style.clipPath === 'inset(50%)';
+      return !visuallyHidden && r.width > 0 && r.height > 0 && style.visibility !== 'hidden' && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
     });
     for (const b of btns) {
       const r = b.getBoundingClientRect();
@@ -64,10 +82,19 @@ async function measure(page) {
     });
     for (let i = 0; i < hitButtons.length; i++) {
       for (let j = i + 1; j < hitButtons.length; j++) {
-        const a = hitButtons[i].getBoundingClientRect(), c = hitButtons[j].getBoundingClientRect();
-        const ix = Math.max(0, Math.min(a.right, c.right) - Math.max(a.left, c.left));
-        const iy = Math.max(0, Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top));
-        if (ix > 4 && iy > 4) out.overlaps.push(`${(hitButtons[i].textContent || '').trim().slice(0, 18)} <-> ${(hitButtons[j].textContent || '').trim().slice(0, 18)}`);
+        const a = visibleRect(hitButtons[i]), c = visibleRect(hitButtons[j]);
+        const left = Math.max(a.left, c.left), right = Math.min(a.right, c.right);
+        const top = Math.max(a.top, c.top), bottom = Math.min(a.bottom, c.bottom);
+        if (right - left > 4 && bottom - top > 4) {
+          // A scrolled control's layout rectangle can extend beneath the modal
+          // header while its visible pixels are clipped. Confirm the intersection
+          // itself is hit-testable before calling it a real touch overlap.
+          const hit = document.elementFromPoint((left + right) / 2, (top + bottom) / 2);
+          const owner = hit?.closest('button');
+          if (owner !== hitButtons[i] && owner !== hitButtons[j]) continue;
+          const label = (b) => (b.getAttribute('aria-label') || b.textContent || b.outerHTML).trim().slice(0, 70);
+          out.overlaps.push(`${label(hitButtons[i])} <-> ${label(hitButtons[j])}`);
+        }
       }
     }
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);

@@ -2,7 +2,7 @@
 import {
   COLS, FISH_STAM, ROWS, isUnlocked,
 } from './data';
-import { ESTATES, estatePlotAt, estatePlotCenter, isEstateOwned, type FarmSceneId } from './estates';
+import { ESTATES, estatePlotAt, estatePlotCenter, isEstateOwned, isFarmScene, type FarmSceneId } from './estates';
 import { FEED_TROUGH, STRAW_NEST, unifiedPondGeom } from './farmZones';
 import { POSTBOX_GEOM } from './postboxArt';
 import { FIELD_X, FIELD_Y, PLOT_DX, PLOT_DY, RIVER_SPOTS } from './scenes';
@@ -350,16 +350,72 @@ export function createSceneTapRouter(d: SceneInputDeps) {
     notify();
   }
 
-  return {
-    farmTap,
-    estateTap,
-    dispatchTap(x: number, y: number, e: CanvasPoint) {
-      if (UI.scene === 'farm') farmTap(x, y, e, true);
-      else if (UI.scene === 'north' || UI.scene === 'valley') estateTap(UI.scene, x, y, true);
-      else if (UI.scene === 'town') townTap(x, y);
-      else if (UI.scene === 'river') riverTap(x, y);
-      else if (UI.scene === 'cave' || UI.scene === 'forest') frontierTap(UI.scene, x, y);
-      else apiaryTap(x, y);
-    },
-  };
+  function dispatchTap(x: number, y: number, e: CanvasPoint) {
+    if (UI.scene === 'farm') farmTap(x, y, e, true);
+    else if (UI.scene === 'north' || UI.scene === 'valley') estateTap(UI.scene, x, y, true);
+    else if (UI.scene === 'town') townTap(x, y);
+    else if (UI.scene === 'river') riverTap(x, y);
+    else if (UI.scene === 'cave' || UI.scene === 'forest') frontierTap(UI.scene, x, y);
+    else apiaryTap(x, y);
+  }
+
+  /** Semantic DOM controls resolve to the very same hit areas as pointer/touch input. */
+  function activateTarget(id: string): boolean {
+    const tap = (x: number, y: number) => { dispatchTap(x, y, { clientX: 0, clientY: 0 }); return true; };
+    const plot = /^plot:(\d+)$/.exec(id);
+    if (plot && isFarmScene(UI.scene)) {
+      const { cx, cy } = estatePlotCenter(UI.scene, Number(plot[1]));
+      return tap(cx, cy);
+    }
+    const animal = /^animal:(\d+)$/.exec(id);
+    if (animal && UI.scene === 'farm') {
+      const ar = d.animals.get(Number(animal[1]));
+      if (!ar) return false;
+      return tap(ar.x, ar.y - ar.rig.h * ar.sc * 0.5);
+    }
+    if (id.startsWith('shop:') && UI.scene === 'town') {
+      const shop = SHOPS.find((s) => s.id === id.slice(5));
+      return shop ? tap(shop.cx, 320) : false;
+    }
+    if (id.startsWith('npc:') && UI.scene === 'town') {
+      const npc = d.npcs[Number(id.slice(4))];
+      return npc ? tap(npc.x, npc.y - 80) : false;
+    }
+    if (id.startsWith('fair:') && UI.scene === 'town') {
+      const x = id === 'fair:judge' ? 308 : id === 'fair:cauldron' ? 504 : id === 'fair:archery' ? 702 : 0;
+      return x ? tap(x, 480) : false;
+    }
+    if (id.startsWith('fish:') && UI.scene === 'river') {
+      if (id === 'fish:finish') return tap(640, 300);
+      const spot = RIVER_SPOTS[Number(id.slice(5))];
+      return spot ? tap(spot.x, 300) : false;
+    }
+    if (id.startsWith('node:') && (UI.scene === 'cave' || UI.scene === 'forest')) {
+      const idx = Number(id.slice(5));
+      const spot = (UI.scene === 'cave' ? activeMineNodes() : activeFrontierNodes('forest')).find((n) => n.idx === idx);
+      return spot ? tap(spot.x, spot.y) : false;
+    }
+    if (id === 'home' && UI.scene === 'farm') return tap(180, 160);
+    if (id === 'well' && UI.scene === 'farm') return tap(380, 200);
+    if (id === 'well' && (UI.scene === 'north' || UI.scene === 'valley')) return tap(150, 330);
+    if (id === 'feed' && UI.scene === 'farm') return tap(FEED_TROUGH.cx, FEED_TROUGH.cy);
+    if (id === 'straw' && UI.scene === 'farm') return tap(STRAW_NEST.cx, STRAW_NEST.cy);
+    if (id === 'mail' && UI.scene === 'farm') return tap((POSTBOX_GEOM.bbox.x0 + POSTBOX_GEOM.bbox.x1) / 2, (POSTBOX_GEOM.bbox.y0 + POSTBOX_GEOM.bbox.y1) / 2);
+    if (id === 'ledger' && UI.scene === 'farm') return tap(1200, 580);
+    if (id === 'windmill' && UI.scene === 'north') return tap(118, 196);
+    if (id === 'spring' && UI.scene === 'valley') return tap(100, 200);
+    if (id === 'barn' && UI.scene === 'farm') return tap(1040, 130);
+    if (id === 'barn' && (UI.scene === 'north' || UI.scene === 'valley')) return tap(1152, 150);
+    if (id === 'barn' && UI.scene === 'apiary') return tap(158, 280);
+    if (id === 'hive' && UI.scene === 'apiary') return tap(700, 400);
+    if (id === 'pond' && UI.scene === 'river') { const pg = unifiedPondGeom(); return tap((pg.x0 + pg.x1) / 2, pg.cy); }
+    if (id === 'sharkhar' && UI.scene === 'town') return tap(d.jahangir.x, d.jahangir.y - 80);
+    if (id === 'museum' && UI.scene === 'town') return tap(872, 430);
+    if (id === 'shrine' && UI.scene === 'forest') return tap(640, 336);
+    if (id === 'layer:next' && (UI.scene === 'cave' || UI.scene === 'forest')) return tap(1148, 400);
+    if (id === 'layer:prev' && (UI.scene === 'cave' || UI.scene === 'forest')) return tap(980, 400);
+    return false;
+  }
+
+  return { farmTap, estateTap, dispatchTap, activateTarget };
 }

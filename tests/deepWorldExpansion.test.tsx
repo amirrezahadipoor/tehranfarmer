@@ -8,7 +8,7 @@ import {
 } from '../src/game/state';
 import { interestOf, payDebt, raidAmount, startDebt, stashCap } from '../src/game/core/debt';
 import {
-  ROYAL_DECREES, activeCharter, activeFrontierNodes, checkSeamlessEdgePortal, chooseVillageCharter,
+  CHARTER_SWITCH_COOLDOWN_DAYS, ROYAL_DECREES, activeCharter, activeFrontierNodes, checkSeamlessEdgePortal, chooseVillageCharter,
   completeFestivalContest, currentRegionalShock, ensureFrontier, fulfillRoyalDecree, harvestFrontierNode,
   hasMonocultureSaturation, isTownFestivalActive, judgeFestivalSubmission, redeemFestivalTokens,
   ringTownFestivalBell, stepFrontierLayer, useFrontierLandmark,
@@ -99,6 +99,7 @@ describe('Deep 4-Pillar World, Skill Minigames, Branching Charters & Late-Game E
     expect(activeCharter('bazaar')).toBe('coop');
     expect(goodPrice('milk')).toBeGreaterThan(baseMilk);
 
+    S.day += CHARTER_SWITCH_COOLDOWN_DAYS;
     applyDialogueChoice('note-open-1', 1); // bazaar = 'caravan'
     expect(activeCharter('bazaar')).toBe('caravan');
     expect(goodPrice('saffron')).toBeGreaterThan(baseSaffron);
@@ -112,6 +113,7 @@ describe('Deep 4-Pillar World, Skill Minigames, Branching Charters & Late-Game E
     expect(interestOf()).toBeLessThan(baseInterest);
     expect(stashCap()).toBeGreaterThan(baseStash);
 
+    S.day += CHARTER_SWITCH_COOLDOWN_DAYS;
     chooseVillageCharter('bank', 'council');
     expect(raidAmount()).toBeLessThan(baseRaid);
 

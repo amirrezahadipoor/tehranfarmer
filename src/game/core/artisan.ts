@@ -253,6 +253,8 @@ export function performPlayerPlotSweep(
       const extra = exA + (exA < res.qty! ? addGood(res.crop, res.qty! - exA) : 0);
       S.seeds[res.crop as keyof typeof S.seeds] = (S.seeds[res.crop as keyof typeof S.seeds] ?? 0) + 1;
       addStat('harv', extra);
+      addStat('cropHarv', extra);
+      addStat(`cropHarv:${activeFarm()}`, extra);
       addXp(18);
       res.qty = (res.qty ?? 0) + extra;
       golden = true;

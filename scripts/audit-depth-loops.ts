@@ -97,7 +97,7 @@ export function runLoop8MandatoryUpgradesAndMachinesAudit(report: ReportFn) {
   UI.started = true;
   S.xp = 9_000_000;
   S.coins = 50_000_000;
-  S.stats.harv = 500;
+  S.stats['cropHarv:farm'] = 500;
   startDebt(0);
   S.story.chapter = 1;
   S.debt!.chapterStartDay = -500;

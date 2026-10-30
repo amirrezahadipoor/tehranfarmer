@@ -1,6 +1,6 @@
 // ===== Frontier Expansion Core: Multi-Layer Cavern & Forest, 8-Region Portals, Charters, Fair & Late-Game Shocks =====
 import { CROP, CROPS, GOOD, HEART_BOND_2, KAVEH2_PRICE_MULT, machineMkPrice, type MachineId } from '../data';
-import { S, addStat, addXp, farmLevel, grantGoodWithMailOverflow, holdCount, notify, saveGame, season, stamCap, takeHold, toast } from '../state';
+import { S, addStat, addXp, farmLevel, grantGoodWithMailOverflow, holdCount, notify, pay, saveGame, season, stamCap, takeHold, toast } from '../state';
 import { addStanding } from './debt';
 import { sfx } from '../sound';
 import { CFG } from '../settings';
@@ -26,6 +26,8 @@ export interface FrontierState {
   fairPlayed: Record<string, number>;
   festivalTokens: number;
   charters: Partial<Record<CharterKey, CharterValue>>;
+  /** آخرین روز تصویب/تعویض هر منشور؛ برای جلوگیری از سوییچ منفعت‌طلبانهٔ پی‌درپی */
+  charterChangedDay: Partial<Record<CharterKey, number>>;
 }
 
 export function freshFrontier(): FrontierState {
@@ -46,6 +48,7 @@ export function freshFrontier(): FrontierState {
     fairPlayed: {},
     festivalTokens: 0,
     charters: {},
+    charterChangedDay: {},
   };
 }
 
@@ -64,6 +67,7 @@ export function ensureFrontier(): FrontierState {
   f.decreeClaimed ??= {};
   f.fairPlayed ??= {};
   f.charters ??= {};
+  f.charterChangedDay ??= {};
   f.festivalTokens = Math.max(0, Math.floor(f.festivalTokens || 0));
   const curWeek = Math.floor((S.day - 1) / 7) + 1;
   if (f.nodesDay !== S.day) {
@@ -91,20 +95,39 @@ export function charterRequiredChapter(key: CharterKey): number {
   return key === 'qanat' ? 2 : key === 'bazaar' ? 3 : key === 'frontier' ? 4 : 5;
 }
 
+export const CHARTER_SWITCH_COOLDOWN_DAYS = 3;
+export const CHARTER_SWITCH_COST = 750;
+
+export function charterSwitchInfo(key: CharterKey): { daysLeft: number; cost: number } {
+  const f = ensureFrontier();
+  const prev = f.charters[key];
+  const changed = f.charterChangedDay[key];
+  const daysLeft = prev && changed !== undefined
+    ? Math.max(0, CHARTER_SWITCH_COOLDOWN_DAYS - Math.max(0, S.day - changed))
+    : 0;
+  return { daysLeft, cost: prev ? CHARTER_SWITCH_COST : 0 };
+}
+
 export function chooseVillageCharter(key: CharterKey, val: CharterValue): boolean {
   const reqCh = charterRequiredChapter(key);
   if ((S.story?.chapter ?? 1) < reqCh && !S.story?.postgame) { sfx.err(); return false; }
+  const def = CHARTER_DEFS.find((c) => c.key === key);
+  if (!def || (def.aVal !== val && def.bVal !== val)) { sfx.err(); return false; }
   const f = ensureFrontier();
   const prev = f.charters[key];
+  if (prev === val) return true;
+  const { daysLeft, cost } = charterSwitchInfo(key);
+  if (daysLeft > 0) { sfx.err(); toast('lock', FT.charterCooldown(daysLeft)); return false; }
+  if (cost > 0 && !pay(cost)) return false;
   f.charters[key] = val;
+  f.charterChangedDay[key] = S.day;
   if (!prev) {
     if (val === 'commons') addStanding(10);
     if (val === 'credit') addStanding(8);
     addXp(95);
     S.coins += 280;
   }
-  const def = CHARTER_DEFS.find((c) => c.key === key);
-  const isA = def?.aVal === val;
+  const isA = def.aVal === val;
   const title = CFG.locale === 'en'
     ? (isA ? def?.aTitleEn : def?.bTitleEn) ?? val
     : (isA ? def?.aTitleFa : def?.bTitleFa) ?? val;

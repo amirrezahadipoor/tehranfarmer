@@ -302,16 +302,17 @@ describe('فاز ۹ — جداسازی کامل تنظیمات از سِیو و 
     expect(fs.readFileSync('docs/RELEASE-CHECKLIST.md', 'utf8')).toContain('apksigner verify');
   });
 
-  it('همهٔ تسک‌های نقشهٔ راه (۱۱۸ تسک اصلی + تسک‌های فاز ۱۹) تیک خورده‌اند و سقف ۶۰۰ خط ماژول‌ها رعایت شده است (P10-10)', () => {
+  it('همهٔ تسک‌های نقشهٔ راه (۱۱۸ تسک اصلی + فازهای ممیزی بعدی) تیک خورده‌اند و سقف ۶۰۰ خط ماژول‌ها رعایت شده است (P10-10)', () => {
     const roadmap = fs.readFileSync('ROADMAP.md', 'utf8');
     const unchecked = [...roadmap.matchAll(/^- \[ \] (P\d+-\d+)/gm)];
     const checked = [...roadmap.matchAll(/^- \[x\] (P\d+-\d+)/gm)];
-    const mainTasks = checked.filter((m) => Number(m[1].split('-')[0].slice(1)) <= 18);
-    const auditTasks = checked.filter((m) => m[1].startsWith('P19-'));
+    const phaseOf = (m: RegExpMatchArray) => Number(m[1].split('-')[0].slice(1));
+    const mainTasks = checked.filter((m) => phaseOf(m) <= 18);
+    const auditTasks = checked.filter((m) => phaseOf(m) > 18);
     expect(unchecked.length).toBe(0);
     expect(mainTasks.length).toBe(118);
-    // فاز ۱۹ = رفع ایرادهای ممیزی ۲۰۲۶-۱۰-۲۸
-    expect(auditTasks.length).toBeGreaterThanOrEqual(18);
+    // فازهای ۱۹ و ۲۰ = ۱۸ رفع ایراد قبلی و ۷ اصلاح ممیزی سخت‌گیرانهٔ جاری.
+    expect(auditTasks.length).toBeGreaterThanOrEqual(24);
     expect(checked.length).toBe(mainTasks.length + auditTasks.length);
   });
 

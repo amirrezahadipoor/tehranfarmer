@@ -1,4 +1,4 @@
-import { ANIMALS, FISH_STAM, HOE_SPEED, PORTAL_TRAVEL_HOURS, XP, MACHINES, MK_SPEED, type AnimalKind, type CropId, type MachineId } from './data';
+import { ANIMALS, FISH_STAM, HOE_SPEED, PORTAL_TRAVEL_HOURS, XP, MACHINES, MK_SPEED, type CropId, type MachineId } from './data';
 declare const __DEV_TOOLS__: boolean;
 import {
   PAL_BUILDER, PAL_JAHANGIR, PAL_NPC, PAL_PLAYER, PAL_WORKERS, makeFarmer, poseFarmer, type Pal,
@@ -26,21 +26,20 @@ import { createWorkerVisuals } from './engineWorkerVisuals';
 import { checkSeamlessEdgePortal } from './core/frontier';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
 import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
+import { sceneSummary } from './a11y';
+import { createCanvasA11yController } from './engineA11y';
 const W = 1280, H = 720;
 void FIELD_X; void FIELD_Y;
 const plotC = (i: number) => estatePlotCenter(activeFarm(), i);
 export const JAHANGIR_HUT = { cx: 1156, cy: 646 };
-export interface EngineRigSnapshot {
-  builder: { phase: 'off' | 'walk' | 'work' | 'exit'; mode: string; x: number; y: number; legF: number; legB: number; shinF: number; armF: number; hasTool: boolean };
-  workers: Array<{ x: number; y: number; mode: string; kind: string; legF: number; stuckRecoveries: number; post?: FarmSceneId; visible: boolean }>;
-  animals: Array<{ id: number; kind: AnimalKind; x: number; y: number; mode: string; scale: number }>;
-  pausedInBackground: boolean;
-  framesRendered: number;
-  viewport: { scale: number; tx: number; ty: number };
-}
+import type { EngineRigSnapshot } from './engineTypes';
+export type { EngineRigSnapshot } from './engineTypes';
 export const cmd = {
   travelTo: (_: SceneKey) => { void _; },
   actPlot: (_kind: string, _idx: number) => { void _kind; void _idx; },
+  activateTarget: (_id: string): boolean => false,
+  canvasKey: (_key: string): boolean => false,
+  sceneAnnouncement: (): string => sceneSummary(),
   resetMotion: () => {},
   inspectEngine: (): EngineRigSnapshot | null => null,
 };
@@ -340,6 +339,11 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     moveTo, mkTask, enqueuePlot, reasonToast, toScreen, pop, finishRiverCast,
   });
   const dispatchTap = tapRouter.dispatchTap;
+  const canvasA11y = createCanvasA11yController({
+    blocked: () => Boolean(!UI.started || UI.modal || UI.confirm || (trans && !trans.done) || cinema.active),
+    startTrans, activateTarget: tapRouter.activateTarget, setHoverPlot: (plot) => { hoverPlot = plot; },
+  });
+  Object.assign(cmd, canvasA11y);
   const unbindInput = bindCanvasInput(canvas, resize, {
     onDown: (e) => {
       lastInputAt = performance.now(); lastPaint = 0;

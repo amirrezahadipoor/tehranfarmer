@@ -4,7 +4,7 @@ import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
 import { S, UI, farmLevel, holdCount, notify } from '../game/state';
 import {
-  ROYAL_DECREES, activeCharter, charterRequiredChapter, chooseVillageCharter,
+  ROYAL_DECREES, activeCharter, charterRequiredChapter, charterSwitchInfo, chooseVillageCharter,
   currentRegionalShock, decreeWeekKey, ensureFrontier, fulfillRoyalDecree, hasMonocultureSaturation, isTownFestivalActive,
 } from '../game/core/frontier';
 import { sfx } from '../game/sound';
@@ -138,6 +138,7 @@ export function WorldAtlasModal() {
               const cur = activeCharter(c.key);
               const reqCh = charterRequiredChapter(c.key);
               const canRatify = (S.story?.chapter ?? 1) >= reqCh || !!S.story?.postgame;
+              const switchInfo = charterSwitchInfo(c.key);
               return (
                 <div key={c.key} className="paper space-y-2 p-3 text-xs">
                   <div className="flex items-center justify-between font-black">
@@ -156,11 +157,15 @@ export function WorldAtlasModal() {
                           type="button"
                           data-charter-pick={`${c.key}:${val}`}
                           aria-label={title}
-                          disabled={!canRatify || cur === val}
+                          disabled={!canRatify || cur === val || switchInfo.daysLeft > 0}
                           className={'btn press mt-1.5 w-full !py-1 text-[.7rem] font-black ' + (cur === val ? 'g' : 'y')}
                           onClick={() => chooseVillageCharter(c.key, val)}
                         >
-                          {cur === val ? <><Ic n="check" s={1.25} /> <span>{title}</span></> : <span>{FT.charterEnactBtn}</span>}
+                          {cur === val
+                            ? <><Ic n="check" s={1.25} /> <span>{title}</span></>
+                            : <span>{switchInfo.daysLeft > 0
+                              ? FT.charterCooldown(switchInfo.daysLeft)
+                              : switchInfo.cost > 0 ? FT.charterSwitchBtn(switchInfo.cost) : FT.charterEnactBtn}</span>}
                         </button>
                       </div>
                     ))}

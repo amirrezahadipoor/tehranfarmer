@@ -4,7 +4,7 @@ import { CFG } from '../game/settings';
 import { triggerCutscene } from './engine';
 import type { QuestDef } from './types';
 
-const harv = () => S.stats.harv ?? 0;
+const harv = () => S.stats['cropHarv:farm'] ?? 0;
 const pens = () => Object.values(S.pens).filter((v) => (v ?? 0) > 0).length;
 const lv = () => farmLevel();
 const toolUps = () => (S.lv.hoe ?? 0) + (S.lv.can ?? 0) + (S.lv.bag ?? 0) + (S.lv.stam ?? 0);

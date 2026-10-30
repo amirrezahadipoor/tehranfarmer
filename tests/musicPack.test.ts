@@ -10,6 +10,7 @@ const { JSDOM } = createRequire(import.meta.url)('jsdom') as {
 };
 let lastSrc = '';
 let lastLoop = false;
+let lastAudio: { onended: null | (() => void) } | null = null;
 
 beforeAll(() => {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://game.test' });
@@ -24,8 +25,11 @@ beforeAll(() => {
     volume = 1;
     preload = '';
     currentTime = 0;
-    src: string;
-    constructor(src: string) { this.src = src; lastSrc = src; }
+    onended: null | (() => void) = null;
+    private _src: string;
+    get src() { return this._src; }
+    set src(value: string) { this._src = value; lastSrc = value; }
+    constructor(src: string) { this._src = src; lastSrc = src; lastAudio = this; }
     play() { this.paused = false; lastLoop = this.loop; return Promise.resolve(); }
     pause() { this.paused = true; }
   }
@@ -40,20 +44,30 @@ beforeEach(() => {
 });
 
 describe('single-file inert music pack', () => {
-  it('materializes only the requested packed track and keeps normal looping playback', () => {
+  it('materializes packed tracks on demand and rotates to a companion after a natural ending', () => {
     const pack = document.createElement('script');
     pack.type = 'application/octet-stream';
     pack.dataset.musicPack = 'ch2.mp3';
     pack.textContent = 'QUJD';
-    document.body.appendChild(pack);
+    const companion = document.createElement('script');
+    companion.type = 'application/octet-stream';
+    companion.dataset.musicPack = 'ch5.mp3';
+    companion.textContent = 'REVG';
+    document.body.append(pack, companion);
     try {
       ambient.note(0, 10, 2);
       expect(lastSrc).toBe('data:audio/mpeg;base64,QUJD');
-      expect(lastLoop).toBe(true);
+      expect(lastLoop).toBe(false);
       expect(ambient.playing).toBe(true);
+      expect(lastAudio?.onended).toEqual(expect.any(Function));
+      lastAudio?.onended?.();
+      expect(lastSrc).toBe('data:audio/mpeg;base64,REVG');
+      lastAudio?.onended?.();
+      expect(lastSrc).toBe('data:audio/mpeg;base64,QUJD');
     } finally {
       ambient.stop();
       pack.remove();
+      companion.remove();
     }
   });
 });

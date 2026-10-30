@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-10-30T01:09:46.646Z",
+  "generatedAt": "2026-10-30T02:07:49.507Z",
+  "timeModel": "day-based economic simulation; use live-balance-report.json for wall time",
   "runs": 3,
   "maxDays": 3000,
   "noDebtLv30": 1096,
@@ -45,7 +46,6 @@
       ],
       "runs": 3,
       "avgDays": 1108,
-      "avgHours": 59.1,
       "avgLevel30": 1317,
       "avgPost": 1108,
       "avgShare": [
@@ -98,7 +98,6 @@
       ],
       "runs": 3,
       "avgDays": 1114.7,
-      "avgHours": 59.5,
       "avgLevel30": 1317.3,
       "avgPost": 1114.7,
       "avgShare": [
@@ -151,7 +150,6 @@
       ],
       "runs": 3,
       "avgDays": 1432,
-      "avgHours": 76.4,
       "avgLevel30": 1442.3,
       "avgPost": 1432,
       "avgShare": [
@@ -204,7 +202,6 @@
       ],
       "runs": 3,
       "avgDays": 3001,
-      "avgHours": 160.1,
       "avgLevel30": 1656.3,
       "avgPost": null,
       "avgShare": [
@@ -241,12 +238,7 @@
     [
       "هر دو قطب رشد مزارع ماهواره‌ای سالم (قفل‌بذر سریع‌تر از خودکار و نه کندتر از ۴۵٪)",
       true,
-      "قفل‌شده 55.1h = 72٪ مسیر خودکار"
-    ],
-    [
-      "طول داستان ۶۰ تا ۸۵ ساعت",
-      true,
-      "معمولی 76.4h · خوش‌حساب 59.5h"
+      "قفل‌شده 1033 روز = 72٪ مسیر خودکار"
     ],
     [
       "تعداد کتک معمولی ۲۰ تا ۲۸",

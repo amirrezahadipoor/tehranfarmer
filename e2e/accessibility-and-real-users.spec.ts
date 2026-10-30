@@ -196,6 +196,55 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await expect(hold).toHaveAttribute('aria-pressed', 'false');
   });
 
+  test('canvas and semantic scene mirror support keyboard-only plot and NPC interaction', async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/');
+    await page.locator('button').first().click();
+    const skip = page.locator('button:has-text("رد کردن صحنه")');
+    if (await skip.count()) await skip.click();
+
+    const canvas = page.locator('#game-canvas');
+    await expect(canvas).toHaveAttribute('role', 'application');
+    await expect(canvas).toHaveAttribute('tabindex', '0');
+    await canvas.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(canvas).toHaveAttribute('aria-label', /کرت ۲|Plot 2/);
+    await page.keyboard.press('ArrowLeft');
+    await expect(canvas).toHaveAttribute('aria-label', /کرت ۱|Plot 1/);
+    await page.keyboard.press('Enter');
+    await expect.poll(() => page.evaluate(() => {
+      const raw = localStorage.getItem('mazrae-rangi-save-v1');
+      return raw ? JSON.parse(raw).tut?.step : -1;
+    })).toBe(1);
+
+    const panelToggle = page.locator('[data-scene-a11y-toggle="1"]');
+    await panelToggle.focus();
+    await expect(panelToggle).toBeVisible();
+    await panelToggle.click();
+    await expect(page.locator('[data-scene-a11y="1"]')).toHaveAttribute('data-pinned', '1');
+    await expect(page.locator('[data-a11y-plot-select="1"]')).toBeVisible();
+    await expect(page.locator('[data-a11y-plot-select="1"] option').first()).toContainText(/کرت ۱|Plot 1/);
+
+    await page.evaluate(() => {
+      (window as unknown as { __gameApi?: { setEnv: (p: { scene: 'town'; postgame: boolean }) => void } }).__gameApi?.setEnv({ scene: 'town', postgame: true });
+    });
+    await page.waitForTimeout(800);
+    const npc = page.locator('[data-a11y-target="npc:0"]');
+    await npc.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[data-tap="cutscene"]')).toBeVisible();
+    const npcSkip = page.locator('button:has-text("رد کردن صحنه")');
+    if (await npcSkip.count()) await npcSkip.click();
+
+    await page.evaluate(() => {
+      (window as unknown as { __gameApi?: { setEnv: (p: { scene: 'farm'; postgame: boolean }) => void } }).__gameApi?.setEnv({ scene: 'farm', postgame: true });
+    });
+    await page.addScriptTag({ path: path.resolve('node_modules/axe-core/axe.min.js') });
+    const violations = await runAxe(page);
+    expect(violations, `gameplay canvas: ${JSON.stringify(violations)}`).toEqual([]);
+  });
+
   test('real first-day tutorial completes farm, sale, ledger and rest without dev API shortcuts', async ({ page }) => {
     test.setTimeout(90_000);
     const errors: string[] = [];

@@ -5,7 +5,7 @@ import { ANIMALS, COLS, CROP, GOOD, LAND_PRICES, LEVEL_CAP, ROWS, WORKER_MAX, xp
 import { NORTH_PLOTS_COUNT, VALLEY_PLOTS_COUNT } from '../estates';
 import { NOTES } from '../../story/debtData';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 /** نسخه‌ای که از آن به بعد طول آرایه‌های کرت‌ها دقیقاً باید مطابق سازه باشد (ناهمخوانی = خرابی، نه مهاجرت) */
 const STRICT_LAYOUT_FROM = 7;
 
@@ -107,7 +107,34 @@ function v8_to_v9(d: Raw) {
   st.questBase = clean;
 }
 
-const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9];
+/** نسخهٔ ۹ به ۱۰: معیار مستقل برداشت کرت/فروش بازار و cooldown ماندگار منشورها. */
+function v9_to_v10(d: Raw) {
+  d.v = 10;
+  const stats = { ...((d.stats && typeof d.stats === 'object' && !Array.isArray(d.stats) ? d.stats : {}) as Raw) };
+  const legacyHarv = Math.max(0, num(stats.harv, 0));
+  // سیوهای قدیمی تفکیک تاریخی ندارند؛ مقدار قبلی فقط یک‌بار به‌عنوان baseline حفظ می‌شود.
+  stats.marketEarned = Math.max(0, num(stats.marketEarned, num(d.earned, 0)));
+  stats.cropHarv = Math.max(0, num(stats.cropHarv, legacyHarv));
+  for (const farm of ['farm', 'north', 'valley']) {
+    const k = `cropHarv:${farm}`;
+    stats[k] = Math.max(0, num(stats[k], farm === 'farm' ? legacyHarv : 0));
+  }
+  d.stats = stats;
+  if (d.frontier && typeof d.frontier === 'object' && !Array.isArray(d.frontier)) {
+    const frontier = d.frontier as Raw;
+    const raw = frontier.charterChangedDay;
+    const clean: Record<string, number> = {};
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      for (const key of ['qanat', 'bazaar', 'frontier', 'bank']) {
+        const day = num((raw as Raw)[key], -1);
+        if (day >= 1) clean[key] = Math.floor(day);
+      }
+    }
+    frontier.charterChangedDay = clean;
+  }
+}
+
+const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9, v9_to_v10];
 
 /**
  * سِیو خام را به آخرین نسخه مهاجرت می‌دهد.

@@ -573,7 +573,7 @@ export function doAct(kind: string, i: number, worker = false, seed?: CropId, si
         p.dry = 0;
         p.dead = false;
       } else { p.last = id; p.crop = null; p.st = 0; p.prog = 0; p.ripe = false; p.n = 0; p.water = 0; p.hand = false; }
-      addStat('harv', got);
+      addStat('harv', got); addStat('cropHarv', got); addStat(`cropHarv:${farm}`, got);
       addXp(XP.harvestBase + def.price / XP.harvestPerPrice);
       if (!silent) sfx.pop();
       return { crop: id, qty: got };

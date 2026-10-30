@@ -19,14 +19,14 @@ describe('کوئست روزانه و هفتگی', () => {
   it('پیشرفت از لحظهٔ ساخت کوئست شمرده می‌شود', () => {
     const g = S.quests.daily[0];
     const before = questProgress(g);
-    S.stats[g.kind === 'sell' ? 'harv' : g.kind] = (S.stats[g.kind] ?? 0);
+    S.stats[g.kind === 'sell' ? 'cropHarv' : g.kind] = (S.stats[g.kind] ?? 0);
     // شبیه‌سازی پیشرفت سنجهٔ کوئست
-    if (g.kind === 'harvest') S.stats.harv = (S.stats.harv ?? 0) + g.target;
+    if (g.kind === 'harvest') S.stats.cropHarv = (S.stats.cropHarv ?? 0) + g.target;
     else if (g.kind === 'plant') S.stats.plants = (S.stats.plants ?? 0) + g.target;
     else if (g.kind === 'collect') S.stats.collect = (S.stats.collect ?? 0) + g.target;
     else if (g.kind === 'honey') S.stats.honey = (S.stats.honey ?? 0) + g.target;
     else if (g.kind === 'pond') S.stats.pondH = (S.stats.pondH ?? 0) + g.target;
-    else if (g.kind === 'sell') S.earned = (S.earned ?? 0) + g.target;
+    else if (g.kind === 'sell') S.stats.marketEarned = (S.stats.marketEarned ?? 0) + g.target;
     else if (g.kind === 'build') S.stats.builds = (S.stats.builds ?? 0) + g.target;
     else if (g.kind === 'fish') S.stats.fish = (S.stats.fish ?? 0) + g.target;
     else if (g.kind === 'babies') S.stats.babies = (S.stats.babies ?? 0) + g.target;
@@ -36,7 +36,7 @@ describe('کوئست روزانه و هفتگی', () => {
 
   it('پاداش فقط یک بار گرفته می‌شود', () => {
     const g = S.quests.daily[0];
-    S.stats.harv = (S.stats.harv ?? 0) + 1000;
+    S.stats.cropHarv = (S.stats.cropHarv ?? 0) + 1000;
     S.stats.collect = (S.stats.collect ?? 0) + 1000;
     S.stats.plants = (S.stats.plants ?? 0) + 1000;
     S.stats.honey = (S.stats.honey ?? 0) + 1000;
@@ -44,7 +44,7 @@ describe('کوئست روزانه و هفتگی', () => {
     S.stats.builds = (S.stats.builds ?? 0) + 1000;
     S.stats.fish = (S.stats.fish ?? 0) + 1000;
     S.stats.babies = (S.stats.babies ?? 0) + 1000;
-    S.earned += 100000;
+    S.stats.marketEarned = (S.stats.marketEarned ?? 0) + 100000;
     const c0 = S.coins;
     expect(claim(g)).toBe(true);
     expect(S.coins).toBeGreaterThan(c0);
@@ -59,7 +59,7 @@ describe('کوئست روزانه و هفتگی', () => {
 
   it('روز بعد، کوئست‌های تازه ساخته می‌شوند و ادعاها پاک می‌شوند', () => {
     const g = S.quests.daily[0];
-    S.stats.harv = (S.stats.harv ?? 0) + 500;
+    S.stats.cropHarv = (S.stats.cropHarv ?? 0) + 500;
     S.stats.collect = (S.stats.collect ?? 0) + 500;
     S.stats.plants = (S.stats.plants ?? 0) + 500;
     S.stats.honey = (S.stats.honey ?? 0) + 500;
@@ -67,7 +67,7 @@ describe('کوئست روزانه و هفتگی', () => {
     S.stats.builds = (S.stats.builds ?? 0) + 500;
     S.stats.fish = (S.stats.fish ?? 0) + 500;
     S.stats.babies = (S.stats.babies ?? 0) + 500;
-    S.earned += 100000;
+    S.stats.marketEarned = (S.stats.marketEarned ?? 0) + 100000;
     claim(g);
     const week0 = S.quests.week;
     advance(24);
@@ -90,8 +90,8 @@ describe('کوئست روزانه و هفتگی', () => {
   });
 
   it('سنجه‌ها با آمار واقعی هم‌خوان‌اند', () => {
-    S.stats.harv = 42;
-    S.earned = 900;
+    S.stats.cropHarv = 42;
+    S.stats.marketEarned = 900;
     expect(metric('harvest')).toBe(42);
     expect(metric('sell')).toBe(900);
   });

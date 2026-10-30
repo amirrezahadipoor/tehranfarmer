@@ -45,8 +45,8 @@ describe('AAA Studio Cross-System Adversarial Audit Suite', () => {
     // Advance across Days 1..6 making partial daily progress on `wq.kind`
     const stepAmt = Math.ceil(wq.target / 4);
     const bumpMetric = (amt: number) => {
-      if (wq.kind === 'sell') S.earned += amt;
-      else if (wq.kind === 'harvest') addStat('harv', amt);
+      if (wq.kind === 'sell') addStat('marketEarned', amt);
+      else if (wq.kind === 'harvest') addStat('cropHarv', amt);
       else if (wq.kind === 'plant') addStat('plants', amt);
       else if (wq.kind === 'collect') addStat('collect', amt);
       else if (wq.kind === 'honey') addStat('honey', amt);

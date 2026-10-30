@@ -29,13 +29,10 @@ describe('کالیبراسیون بالانس اسناد، طول داستان �
     }
   });
 
-  it('تعداد کتک بازیکن معمولی بین ۲۰ تا ۲۸ و طول داستان بین ۶۰ تا ۸۵ ساعت است', () => {
-    const hours = (normalRun.days * 192) / 3600;
+  it('کمپین معمولی تمام می‌شود و تعداد کتک بین ۲۰ تا ۲۸ است', () => {
     expect(normalRun.postgameDay).not.toBeNull();
     expect(normalRun.beatings).toBeGreaterThanOrEqual(BEATINGS_MIN);
     expect(normalRun.beatings).toBeLessThanOrEqual(BEATINGS_MAX);
-    expect(hours).toBeGreaterThanOrEqual(60);
-    expect(hours).toBeLessThanOrEqual(85);
   });
 
   it('بدهی زمان رسیدن به سطح ۳۰ را بین +۱۵٪ تا +۳۵٪ افزایش می‌دهد', () => {
