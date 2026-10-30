@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { GOOD, SEASONS, fa } from '../game/data';
+import { ACHS, ACH_OUTFIT_REWARDS, GOOD, SEASONS, fa } from '../game/data';
 import {
   DECOR_ITEMS, OUTFIT_THEMES, SKILL_DEFS, S, UI, buyCourtyardDecor, farmLevel, hasDecor, hasSkill,
-  isNight, notify, setHomesteadNames, setPlayerOutfit, skillPointsAvailable,
+  isNight, isOutfitUnlocked, notify, setHomesteadNames, setPlayerOutfit, skillPointsAvailable,
   sleepToMorning, toggleMorningCard, toggleCompactStory, unlockSkill, type SkillBranch,
 } from '../game/state';
 import { VILLAGER_PROFILES, canGiftVillagerToday, findBestGiftInBag, giftVillager, villagerHearts } from '../story/socialVillagers';
@@ -14,6 +14,7 @@ import { BuyBtn, Lock, close, Wallet } from './shopKit';
 import { NPC_ROLES } from '../strings/estateStoryText';
 import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
+import { tutOnSleep } from '../game/tutorial';
 
 type HomeTab = 'home' | 'decor' | 'skills' | 'social' | 'calendar';
 
@@ -29,7 +30,23 @@ export function FarmhouseModal() {
   const dueYearDay = dueOffset >= 0 && dayInYear + dueOffset <= 28 ? dayInYear + dueOffset : -1;
 
   return (
-    <Modal title={WX.homeTitle} icon="house" onClose={close} coins={<Wallet />}>
+    <Modal
+      title={WX.homeTitle}
+      icon="house"
+      onClose={close}
+      coins={<Wallet />}
+      actions={(
+        <button
+          type="button"
+          className="btn b press w-full !py-1.5 text-sm font-black"
+          data-home-sleep="1"
+          onClick={() => { tutOnSleep(); sleepToMorning(); sfx.buy(); close(); }}
+        >
+          <Ic n="moon" s={1.6} />
+          <span>{isNight() ? UT.u33 : UT.restAnytime}</span>
+        </button>
+      )}
+    >
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex flex-wrap gap-1">
           {([
@@ -104,18 +121,28 @@ export function FarmhouseModal() {
           <div className="paper flex flex-col justify-between gap-2 p-3">
             <div>
               <div className="ft text-lg text-[#5a3518]">{WX.outfitTitle}</div>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {OUTFIT_THEMES.map((o) => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    className={'btn press !px-2.5 !py-0.5 text-xs font-black ' + ((S.custom?.outfit ?? 0) === o.id ? 'g' : '')}
-                    onClick={() => setPlayerOutfit(o.id)}
-                  >
-                    <span className="inline-block h-3 w-3 rounded-full border border-[#503426]" style={{ background: o.swatch }} />
-                    <span>{o.name}</span>
-                  </button>
-                ))}
+              <div className="scroll-x mt-1.5 flex gap-1.5 pb-1" aria-label={WX.outfitTitle}>
+                {OUTFIT_THEMES.map((o) => {
+                  const unlocked = isOutfitUnlocked(o.id);
+                  const reward = ACH_OUTFIT_REWARDS.find((r) => r.outfit === o.id);
+                  const achievement = reward ? ACHS.find((a) => a.id === reward.ach) : null;
+                  const requirement = achievement && reward ? `${achievement.fa}: ${fa(achievement.tiers[reward.tier]?.n ?? 0)}` : o.name;
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      className={'btn press shrink-0 !px-2.5 !py-0.5 text-xs font-black ' + ((S.custom?.outfit ?? 0) === o.id ? 'g' : '')}
+                      disabled={!unlocked}
+                      title={unlocked ? o.name : requirement}
+                      data-outfit={o.id}
+                      onClick={() => setPlayerOutfit(o.id)}
+                    >
+                      <span className="inline-block h-3 w-3 rounded-full border border-[#503426]" style={{ background: o.swatch }} />
+                      <span>{o.name}</span>
+                      {!unlocked && <Ic n="lock" s={1.1} />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -136,14 +163,6 @@ export function FarmhouseModal() {
               >
                 <Ic n="scroll" s={1.4} />
                 <span>{WX.storyCompact}</span>
-              </button>
-              <button
-                type="button"
-                className="btn b press w-full !py-1.5 text-xs font-black"
-                onClick={() => { sleepToMorning(); sfx.buy(); close(); }}
-              >
-                <Ic n="moon" s={1.4} />
-                <span>{isNight() ? UT.u33 : UT.restAnytime}</span>
               </button>
             </div>
           </div>

@@ -1,4 +1,6 @@
 // Complete English (EN) UI, Gameplay, Economy, Quest & Secret Dictionary for 100% Zero-Mixed-Language Localization
+import { TUTORIAL_UT_EN } from './tutorialText';
+
 export const UT_EN = {
   u1: 'Colorful',
   u2: 'Homestead',
@@ -351,6 +353,15 @@ export const UT_EN = {
   uSrcPack: 'Backpack',
   uSrcBarn: 'Barn',
   uSrcBoth: 'Both',
+  invSelectHint: 'Select an item to see its value and uses.',
+  invTotal: 'Total in barn and backpack',
+  invUnitPrice: 'Sale value each',
+  invUsedIn: 'Used in crafting',
+  invNoRecipe: 'For selling, gifting, or direct use; no crafting recipe.',
+  invGrowthDays: 'Growth days',
+  invSeasons: 'Planting seasons',
+  invFertDetail: 'Use on tilled plots to improve harvest yield.',
+  ...TUTORIAL_UT_EN,
 } as const;
 
 export const GT_EN = {
@@ -584,4 +595,5 @@ export const GT_EN = {
   strawNestEmpty: 'No fresh eggs on the straw nest yet',
   noGrazersForFeed: 'No cattle or sheep yet — hens lay eggs without fodder!',
   workerArrived: 'Farmhand arrived on foot and started working everywhere!',
+  achOutfitUnlocked: 'plus a new outfit at the farmhouse',
 } as const;

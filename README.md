@@ -8,6 +8,8 @@
 npm install
 npm run dev                        # اجرای محیط توسعه
 npm run check                      # گیت کامل: tsc + lint:fa + lint:magic + privacy + agents + vitest + build + offline + icons
+npm run audit:media                # گیت جداگانهٔ انتشار: provenance کامل همهٔ فایل‌های صوتی
+npm run audit:startup              # بودجهٔ startup در Chromium با CPU عادی و ۴× کندتر
 STRICT=1 RUNS=3 npm run sim:balance # شبیه‌ساز بالانس اقتصادی در ۹ سناریو (۳ دشواری × ۳ استراتژی)
 STRICT=1 npm run sim:story         # ربات تکمیل خودکار داستان از پرولوگ تا جشن پایانی
 npm run test:visual                # آزمون‌های تصویری Playwright روی پروفایل‌های نمایشگر و مودال‌ها
@@ -30,7 +32,8 @@ npm run android:verify             # ساختار + امضای v2/v3 با apksig
 | [`STORY.md`](STORY.md) | فیلم‌نامه، شخصیت‌ها، فصل‌ها و پایان‌بندی‌ها |
 | [`DECISIONS.md`](DECISIONS.md) | تصمیم‌های معماری و دلایل فنی |
 | [`PRIVACY.md`](PRIVACY.md) | سیاست حریم خصوصی (گردآوری صفر داده و صفر مجوز شبکه) |
-| [`CREDITS.md`](CREDITS.md) | منبع و مجوز CC0 موسیقی و صدای واقعی آبیاری |
+| [`CREDITS.md`](CREDITS.md) | منابع مستند و وضعیت صریح provenance افکت‌های هنوز تأییدنشده |
+| [`docs/media-provenance.json`](docs/media-provenance.json) | رکورد ساختاریافتهٔ مبدأ، پدیدآور، مجوز، تغییرات و مدرک هر فایل صوتی |
 | [`CHANGELOG.md`](CHANGELOG.md) | تاریخچهٔ کامل نسخه‌ها و تغییرات جاری |
 | [`docs/BALANCE-REPORT.md`](docs/BALANCE-REPORT.md) | گزارش عددی شبیه‌ساز بالانس و نرخ تسویهٔ بدهی |
 | [`docs/KEYSTORE.md`](docs/KEYSTORE.md) | مدیریت امن کلید امضای اندروید بیرون از گیت |

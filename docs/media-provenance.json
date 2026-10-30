@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "path": "public/music/peaceful-forest.mp3",
+      "status": "documented",
+      "title": "Peaceful Forest",
+      "author": "Samza",
+      "source": "https://opengameart.org/content/peaceful-forest",
+      "license": "CC0-1.0",
+      "changes": "Gentle normalization, short fade-in, stereo 96kbps MP3.",
+      "evidence": "https://opengameart.org/content/peaceful-forest"
+    },
+    {
+      "path": "public/music/ch2.mp3",
+      "status": "documented",
+      "title": "Countryside",
+      "author": "TAD",
+      "source": "https://opengameart.org/content/lofi-compilation",
+      "license": "CC0-1.0",
+      "changes": "Source Countryside_0.mp3; trimmed to 92 seconds, mono 32kbps, soft fade.",
+      "evidence": "https://opengameart.org/content/lofi-compilation"
+    },
+    {
+      "path": "public/music/ch3.mp3",
+      "status": "documented",
+      "title": "Feel good slow ambient track with a beat",
+      "author": "annandistance",
+      "source": "https://opengameart.org/content/feel-good-slow-ambient-track-with-a-beat",
+      "license": "CC0-1.0",
+      "changes": "Source ambienttrack_1.ogg; trimmed to 114 seconds, mono 32kbps MP3, soft fade.",
+      "evidence": "https://opengameart.org/content/feel-good-slow-ambient-track-with-a-beat"
+    },
+    {
+      "path": "public/music/ch4.mp3",
+      "status": "documented",
+      "title": "Florist",
+      "author": "TAD",
+      "source": "https://opengameart.org/content/lofi-compilation",
+      "license": "CC0-1.0",
+      "changes": "Source Florist_0.mp3; trimmed to 113 seconds, mono 32kbps, soft fade.",
+      "evidence": "https://opengameart.org/content/lofi-compilation"
+    },
+    {
+      "path": "public/music/ch5.mp3",
+      "status": "documented",
+      "title": "A cup of tea",
+      "author": "TAD",
+      "source": "https://opengameart.org/content/lofi-compilation",
+      "license": "CC0-1.0",
+      "changes": "Source A cup of tea_0.mp3; trimmed to 140 seconds, mono 32kbps, soft fade.",
+      "evidence": "https://opengameart.org/content/lofi-compilation"
+    },
+    {
+      "path": "public/music/ch6.mp3",
+      "status": "documented",
+      "title": "Town Theme (RPG)",
+      "author": "cynicmusic",
+      "source": "https://opengameart.org/content/town-theme-rpg",
+      "license": "CC0-1.0; attribution requested by author: cynicmusic.com / pixelsphere.org",
+      "changes": "Trimmed to 97 seconds, mono 32kbps, soft fade.",
+      "evidence": "https://opengameart.org/content/town-theme-rpg"
+    },
+    {
+      "path": "public/music/ch7.mp3",
+      "status": "documented",
+      "title": "Forest Ambience",
+      "author": "TinyWorlds",
+      "source": "https://opengameart.org/content/forest-ambience",
+      "license": "CC0-1.0",
+      "changes": "Three seamless loop repetitions, approximately 134 seconds, mono 24kbps.",
+      "evidence": "https://opengameart.org/content/forest-ambience"
+    },
+    {
+      "path": "src/assets/sfx/water.mp3",
+      "status": "documented",
+      "title": "Watering with a Watering Can.mp3",
+      "author": "Bricklover",
+      "source": "https://freesound.org/s/532890/",
+      "license": "CC0-1.0",
+      "changes": "Selected a 2.5-second watering segment, mono conversion, gentle normalization, short fades and compression.",
+      "evidence": "https://freesound.org/s/532890/ and https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    { "path": "src/assets/sfx/boop.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/buy.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/cluck.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/coin.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/dig.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/err.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/fanfare.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/guitar.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/nibble.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/pad.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/paper.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/pop.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/splash.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/step.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null },
+    { "path": "src/assets/sfx/tap.mp3", "status": "unverified", "title": null, "author": null, "source": null, "license": null, "changes": null, "evidence": null }
+  ]
+}

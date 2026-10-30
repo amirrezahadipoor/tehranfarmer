@@ -1,33 +1,29 @@
-// ===== آموزش تعاملی روز اول (U-4) — بدون هیچ متنی: بازیکن با «انجامِ اجباری» یاد می‌گیرد =====
-// قواعد طراحی: فقط بعد از پایان صحنهٔ داستان (interference صفر)، هیچ نوشته‌ای نشان نمی‌دهد،
-// فقط کرت هدف با ابزار درست کار می‌کند (بقیه ضربه‌ها صدای خطا می‌دهند) و دکمهٔ بستن همیشه ردِ آموزش است.
+// ===== آموزش تعاملی روز اول: کرت، فروش، دفترکل و استراحت =====
+// همان مسیر در مرورگر کاربر و Playwright اجرا می‌شود؛ هیچ شاخهٔ navigator.webdriver وجود ندارد.
 import { S, UI, notify, saveGame, type Plot, type Tool } from './state';
 import { sfx } from './sound';
 
-/** کرت آموزشی: اولین کرتِ همیشه-بازِ مزرعهٔ اصلی */
 export const TUT_PLOT = 0;
+export const TUT_STEP_COUNT = 7;
 const STEP_TOOLS = ['till', 'plant', 'water', 'hand'] as const;
-
-/** در محیط خودکار (پلی‌رایت/CI/تست بصری) آموزش هرگز شروع نمی‌شود تا جریان‌های خودکار بی‌تغییر بمانند */
-const autoEnv = () => typeof navigator !== 'undefined' && Boolean(navigator.webdriver);
 const storyQuiet = () => !S.story.pending;
+const running = () => Boolean(S.tut && S.tut.active && !S.tut.done && storyQuiet() && UI.started && S.day === 1 && !S.story.postgame);
 
+/** Overlay remains available for the sale/ledger/rest legs; farm gating is only steps 0–3. */
 export function tutActive(): boolean {
   const t = S.tut;
-  return Boolean(t && t.active && !t.done && !autoEnv() && storyQuiet() && !UI.modal && UI.scene === 'farm' && UI.started);
+  if (!t || !running() || S.day !== 1 || S.story.postgame || UI.modal) return false;
+  return t.step >= 4 || UI.scene === 'farm';
 }
-export const tutStep = (): number => S.tut?.step ?? 4;
+export const tutStep = (): number => S.tut?.step ?? TUT_STEP_COUNT;
 export function tutExpectedTool(): Tool { return STEP_TOOLS[Math.min(3, tutStep())]; }
 
-/** ضربه روی زمین فقط برای کرت هدف با ابزارِ همان گام مجاز است */
 export function tutTapOk(i: number): boolean {
-  if (!tutActive()) return true;
+  if (!tutActive() || tutStep() >= 4) return true;
   return i === TUT_PLOT && UI.tool === tutExpectedTool();
 }
-
-/** در حین آموزش انتخاب ابزارِ دیگر ممکن نیست (فیدبک صوتی، بدون متن) */
-export const tutToolBlocked = (k: string): boolean => tutActive() && k !== tutExpectedTool();
-export const tutToolHi = (k: string): boolean => tutActive() && k === tutExpectedTool();
+export const tutToolBlocked = (k: string): boolean => tutActive() && tutStep() < 4 && k !== tutExpectedTool();
+export const tutToolHi = (k: string): boolean => tutActive() && tutStep() < 4 && k === tutExpectedTool();
 
 function stepDone(step: number, p: Plot): boolean {
   if (step === 0) return p.st !== 0;
@@ -36,11 +32,10 @@ function stepDone(step: number, p: Plot): boolean {
   return false;
 }
 
-/** شروع خودکار فقط برای تازه‌وارد روز اول؛ سیوهای کهنه (tut ندارند) هرگز آموزش نمی‌بینند */
 export function tutMaybeStart(): void {
   const t = S.tut;
-  if (!t || t.done || t.active || autoEnv()) return;
-  if (S.day !== 1 || !UI.started || UI.modal || UI.scene !== 'farm' || !storyQuiet()) return;
+  if (!t || t.done || t.active) return;
+  if (S.day !== 1 || S.story.postgame || !UI.started || UI.modal || UI.scene !== 'farm' || !storyQuiet()) return;
   t.active = true;
   t.step = 0;
   syncTut();
@@ -48,14 +43,16 @@ export function tutMaybeStart(): void {
   notify();
 }
 
-/** همگام‌سازی گام: ابزار درست + سینی بذر + آماده‌سازی برداشتِ فوریِ کرت آموزشی */
 export function syncTut(): void {
   if (!tutActive()) return;
   const t = S.tut!;
   const p = S.plots[TUT_PLOT];
-  while (t.step < 3 && stepDone(t.step, p)) t.step++; // اگر بازیکن بخشی را از قبل کرده باشد، گام‌ها جلو می‌روند
+  while (t.step < 3 && stepDone(t.step, p)) t.step++;
+  if (t.step >= 4) {
+    if (UI.seedTray) UI.seedTray = false;
+    return;
+  }
   if (t.step === 1) UI.seed = 'wheat';
-  // یادگیری کامل حلقه در یک دقیقه: کرت آموزشیِ آبیاری‌شده بلافاصله می‌رسد تا «برداشت» همان روز تمرین شود
   if (t.step === 3 && p.st === 2 && p.crop && !p.ripe && !p.dead) { p.prog = 1; p.ripe = true; p.dry = 0; p.water = 1; }
   const tray = t.step === 1;
   const tool = tutExpectedTool();
@@ -63,16 +60,20 @@ export function syncTut(): void {
   if (UI.tool !== tool) { UI.tool = tool; UI.info = null; notify(); }
 }
 
-/** فراخوانی پس از ثبتِ موفقِ یک عمل آموزشی؛ گام بعد یا پایان آموزش */
+function persistStep(step: number): void {
+  const t = S.tut;
+  if (!t) return;
+  t.step = step;
+  saveGame();
+  notify();
+}
+
 export function tutOnPlotAction(i: number): void {
-  if (!tutActive() || i !== TUT_PLOT || UI.tool !== tutExpectedTool()) return;
+  if (!tutActive() || tutStep() >= 4 || i !== TUT_PLOT || UI.tool !== tutExpectedTool()) return;
   const t = S.tut!;
   if (t.step >= 3) {
-    t.done = true;
-    t.active = false;
+    persistStep(4);
     sfx.coin();
-    saveGame();
-    notify();
     return;
   }
   t.step++;
@@ -81,12 +82,38 @@ export function tutOnPlotAction(i: number): void {
   notify();
 }
 
-/** رد کردن آموزش با دکمهٔ بستن — هر زمان که بازیکن بخواهد */
+export function tutOnSale(): void {
+  if (!running() || tutStep() !== 4) return;
+  persistStep(5);
+  sfx.tap();
+}
+
+export function tutOnLedger(): void {
+  if (!running() || tutStep() !== 5) return;
+  persistStep(6);
+  sfx.tap();
+}
+
+/** Sleeping finishes the seventh step, or cleanly ends an unfinished first-day tutorial. */
+export function tutOnSleep(): void {
+  if (!running()) return;
+  const t = S.tut!;
+  if (t.step === 6) sfx.coin();
+  t.step = TUT_STEP_COUNT;
+  t.done = true;
+  t.active = false;
+  saveGame();
+  notify();
+}
+
 export function tutSkip(): void {
   const t = S.tut;
   if (!t || t.done) return;
   t.done = true;
   t.active = false;
+  UI.tool = 'hand';
+  UI.seedTray = false;
+  UI.info = null;
   sfx.tap();
   saveGame();
   notify();

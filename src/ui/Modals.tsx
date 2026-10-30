@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  ACHS, CROPS, CROP, FEED_PRICE, FINGER_PRICE, GOOD, GOODS, HIVE_MAX,
+  ACHS, ACH_OUTFIT_REWARDS, CROPS, CROP, FEED_PRICE, FINGER_PRICE, GOOD, GOODS, HIVE_MAX,
   FERT_PRICE, HONEY_CAP_PER_HIVE, MACHINES, MACHINE_LIST, MK_FA, POND_GROW_DAYS, POND_MAX, STAM_CAP,
   DAY_RATE, fa, machineMkLv,
   type MachineId,
@@ -8,7 +8,7 @@ import {
 import {
   S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract,
   effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
-  isNight, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond, holdCount,
+  isNight, OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond, holdCount,
 } from '../game/state';
 import { sfx } from '../game/sound';
 import { Bar, Coin, Ic, Modal, Trend, useDialogFocus } from './parts';
@@ -33,6 +33,7 @@ import { FT } from '../strings/frontierText';
 import { bestEstateForCrop, estateGrowthRate } from '../game/estates';
 import { offerContractBoard, signBoardContract } from '../story/socialVillagers';
 import { WX } from '../strings/worldExpansionText';
+import { tutOnSale, tutOnSleep } from '../game/tutorial';
 import { SettingsPanel } from './SettingsPanel';
 import { CFG, setShortBeat, updateSetting } from '../game/settings';
 import { APP_VERSION, CHANGELOG, formatVersion } from '../strings/version';
@@ -223,7 +224,7 @@ function Market() {
           ))}
         </div>
       </div>
-      <button className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { sellAll(); }}>
+      <button data-market-sell-all="1" className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { if (sellAll() > 0) tutOnSale(); }}>
         <Ic n="cart" s={2.4} /><span className="ft text-xl">{UT.u85}</span><Coin v={total} s={1.8} cls="text-xl" />
       </button>
       <div className="paper mb-2 flex flex-wrap items-center gap-1.5 px-2.5 py-1 text-xs font-extrabold" data-market-hot="1">
@@ -251,8 +252,8 @@ function Market() {
               {offSeason && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.66rem] font-black text-amber-900">{UT.outSeasonBonus}</span>}
               <div className="flex items-center gap-2"><Coin v={goodPrice(g.id)} s={1.4} cls="text-base" /><Trend r={goodRatio(g.id)} /></div>
               <div className="flex w-full flex-wrap gap-1">
-                <button className="btn y press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => sellGood(g.id, 1)}><span className="font-black">{UT.u77}</span><Ic n="coin" s={1.1} /></button>
-                <button className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => sellGood(g.id, q)}><span className="font-black">{UT.sellAllStack}</span><Ic n="coin" s={1.1} /></button>
+                <button data-sell-one={g.id} className="btn y press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, 1) > 0) tutOnSale(); }}><span className="font-black">{UT.u77}</span><Ic n="coin" s={1.1} /></button>
+                <button className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, q) > 0) tutOnSale(); }}><span className="font-black">{UT.sellAllStack}</span><Ic n="coin" s={1.1} /></button>
               </div>
             </div>
           );
@@ -514,6 +515,7 @@ function Achievements() {
           const allDone = claimed >= a.tiers.length;
           const tier = a.tiers[Math.min(claimed, a.tiers.length - 1)];
           const value = achStatValue(a);
+          const cosmetic = ACH_OUTFIT_REWARDS.find((r) => r.ach === a.id && r.tier === claimed);
           return (
             <div key={a.id} className={'paper flex flex-col items-center gap-1 p-2 ' + (allDone ? 'ring-2 ring-[#d99a1a]' : '')}>
               <Ic n={a.icon} s={4} cls={allDone ? '' : claimed === 0 ? 'grayscale opacity-80' : ''} />
@@ -530,6 +532,7 @@ function Achievements() {
                     <span>{fa(Math.min(value, tier.n))}/{fa(tier.n)}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[.7rem] font-bold opacity-75">{UT.u132}<Coin v={tier.reward} s={1.1} /></div>
+                  {cosmetic && <div className="flex items-center gap-1 text-xs font-black text-purple-800" data-achievement-outfit={cosmetic.outfit}><Ic n="star" s={1.2} />{OUTFIT_THEMES[cosmetic.outfit]?.name}</div>}
                 </>
               )}
             </div>
@@ -558,7 +561,7 @@ function Menu() {
           <Ic n="note" s={4.5} /><span className="ft text-xl">{UT.alwaysShort}</span>
           <span className="text-xs font-black">{CFG.shortBeat ? UT.shortOn : UT.shortOff}</span>
         </button>
-        <button className="btn b press flex-col !p-3" onClick={() => { sleepToMorning(); sfx.buy(); close(); }}>
+        <button className="btn b press flex-col !p-3" onClick={() => { tutOnSleep(); sleepToMorning(); sfx.buy(); close(); }}>
           <Ic n="moon" s={4.5} /><span className="ft text-xl">{isNight() ? UT.u33 : UT.restAnytime}</span>
           <span className="text-xs font-black">{isNight() ? UT.u137 : UT.restSub}</span>
         </button>

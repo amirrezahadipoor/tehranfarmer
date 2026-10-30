@@ -23,7 +23,7 @@ async function runAxe(page: import('@playwright/test').Page): Promise<Violation[
 }
 
 test.describe('Real-user accessibility, tutorial and portrait regression gates', () => {
-  test.use({ bypassCSP: true });
+  test.use({ bypassCSP: true, hasTouch: true });
 
   test('all 23 dialogs pass WCAG A/AA automated checks and keep keyboard focus contained', async ({ page }) => {
     test.setTimeout(90_000);
@@ -196,11 +196,10 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await expect(hold).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('real first-day tutorial completes till, plant, water and harvest without dev API shortcuts', async ({ page }) => {
-    test.setTimeout(60_000);
+  test('real first-day tutorial completes farm, sale, ledger and rest without dev API shortcuts', async ({ page }) => {
+    test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true }));
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
     await page.locator('button').first().click();
@@ -216,19 +215,51 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
       await page.waitForTimeout(2800);
     }
     await page.locator('canvas').click({ position: { x: 478, y: 282 } });
-    await expect(page.locator('[data-tutorial="1"]')).toHaveCount(0);
+    await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '4');
     await page.waitForTimeout(2800);
 
-    await page.locator('[data-open-settings="1"]').click();
-    await page.getByRole('button', { name: 'ذخیره', exact: true }).click();
+    // Sell one harvested wheat through the actual town and market controls.
+    await page.locator('[data-nav="town"]').click();
+    const townSkip = page.locator('button:has-text("رد کردن صحنه")');
+    await expect(townSkip).toBeVisible({ timeout: 5000 });
+    await townSkip.click();
+    await expect(page.locator('[data-tap="cutscene"]')).toHaveCount(0);
+    await page.locator('canvas').click({ position: { x: 350, y: 300 } });
+    const marketSkip = page.locator('button:has-text("رد کردن صحنه")');
+    await expect(marketSkip).toBeVisible({ timeout: 5000 });
+    await marketSkip.click();
+    await expect(page.locator('[data-tap="cutscene"]')).toHaveCount(0);
+    await expect(page.locator('[data-sell-one="wheat"]')).toBeVisible({ timeout: 15_000 });
+    await page.locator('[data-sell-one="wheat"]').click();
+    await page.getByRole('button', { name: 'بستن پنجره' }).click();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '5');
+
+    await page.locator('[data-open-ledger="1"]').click();
+    await expect(page.locator('[role="dialog"]')).toBeVisible();
+    await page.getByRole('button', { name: 'بستن پنجره' }).click();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '6');
+
+    await page.locator('[data-nav="farm"]').click();
+    await expect(page.locator('[data-nav="farm"]')).toBeDisabled();
+    await page.locator('canvas').click({ position: { x: 190, y: 180 } });
+    const sleep = page.locator('[data-home-sleep="1"]');
+    await expect(sleep).toBeVisible({ timeout: 15_000 });
+    expect(await page.locator('[data-modal-scroll="1"]').evaluate((el) => el.scrollTop)).toBe(0);
+    const sleepBox = await sleep.boundingBox();
+    expect(sleepBox!.y).toBeGreaterThanOrEqual(0);
+    expect(sleepBox!.y + sleepBox!.height).toBeLessThanOrEqual(720);
+    await sleep.click();
+    await expect(page.locator('[data-tutorial="1"]')).toHaveCount(0);
+
     const result = await page.evaluate(() => {
       const raw = localStorage.getItem('mazrae-rangi-save-v1');
       const save = raw ? JSON.parse(raw) : null;
-      return { tut: save?.tut, wheat: save?.pack?.wheat ?? 0, harvests: save?.stats?.harv ?? 0 };
+      return { tut: save?.tut, earned: save?.earned ?? 0, harvests: save?.stats?.harv ?? 0, day: save?.day };
     });
     expect(result.tut?.done).toBe(true);
-    expect(result.wheat).toBeGreaterThan(0);
+    expect(result.earned).toBeGreaterThan(0);
     expect(result.harvests).toBeGreaterThan(0);
+    expect(result.day).toBe(2);
     expect(errors).toEqual([]);
   });
 
@@ -277,6 +308,87 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     expect(choiceSeen).toBe(true);
   });
 
+  test('640x360 touch keeps farmhouse rest and comedic inventory details immediately usable', async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 640, height: 360 });
+    await page.goto('/');
+    await page.locator('button').first().click();
+    await page.locator('button:has-text("رد کردن صحنه")').click();
+    const tutorialSkip = page.getByRole('button', { name: 'رد کردن آموزش' });
+    if (await tutorialSkip.isVisible()) await tutorialSkip.click();
+
+    // Actual canvas touch on the farmhouse, not a dev modal shortcut.
+    await page.locator('canvas').tap({ position: { x: 70, y: 90 } });
+    const sleep = page.locator('[data-home-sleep="1"]');
+    await expect(sleep).toBeVisible({ timeout: 15_000 });
+    expect(await page.locator('[data-modal-scroll="1"]').evaluate((el) => el.scrollTop)).toBe(0);
+    const sleepBox = await sleep.boundingBox();
+    expect(sleepBox!.y).toBeGreaterThanOrEqual(0);
+    expect(sleepBox!.y + sleepBox!.height).toBeLessThanOrEqual(360);
+    await page.getByRole('button', { name: 'بستن پنجره' }).tap();
+
+    await page.locator('[data-open-inventory="1"]').tap();
+    const seed = page.locator('[data-inventory-item="barn|seed|wheat"]');
+    await expect(seed).toBeVisible();
+    await seed.tap();
+    const details = page.locator('[data-inventory-details="seed"]');
+    await expect(details).toBeVisible();
+    await expect(details).toContainText('تشویقِ احساسی');
+    const detailBox = await details.boundingBox();
+    expect(detailBox!.y).toBeGreaterThanOrEqual(0);
+    expect(detailBox!.y + detailBox!.height).toBeLessThanOrEqual(360);
+    await expect(page.locator('[data-modal-actions] [data-pack-to-barn="1"]')).toBeVisible();
+    await expect(page.locator('[data-artisan-kitchen="1"]')).toBeAttached();
+
+    const minFont = await page.locator('[role="dialog"]').evaluate((root) => {
+      let min = Infinity;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!node.textContent?.trim()) continue;
+        const el = node.parentElement;
+        if (!el) continue;
+        const style = getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') continue;
+        min = Math.min(min, Number.parseFloat(style.fontSize));
+      }
+      return min;
+    });
+    expect(minFont).toBeGreaterThanOrEqual(12.9);
+  });
+
+  test('all seven backpack tiers really render on canvas, including the frontier renderer', async ({ page }) => {
+    await page.addInitScript(() => {
+      const hits: Record<string, number> = {};
+      (window as unknown as { __bagHits: Record<string, number> }).__bagHits = hits;
+      const original = CanvasRenderingContext2D.prototype.fill;
+      CanvasRenderingContext2D.prototype.fill = function (...args) {
+        const color = String(this.fillStyle);
+        if (color.startsWith('#')) hits[color] = (hits[color] ?? 0) + 1;
+        return Reflect.apply(original, this, args);
+      };
+    });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto('/');
+    await page.locator('button').first().click();
+    await page.locator('button:has-text("رد کردن صحنه")').click();
+    const tutorialSkip = page.getByRole('button', { name: 'رد کردن آموزش' });
+    if (await tutorialSkip.isVisible()) await tutorialSkip.click();
+    const colors = ['#b8793f', '#9a6237', '#6f9448', '#3f86ad', '#277d82', '#815ea6', '#9a6a2f'];
+    for (let lv = 0; lv < colors.length; lv++) {
+      const color = colors[lv]!;
+      await page.evaluate(({ lv, color }) => {
+        (window as unknown as { __gameApi: { setEnv: (p: { bag: number }) => void } }).__gameApi.setEnv({ bag: lv });
+        (window as unknown as { __bagHits: Record<string, number> }).__bagHits[color] = 0;
+      }, { lv, color });
+      await expect.poll(() => page.evaluate((c) => (window as unknown as { __bagHits: Record<string, number> }).__bagHits[c] ?? 0, color)).toBeGreaterThan(0);
+    }
+    await page.evaluate(() => {
+      (window as unknown as { __gameApi: { setEnv: (p: { scene: string }) => void } }).__gameApi.setEnv({ scene: 'cave' });
+      (window as unknown as { __bagHits: Record<string, number> }).__bagHits['#9a6a2f'] = 0;
+    });
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __bagHits: Record<string, number> }).__bagHits['#9a6a2f'] ?? 0)).toBeGreaterThan(0);
+  });
+
   test('portrait gate leads to a usable portrait game, not merely a rotate screenshot', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
@@ -291,15 +403,27 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await portraitContinue.click();
     await expect(portraitContinue).toHaveCount(0);
     await page.waitForTimeout(4400);
+    const tutorialSkip = page.getByRole('button', { name: 'رد کردن آموزش' });
+    if (await tutorialSkip.isVisible()) await tutorialSkip.click();
+    await expect(page.locator('[data-world-nav="compact"]')).toBeVisible();
+    await expect(page.locator('[data-world-nav="desktop"]')).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+    await page.screenshot({ path: testInfo.outputPath('portrait-after-ack.png') });
+
+    // Every destination remains reachable through the real Atlas, without eight cramped nav buttons.
+    await page.locator('[data-mobile-atlas="1"]').click();
+    await expect(page.locator('[data-atlas-modal="1"]')).toBeVisible();
     for (const nav of ['farm', 'north', 'valley', 'town', 'river', 'cave', 'apiary', 'forest']) {
-      const box = await page.locator(`[data-nav="${nav}"]`).boundingBox();
+      const box = await page.locator(`[data-atlas-go="${nav}"]`).boundingBox();
       expect(box, nav).not.toBeNull();
       expect(box!.x).toBeGreaterThanOrEqual(-1);
       expect(box!.x + box!.width).toBeLessThanOrEqual(391);
+      expect(box!.y).toBeGreaterThanOrEqual(0);
       expect(box!.y + box!.height).toBeLessThanOrEqual(845);
     }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
-    await page.screenshot({ path: testInfo.outputPath('portrait-after-ack.png') });
+    await page.locator('[data-atlas-go="town"]').click();
+    await expect(page.locator('[data-atlas-modal="1"]')).toHaveCount(0);
+    await expect(page.locator('[data-nav="town"]')).toBeDisabled();
     await page.locator('[data-open-settings="1"]').click();
     const dialog = page.locator('[role="dialog"]').first();
     await expect(dialog).toBeVisible();

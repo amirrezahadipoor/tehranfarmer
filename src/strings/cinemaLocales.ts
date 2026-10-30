@@ -149,7 +149,7 @@ export const EN_LINES: Record<string, string[]> = {
     'Easy now—nobody pays all at once. I am fair; even this soft foam club is named "Gentle," strictly for friendly reminders!',
   ],
   p6: [
-    'The whole debt is split into six separate deeds—one per chapter—and the first one is very light.',
+    'The debt is split into six separate deeds; settle one each chapter. The ledger always stays at the top of your screen.',
     'Behave and your credit rises; fall behind and I will visit your farm myself with "Gentle"!',
     'What happens if I come up short at month end?',
     'One harmless boop from "Gentle," part of your pocket cash credited toward the debt, plus a small late fee!',

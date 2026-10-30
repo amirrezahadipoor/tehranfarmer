@@ -1,7 +1,7 @@
 import { TW, TH, cached, cropPart, ell, iconPart, ln, put, rng, shape, type Ctx } from './art';
 import { ANIMALS, COLS, ROWS, ghCovers, isUnlocked, type AnimalKind, type CropId } from './data';
 import { drawAnimal, drawFarmer, poseFarmer, type AnimalRig, type FarmerRig } from './rig';
-import { drawBackpack } from './backpackArt';
+import { drawBackpack, drawBackpackFront } from './backpackArt';
 import { drawThirstLeft } from './thirstWarn';
 import { FIELD_X, FIELD_Y, HIVE_SLOTS, OX, OY, PLOT_DX, PLOT_DY, RIVER_SPOTS, BW, BH, getSceneSource } from './scenes';
 import { S, UI, season, unreadMailCount } from './state';
@@ -440,7 +440,7 @@ export function createSceneRenderer(
         },
       });
     }
-    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); } });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.72); } });
     workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) }); });
     if (bph !== 'off') list.push({ y: builder.y, f: () => drawFarmer(ctx, builder.rig, builder.x, builder.y, builder.face, 0.72) });
     for (const a of animals.values()) {
@@ -509,7 +509,7 @@ export function createSceneRenderer(
       put(ctx, iconPart('fish'), sp.x + 36, sp.y + 12 + Math.sin(t * 2.4 + sp.x) * 3.5, 0.46);
     });
     const list: Dr[] = [];
-    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.75); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75); } });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.75); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.75); } });
     workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.75) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
@@ -539,7 +539,7 @@ export function createSceneRenderer(
       put(ctx, iconPart('honey'), sp.x + 42, sp.y - 38 + Math.sin(t * 3) * 2.5, 0.72);
     }
     const list: Dr[] = [];
-    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.74); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.74); } });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.74); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.74); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.74); } });
     workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.74) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
@@ -577,7 +577,7 @@ export function createSceneRenderer(
     }
     if (!cinema.active) poseFarmer(jahangir.rig, { mode: 'idle', ph: t * 0.8, t, kind: '', p: 0 });
     const list: Dr[] = [];
-    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.76); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.76); } });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.76); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.76); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.76); } });
     if (!cinema.active || isActorStagedInScene('jahangir')) {
       list.push({ y: jahangir.y, f: () => drawFarmer(ctx, jahangir.rig, jahangir.x, jahangir.y, jahangir.face, 0.78) });
     }

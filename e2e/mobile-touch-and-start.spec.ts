@@ -118,6 +118,14 @@ test.describe('تناسب کامل صفحهٔ اصلی موبایل و تضمی�
     await rawAndroidTap(skipBox!.x + skipBox!.width / 2, skipBox!.y + skipBox!.height / 2);
     await expect(page.locator('[data-scene-id]')).toHaveCount(0);
 
+    // Production no longer disables the tutorial for webdriver; this test targets
+    // the plot inspector, so bypass onboarding explicitly through the same raw touch path.
+    const tutSkip = page.getByRole('button', { name: 'رد کردن آموزش' });
+    await expect(tutSkip).toBeVisible();
+    const tutSkipBox = await tutSkip.boundingBox();
+    await rawAndroidTap(tutSkipBox!.x + tutSkipBox!.width / 2, tutSkipBox!.y + tutSkipBox!.height / 2, 4);
+    await expect(page.locator('[data-tutorial="1"]')).toHaveCount(0);
+
     // ۳) ضربهٔ خالص اندروید روی بوم مزرعه (کرت #0) -> باز شدن پنجرهٔ بازرس «خاک خام»!
     await rawAndroidTap(111.5 + 448 * 0.5, 290 * 0.5, 4);
     await expect(page.locator('button:has-text("شخم بزن")')).toBeVisible();

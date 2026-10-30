@@ -354,6 +354,20 @@ export const UT_FA = {
   uSrcPack: "کوله",
   uSrcBarn: "انبار",
   uSrcBoth: "هر دو",
+  invSelectHint: "یک آیتم را انتخاب کن تا ارزش و کاربردش را ببینی.",
+  invTotal: "مجموع انبار و کوله",
+  invUnitPrice: "ارزش فروش هر عدد",
+  invUsedIn: "مصرف در فرآوری",
+  invNoRecipe: "برای فروش، هدیه یا مصرف مستقیم؛ دستور فرآوری ندارد.",
+  invGrowthDays: "روز رشد",
+  invSeasons: "فصل کاشت",
+  invFertDetail: "برای کوددهی کرت‌ها و افزایش عملکرد برداشت.",
+  tutSell: "فروش در بازار",
+  tutSellHint: "از مسیر راست به شهر برو و در بازار یک محصول بفروش.",
+  tutLedger: "باز کردن دفترکل",
+  tutLedgerHint: "روی کارت سند و بدهی بالای صفحه بزن تا دفترکل باز شود.",
+  tutSleep: "استراحت تا فردا",
+  tutSleepHint: "در خانه دکمهٔ «استراحت تا فردا صبح» را بزن؛ بدون اسکرول همیشه دیده می‌شود.",
 } as const;
 
 export const UT: Record<keyof typeof UT_FA, string> = new Proxy(UT_FA as Record<keyof typeof UT_FA, string>, {

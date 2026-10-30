@@ -14,6 +14,7 @@ import { Bar, Coin, Ic, Modal } from './parts';
 import { close } from './shopKit';
 import { sfx } from '../game/sound';
 import { UT } from '../strings/uiText';
+import { tutOnLedger } from '../game/tutorial';
 
 const money = (n: number) => fa(Math.max(0, Math.round(n)));
 
@@ -25,7 +26,7 @@ export function Ledger() {
   const cap = stashCap();
   const due = daysToDue();
   // واکنش جهانگیر (فقط یک‌بار هر وضعیت) به محض باز شدن دفتر
-  useEffect(() => { maybeReactionScene(); }, []);
+  useEffect(() => { tutOnLedger(); maybeReactionScene(); }, []);
 
   return (
     <Modal title={UT.u36} icon="ledger" onClose={close} coins={<Coin v={S.coins} />}>

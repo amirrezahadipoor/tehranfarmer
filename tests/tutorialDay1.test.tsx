@@ -1,10 +1,10 @@
-// ===== آموزش تعاملی روز اول (U-4): بدون متن، اجبارِ انجام، بدون تداخل با داستان، قابل رد شدن =====
+// ===== آموزش روز اول: چهار گام عملی و سپس فروش/دفتر/خواب، بدون تداخل با داستان =====
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { installDom } from './helpers/dom';
 import { S, UI, resetGame } from '../src/game/state';
 import {
-  TUT_PLOT, syncTut, tutActive, tutExpectedTool, tutMaybeStart, tutOnPlotAction, tutSkip, tutStep, tutTapOk, tutToolBlocked, tutToolHi,
+  TUT_PLOT, syncTut, tutActive, tutExpectedTool, tutMaybeStart, tutOnLedger, tutOnPlotAction, tutOnSale, tutOnSleep, tutSkip, tutStep, tutTapOk, tutToolBlocked, tutToolHi,
 } from '../src/game/tutorial';
 import { TutorialOverlay } from '../src/ui/TutorialOverlay';
 
@@ -20,7 +20,7 @@ beforeEach(() => {
   S.story.pending = null;
 });
 
-describe('آموزش تعاملی روز اول — یادگیری با اجبار، بدون یک کلمه', () => {
+describe('آموزش تعاملی روز اول — عمل روی کرت و راهنمای اختیاری ادامهٔ مسیر', () => {
   it('شروع خودکار: ابزارِ گامِ اول انتخاب می‌شود و فقط کرت هدف با ابزار درست باز است', () => {
     tutMaybeStart();
     expect(tutActive()).toBe(true);
@@ -41,7 +41,7 @@ describe('آموزش تعاملی روز اول — یادگیری با اجبا
     expect(tutToolHi('plant')).toBe(false);
   });
 
-  it('گام‌به‌گام تا پایان: شخم، کاشت، آبیاری، برداشت — بدون رد شدنِ آموزش', () => {
+  it('گام‌به‌گام تا پایان: شخم، کاشت، آبیاری، برداشت، فروش، دفتر و استراحت', () => {
     tutMaybeStart();
     expect(UI.seedTray).toBe(false);
 
@@ -76,6 +76,15 @@ describe('آموزش تعاملی روز اول — یادگیری با اجبا
     expect(S.plots[TUT_PLOT].prog).toBe(1);
 
     tutOnPlotAction(TUT_PLOT); // برداشت
+    expect(tutStep()).toBe(4);
+    expect(S.tut!.done).toBe(false);
+    expect(S.tut!.active).toBe(true);
+
+    tutOnSale();
+    expect(tutStep()).toBe(5);
+    tutOnLedger();
+    expect(tutStep()).toBe(6);
+    tutOnSleep();
     expect(S.tut!.done).toBe(true);
     expect(S.tut!.active).toBe(false);
     expect(tutActive()).toBe(false);
@@ -115,6 +124,16 @@ describe('آموزش تعاملی روز اول — یادگیری با اجبا
     expect(S.tut!.active).toBe(false);
   });
 
+  it('در postgame نه شروع می‌شود و نه گام پنهانی جلو می‌رود', () => {
+    S.story.postgame = true;
+    tutMaybeStart();
+    expect(S.tut!.active).toBe(false);
+    S.tut = { step: 4, active: true, done: false };
+    tutOnSale();
+    expect(tutStep()).toBe(4);
+    expect(tutActive()).toBe(false);
+  });
+
   it('سیوی قدیمی (بدون فیلد tut) هرگز آموزش نمی‌بیند', () => {
     S.tut = undefined;
     tutMaybeStart();
@@ -122,15 +141,15 @@ describe('آموزش تعاملی روز اول — یادگیری با اجبا
     expect(tutActive()).toBe(false);
   });
 
-  it('در محیط خودکار (پلی‌رایت/CI) آموزش شروع نمی‌شود', () => {
+  it('در Playwright هم همان آموزش واقعی کاربر شروع می‌شود', () => {
     const g = globalThis as { navigator?: unknown };
     const orig = Object.getOwnPropertyDescriptor(g, 'navigator');
     Object.defineProperty(g, 'navigator', { value: { webdriver: true }, configurable: true, writable: true });
     try {
       S.tut = { step: 0, active: false, done: false };
       tutMaybeStart();
-      expect(S.tut.active).toBe(false);
-      expect(tutActive()).toBe(false);
+      expect(S.tut.active).toBe(true);
+      expect(tutActive()).toBe(true);
     } finally {
       if (orig) Object.defineProperty(g, 'navigator', orig);
       else delete g.navigator;

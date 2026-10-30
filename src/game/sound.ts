@@ -203,7 +203,7 @@ export const sfx = {
 // ===== موسیقی هر فصل — آثار رایگان CC0 از OpenGameArt (جزئیات در CREDITS.md) =====
 // فصل ۱: Peaceful Forest (Samza) · فصل ۲: Countryside (TAD) · فصل ۳: Feel-good ambient w/ beat (annandistance)
 // فصل ۴: Florist (TAD) · فصل ۵: A cup of tea (TAD) · فصل ۶: Town Theme (cynicmusic) · فصل ۷: Forest Ambience (TinyWorlds)
-// همه فشرده‌سازی شده‌اند (مونو، ۲۴–۳۲kbps، حدود ۹۰ تا ۱۴۰ ثانیه با فِیدِ نرم)
+// فصل ۱ استریو 96kbps است؛ فصل‌های ۲–۷ مونو ۲۴–۳۲kbps و حدود ۹۰ تا ۱۴۰ ثانیه با فِید نرم‌اند.
 const MUSIC_FILES: Record<number, string> = {
   1: 'peaceful-forest.mp3',
   2: 'ch2.mp3',
@@ -213,15 +213,26 @@ const MUSIC_FILES: Record<number, string> = {
   6: 'ch6.mp3',
   7: 'ch7.mp3',
 };
-// در بیلد production هر هفت آهنگ داخل همان bootstrap فشرده‌اند؛ مسیر public فقط
-// برای dev و پشتیبانِ اجرای بدون pack باقی می‌ماند و artifact تک‌فایل به آن نیاز ندارد.
+// در production هر هفت آهنگ در بلوک‌های inert همان HTML‌اند. فقط آهنگ جاری
+// به data URI تبدیل و cache می‌شود؛ bootstrap دیگر هر هفت را با کد بازی باز نمی‌کند.
+const packedMusicUrls = new Map<string, string>();
 const musicUrlFor = (chapter: number) => {
   const file = MUSIC_FILES[chapter] ?? MUSIC_FILES[1];
+  const cached = packedMusicUrls.get(file);
+  if (cached) return cached;
   if (typeof window !== 'undefined') {
     const packed = (window as unknown as { __MUSIC_PACK__?: Record<string, string> }).__MUSIC_PACK__?.[file];
     if (packed) return packed;
   }
   if (typeof document !== 'undefined') {
+    const encoded = typeof document.querySelector === 'function'
+      ? document.querySelector(`script[data-music-pack="${file}"]`)?.textContent?.trim()
+      : undefined;
+    if (encoded) {
+      const url = `data:audio/mpeg;base64,${encoded}`;
+      packedMusicUrls.set(file, url);
+      return url;
+    }
     try {
       return new URL(`music/${file}`, document.baseURI).href;
     } catch {

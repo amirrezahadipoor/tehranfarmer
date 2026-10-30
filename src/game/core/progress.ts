@@ -1,5 +1,5 @@
 // ===== سطح، تجربه، دستاورد و آمار =====
-import { ACHS, ANIMALS, CROPS, HIVE_LV, LEVEL_CAP, MACHINES, POND_LV, fa, lvReward, machineMkLv, xpNeed, type AnimalKind, type MachineId } from '../data';
+import { ACHS, ACH_OUTFIT_REWARDS, ANIMALS, CROPS, HIVE_LV, LEVEL_CAP, MACHINES, POND_LV, fa, lvReward, machineMkLv, xpNeed, type AnimalKind, type MachineId } from '../data';
 import { S, toast } from '../state';
 import { sfx } from '../sound';
 import { GT } from '../../strings/gameText';
@@ -55,7 +55,8 @@ export function checkAch() {
       S.coins += rew;
       S.ach[a.id] = have + 1;
       have++;
-      toast('medal', ((a.fa) + ": +" + (fa(rew)) + GT.g59));
+      const cosmetic = ACH_OUTFIT_REWARDS.find((r) => r.ach === a.id && r.tier === have);
+      toast('medal', ((a.fa) + ": +" + (fa(rew)) + GT.g59 + (cosmetic ? ` · ${GT.achOutfitUnlocked}` : '')));
       sfx.coin();
     }
   }

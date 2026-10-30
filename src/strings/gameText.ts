@@ -233,6 +233,7 @@ export const GT_FA = {
   strawNestEmpty: "هنوز تخم تازه‌ای روی کاه گذاشته نشده",
   noGrazersForFeed: "هنوز گاو یا گوسفند نداری؛ مرغ‌ها بدون علوفه تخم می‌گذارند!",
   workerArrived: "کارگر استخدام شد و خودش مستقیم آمد سر کار!",
+  achOutfitUnlocked: "یک لباس تازه هم در خانه باز شد",
 } as const;
 
 export const GT: Record<keyof typeof GT_FA, string> = new Proxy(GT_FA as Record<keyof typeof GT_FA, string>, {

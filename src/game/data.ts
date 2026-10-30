@@ -329,6 +329,15 @@ export const ACHS: AchDef[] = [
   { id: 'secrets', icon: 'star', fa: GT.achSecrets, stat: 'secrets', tiers: [{ n: 1, reward: 1500 }, { n: 3, reward: 8000 }, { n: 5, reward: 30000 }, { n: 8, reward: 120000 }] },
 ];
 
+// Cosmetic milestones derive their unlock from persistent achievement state (no extra save flag).
+export const ACH_OUTFIT_REWARDS = [
+  { ach: 'plants', tier: 1, outfit: 4 },
+  { ach: 'harv', tier: 1, outfit: 5 },
+  { ach: 'fish', tier: 1, outfit: 6 },
+  { ach: 'chapter', tier: 3, outfit: 7 },
+  { ach: 'secrets', tier: 1, outfit: 8 },
+] as const;
+
 export interface PondS { id: number; stocked: boolean; grow: number; feed: number }
 export interface BuildJob { id: number; kind: BuildKind; key: string; label: string; icon: string; prog: number; dur: number }
 

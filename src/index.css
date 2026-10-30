@@ -53,16 +53,18 @@ button, [role="button"], .btn, [data-tap], select, label { touch-action: manipul
    نوشته شده‌اند؛ سلکتورهای قدیمیِ «0.72rem» با آن‌ها match نمی‌شدند. این مقادیر فقط در
    viewport کوچک اعمال می‌شوند تا pixel-baseline های دسکتاپ کاملاً ثابت بمانند. */
 @media (max-width: 900px), (max-height: 500px) {
-  .text-\[\.58rem\], .text-\[\.6rem\], .text-\[\.62rem\], .text-\[\.64rem\],
+  .text-xs, .text-\[\.58rem\], .text-\[\.6rem\], .text-\[\.62rem\], .text-\[\.64rem\],
   .text-\[\.65rem\], .text-\[\.66rem\], .text-\[\.68rem\], .text-\[\.7rem\],
-  .text-\[\.72rem\], .text-\[\.75rem\], .text-\[0\.72rem\], .text-\[0\.74rem\] {
-    font-size: max(11px, 0.7rem);
-    line-height: 1.25;
+  .text-\[\.72rem\], .text-\[\.75rem\], .text-\[0\.58rem\], .text-\[0\.6rem\],
+  .text-\[0\.62rem\], .text-\[0\.64rem\], .text-\[0\.65rem\], .text-\[0\.66rem\],
+  .text-\[0\.68rem\], .text-\[0\.7rem\], .text-\[0\.72rem\], .text-\[0\.74rem\], .text-\[0\.75rem\] {
+    font-size: max(13px, 0.75rem);
+    line-height: 1.3;
   }
-  .text-\[\.78rem\] { font-size: max(11px, 0.78rem); }
-  .text-\[0\.84rem\] { font-size: max(11px, 0.84rem); }
-  .text-\[0\.86rem\] { font-size: max(11px, 0.86rem); }
-  .text-sm { font-size: max(11px, 0.875rem); }
+  .text-\[\.78rem\] { font-size: max(13px, 0.78rem); }
+  .text-\[0\.84rem\] { font-size: max(13px, 0.84rem); }
+  .text-\[0\.86rem\] { font-size: max(13px, 0.86rem); }
+  .text-sm { font-size: max(13px, 0.875rem); }
   .hud-debt { width: 13rem; }
 }
 

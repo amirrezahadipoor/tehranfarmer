@@ -50,6 +50,9 @@ const WEEKLY_LABELS: Record<string, { fa: string; en: string }> = {
   collect: { fa: 'جمع‌آوری هفتگی دامستان', en: 'Weekly Barn Roundup' },
   honey: { fa: 'برداشت عسل هفتگی', en: 'Weekly Honey Harvest' },
   fish: { fa: 'صید هفتگی رودخانه', en: 'Weekly River Angling' },
+  pond: { fa: 'صید بزرگ حوضچه‌ها', en: 'Weekly Pond Harvest' },
+  build: { fa: 'هفتهٔ ساخت و آبادانی', en: 'Weekly Building Drive' },
+  babies: { fa: 'نوزادان دامستان', en: 'Weekly Barn Newborns' },
 };
 
 export function questLabelOf(g: QuestGoal, week = false): string {
@@ -73,17 +76,36 @@ const DAILY_POOL: Array<{ kind: QKind; tiers: number[]; reward: number; xp: numb
   { kind: 'babies', tiers: [1, 1, 2], reward: 360, xp: 28 },
 ];
 
+// Weekly goals ride on top of the same activity as dailies. Rewards are a
+// meaningful bonus, but capped to preserve the calibrated 60–85h story pacing.
 const WEEKLY_POOL: Array<{ kind: QKind; target: number; reward: number; xp: number }> = [
-  { kind: 'harvest', target: 135, reward: 140, xp: 17 },
-  { kind: 'plant', target: 155, reward: 125, xp: 16 },
-  { kind: 'sell', target: 14000, reward: 160, xp: 19 },
-  { kind: 'collect', target: 65, reward: 135, xp: 17 },
-  { kind: 'honey', target: 85, reward: 150, xp: 18 },
-  { kind: 'fish', target: 20, reward: 130, xp: 16 },
+  { kind: 'harvest', target: 135, reward: 900, xp: 60 },
+  { kind: 'plant', target: 155, reward: 800, xp: 55 },
+  { kind: 'sell', target: 14000, reward: 1100, xp: 70 },
+  { kind: 'collect', target: 65, reward: 850, xp: 60 },
+  { kind: 'honey', target: 85, reward: 1000, xp: 65 },
+  { kind: 'fish', target: 20, reward: 900, xp: 60 },
+  { kind: 'pond', target: 12, reward: 900, xp: 60 },
+  { kind: 'build', target: 7, reward: 1200, xp: 80 },
+  { kind: 'babies', target: 6, reward: 1100, xp: 75 },
 ];
 
 const weekOf = () => Math.floor((S.day - 1) / 7) + 1;
 const key = (kind: QKind, week: boolean) => (week ? 'w:' : 'd:') + kind;
+
+/** A coprime stride visits every combination before repeating, for any unlock-pool size. */
+export function questRotationStep(size: number): number {
+  if (size <= 1) return 1;
+  const gcd = (a: number, b: number): number => b ? gcd(b, a % b) : a;
+  // Preserve the established 23-day cadence whenever it is coprime; only move
+  // to the nearest valid stride for pool sizes (35/56) that it cannot cover.
+  const preferred = 23 % size || 1;
+  for (let d = 0; d < size; d++) {
+    const candidate = (preferred + d) % size || 1;
+    if (gcd(candidate, size) === 1) return candidate;
+  }
+  return 1;
+}
 
 function snapshot(kinds: QKind[]) {
   const base: Partial<Record<QKind, number>> = {};
@@ -128,7 +150,7 @@ export function ensureQuests(force = false, shouldNotify = false) {
       }
     }
     const dayZero = Math.max(0, S.day - 1);
-    const step = triples.length === 84 ? 23 : 7;
+    const step = questRotationStep(triples.length);
     const idx = (dayZero * step) % triples.length;
     const epoch = Math.floor(dayZero / triples.length);
     const picks = triples[idx].map((ti) => avail[ti]);

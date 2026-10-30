@@ -102,7 +102,11 @@ export function useDialogFocus<T extends HTMLElement>(initialSelector?: string, 
   return ref;
 }
 
-export function Modal({ title, icon, onClose, children, coins }: { title: string; icon: string; onClose: () => void; children: ReactNode; coins?: ReactNode; wide?: boolean }) {
+export function Modal({ title, icon, onClose, children, coins, actions }: {
+  title: string; icon: string; onClose: () => void; children: ReactNode; coins?: ReactNode; wide?: boolean;
+  /** Primary actions stay outside the scrollport on short landscape screens. */
+  actions?: ReactNode;
+}) {
   const dialogRef = useDialogFocus<HTMLDivElement>();
   return (
     <div
@@ -132,6 +136,7 @@ export function Modal({ title, icon, onClose, children, coins }: { title: string
           {coins && <div className="shrink-0">{coins}</div>}
           <button aria-label={UT.closeBtn} className="btn r press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={onClose}><Ic n="close" s={2.2} /></button>
         </div>
+        {actions && <div className="mb-1.5 shrink-0" data-modal-actions="1">{actions}</div>}
         <div className="scroll min-h-0 flex-1 pr-1" tabIndex={0} role="region" aria-label={`${title} — ${UT.modalContent}`} data-modal-scroll="1">{children}</div>
       </div>
     </div>

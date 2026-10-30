@@ -19,6 +19,13 @@ if (bad.length) { console.error('[ERR] منابع خارجی:'); bad.forEach((b)
 if (!html.includes('<!-- offline-music-pack:7 -->')) {
   console.error('[ERR] نشانهٔ بستهٔ هفت‌آهنگهٔ درون‌خطی در HTML نیست'); process.exit(1);
 }
+const musicPacks = [...html.matchAll(/<script type="application\/octet-stream" data-music-pack="([^"]+)">([A-Za-z0-9+/=]+)<\/script>/g)];
+if (musicPacks.length !== 7 || new Set(musicPacks.map((m) => m[1])).size !== 7) {
+  console.error(`[ERR] باید ۷ بلوک inert موسیقی باشد؛ یافت‌شد: ${musicPacks.length}`); process.exit(1);
+}
+if (html.includes('window.__MUSIC_PACK__=')) {
+  console.error('[ERR] موسیقی دوباره داخل bootstrap اجراشدنی جاسازی شده است'); process.exit(1);
+}
 if (fs.existsSync('dist/music')) {
   console.error('[ERR] پوشهٔ music در artifact باقی است؛ بیلد باید مستقل از فایل‌های همراه باشد'); process.exit(1);
 }

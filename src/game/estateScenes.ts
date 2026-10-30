@@ -11,7 +11,7 @@ import {
   drawFarmlandBed, drawFarmlandPlotsLayer, drawGlasshouseSpan, drawMachineryPad, drawSignPlaque, drawValleyWaterfall,
 } from './worldRoads';
 import { drawFarmer } from './rig';
-import { drawBackpack } from './backpackArt';
+import { drawBackpack, drawBackpackFront } from './backpackArt';
 import { drawThirstLeft } from './thirstWarn';
 import { OX, dirtRoad, ground, mountains, newBG, paperGrain, signpost, tree, wellAt } from './scenes';
 import { CFG } from './settings';
@@ -45,10 +45,25 @@ function cypress(c: Ctx, x: number, y: number, sc: number, season: number) {
   c.restore();
 }
 
+function estateGroundIdentity(c: Ctx, farm: 'north' | 'valley', season: number) {
+  if (season === 3) return;
+  c.fillStyle = farm === 'north' ? 'rgba(75,155,145,.10)' : 'rgba(238,177,74,.11)';
+  c.fillRect(-OX, 192, 2120, 720);
+  const cols = farm === 'north' ? ['#f7f4df', '#d9f1e4'] : ['#9b72c8', '#f2c94c'];
+  for (let i = 0; i < 14; i++) {
+    const x = i % 2 ? 1260 + (i % 4) * 22 : -80 + (i % 4) * 24;
+    const y = 286 + (i * 37) % 250;
+    ln(c, [[x, y], [x + 2, y - 11]], 1.8, farm === 'north' ? '#4b9a62' : '#65713c');
+    dot(c, x + 2, y - 13, farm === 'north' ? 3.6 : 4.2, cols[i % 2]);
+    if (farm === 'valley') dot(c, x + 5, y - 9, 3.1, cols[(i + 1) % 2]);
+  }
+}
+
 export function northBG(season: number): HTMLCanvasElement {
   const { cv, c } = newBG();
   mountains(c, season);
   ground(c, season, 192);
+  estateGroundIdentity(c, 'north', season);
   const roadCol = season === 3 ? '#e9e2d4' : '#dcbe86';
   // Connecting edge-to-edge roads above bottom HUD: West -> Main Farm, South-East -> Sunlit Valley, East -> Town
   dirtRoad(c, [[-420, 588], [180, 586], [640, 586], [1140, 588], [1700, 594]], 30, roadCol, 31);
@@ -92,6 +107,7 @@ export function valleyBG(season: number): HTMLCanvasElement {
   const { cv, c } = newBG();
   mountains(c, season);
   ground(c, season, 192);
+  estateGroundIdentity(c, 'valley', season);
   const roadCol = season === 3 ? '#e9e2d4' : '#e2c489';
   // Connecting edge-to-edge roads above bottom HUD: West -> Main Farm, North-West -> Northern Meadow, East -> Town
   dirtRoad(c, [[-420, 588], [180, 586], [640, 586], [1140, 588], [1700, 594]], 30, roadCol, 51);
@@ -268,7 +284,7 @@ export function renderEstateFieldScene(
     }
   }
   list.push({ y: 556, f: () => drawFullScarecrow(ctx, farm === 'north' ? 1112 : 1148, 556, t, S.debt?.scarecrow ?? 0) });
-    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); } });
+    list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.72); } });
   if (owned) {
     workers.forEach((w, wi) => {
       if (wi < workerCount) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) });

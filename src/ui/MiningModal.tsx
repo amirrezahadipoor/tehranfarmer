@@ -5,7 +5,7 @@ import { CFG } from '../game/settings';
 import { GOOD, fa, faPct } from '../game/data';
 import { sfx } from '../game/sound';
 import {
-  closeMineEncounter, currentMineEncounter, finishMineEncounter, mineAccuracyAt, mineWeakPoint,
+  closeMineEncounter, currentMineEncounter, finishMineEncounter, mineAccuracyAt, mineTargetOpenAt, mineWeakPointAt,
 } from '../game/core/mining';
 
 /** استخراج مهارتی کوتاه: سه/چهار نقطهٔ شکست، بدون شکست سخت یا خالی‌آمدن شانسی. */
@@ -16,6 +16,12 @@ export function MiningModal() {
   const [flash, setFlash] = useState<'perfect' | 'good' | 'miss' | null>(null);
   const [finished, setFinished] = useState(false);
   const markerRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
+  const targetLineRef = useRef<HTMLDivElement>(null);
+  const targetCenterRef = useRef(50);
+  const targetWidthRef = useRef(20);
+  const targetOpenRef = useRef(true);
+  const modifierClockRef = useRef(0);
   const positionRef = useRef(8);
   const directionRef = useRef(1);
   const stageRef = useRef(stage);
@@ -38,6 +44,24 @@ export function MiningModal() {
         if (p <= 2) { p = 2; directionRef.current = 1; }
         positionRef.current = p;
         if (markerRef.current) markerRef.current.style.left = `${p}%`;
+
+        modifierClockRef.current += dt * (CFG.reduceMotion ? 0.6 : 1);
+        const runtime = mineWeakPointAt(active.floor, active.idx, Math.min(stageRef.current, active.spot.strikes - 1), modifierClockRef.current);
+        const open = mineTargetOpenAt(active.floor, modifierClockRef.current);
+        targetCenterRef.current = runtime.center;
+        targetWidthRef.current = runtime.width;
+        targetOpenRef.current = open;
+        if (targetRef.current) {
+          targetRef.current.style.left = `${runtime.center}%`;
+          targetRef.current.style.width = `${runtime.width}%`;
+          targetRef.current.style.opacity = open ? '1' : '0.18';
+          targetRef.current.setAttribute('data-mine-target-open', String(open));
+        }
+        if (targetLineRef.current) {
+          targetLineRef.current.style.left = `${runtime.center}%`;
+          targetLineRef.current.style.opacity = open ? '1' : '0.12';
+          targetLineRef.current.setAttribute('data-mine-target-center', runtime.center.toFixed(3));
+        }
       }
       raf = requestAnimationFrame(tick);
     };
@@ -47,13 +71,19 @@ export function MiningModal() {
 
   if (!active) return null;
   const { floor, idx, spot } = active;
-  const target = mineWeakPoint(floor, idx, Math.min(stage, spot.strikes - 1));
+  const target = mineWeakPointAt(floor, idx, Math.min(stage, spot.strikes - 1), 0);
+  if (stage === 0 && scores.length === 0 && positionRef.current === 8) {
+    targetCenterRef.current = target.center;
+    targetWidthRef.current = target.width;
+  }
   const royal = spot.good === 'ruby';
   const gemName = GOOD[spot.good]?.fa ?? spot.good;
 
   const strike = () => {
     if (finished) return;
-    const accuracy = mineAccuracyAt(floor, idx, stage, positionRef.current);
+    const accuracy = mineAccuracyAt(floor, idx, stage, positionRef.current, {
+      center: targetCenterRef.current, width: targetWidthRef.current, open: targetOpenRef.current,
+    });
     const next = [...scores, accuracy];
     setScores(next);
     const grade = accuracy >= 0.9 ? 'perfect' : accuracy >= 0.48 ? 'good' : 'miss';
@@ -73,12 +103,19 @@ export function MiningModal() {
     finishMineEncounter(Array.from({ length: spot.strikes }, () => 0.45), active.token);
   };
 
-  const flashText = flash === 'perfect' ? FT.minePerfectHit : flash === 'good' ? FT.mineGoodHit : flash === 'miss' ? FT.mineMissHit : FT.mineWeakPointHint;
+  const modifierHint = floor === 2 ? FT.mineDriftHint : floor === 3 ? FT.minePulseHint : FT.mineWeakPointHint;
+  const flashText = flash === 'perfect' ? FT.minePerfectHit : flash === 'good' ? FT.mineGoodHit : flash === 'miss' ? FT.mineMissHit : modifierHint;
   const average = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const actionBar = (
+    <div className="flex items-center gap-1.5">
+      <button data-mine-strike="1" className="btn y press min-h-[48px] flex-1 text-sm font-black" disabled={finished} onClick={strike}><Ic n="hammer" s={2} />{finished ? FT.mineGoodHit : FT.mineStrikeBtn}</button>
+      <button data-mine-quick="1" className="btn press min-h-[48px] px-3 text-xs font-black" title={FT.mineQuickHint} disabled={finished} onClick={quick}><Ic n="bolt" s={1.5} />{FT.mineQuickBtn}</button>
+    </div>
+  );
 
   return (
-    <ModalShell title={FT.mineGameTitle} icon="cave" onClose={closeMineEncounter}>
-      <div data-mining-modal="1" data-mine-stage={stage} className="mx-auto flex max-w-[39rem] flex-col gap-1.5 p-1 text-center">
+    <ModalShell title={FT.mineGameTitle} icon="cave" onClose={closeMineEncounter} actions={actionBar}>
+      <div data-mining-modal="1" data-mine-stage={stage} data-mine-modifier={floor === 2 ? 'drift' : floor === 3 ? 'pulse' : 'static'} className="mx-auto flex max-w-[39rem] flex-col gap-1.5 p-1 text-center">
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-black">
           <span className="rounded-full bg-[#503426] px-3 py-1 text-[#fff4d8]">{FT.mineFloorShort} {fa(floor)}</span>
           <span className="inline-flex items-center gap-1 rounded-full bg-[#fff2cf] px-3 py-1 ring-1 ring-[#8a633f]"><Ic n={spot.good} s={1.35} />{gemName}</span>
@@ -113,18 +150,17 @@ export function MiningModal() {
         <div className="select-none px-1" dir="ltr">
           <div className="relative h-14 rounded-xl border-4 border-[#503426] bg-[#1d2c38] shadow-inner">
             <div className="absolute inset-x-3 top-1/2 h-2 -translate-y-1/2 rounded-full bg-[#607483]" />
-            <div data-mine-target="1" className="absolute top-1/2 h-9 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-[#fff4b0] bg-[#f8d94e66] shadow-[0_0_18px_#ffe66d88]" style={{ left: `${target.center}%`, width: `${target.width}%` }} />
-            <div data-mine-target-center={target.center} className="absolute top-1/2 h-11 w-1 -translate-x-1/2 -translate-y-1/2 bg-[#fff7c7]" style={{ left: `${target.center}%` }} />
+            <div ref={targetRef} data-mine-target="1" data-mine-target-open="true" className="absolute top-1/2 h-9 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-[#fff4b0] bg-[#f8d94e66] shadow-[0_0_18px_#ffe66d88]" style={{ left: `${target.center}%`, width: `${target.width}%` }} />
+            <div ref={targetLineRef} data-mine-target-center={target.center} className="absolute top-1/2 h-11 w-1 -translate-x-1/2 -translate-y-1/2 bg-[#fff7c7]" style={{ left: `${target.center}%` }} />
             <div ref={markerRef} data-mine-marker="1" className="absolute top-1/2 z-10 flex h-12 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border-2 border-[#fff4d8] bg-[#8f4e2d] shadow-lg" style={{ left: '8%' }}><Ic n="hammer" s={2.05} /></div>
           </div>
         </div>
 
         <div className={`min-h-5 text-xs font-black ${flash === 'perfect' ? 'text-[#8a5a00]' : flash === 'miss' ? 'text-[#8b493b]' : 'text-[#385b45]'}`} aria-live="polite">{flashText}</div>
         {royal && <div className="rounded-lg bg-[#fff0c2] px-2 py-1 text-xs font-black text-[#793343] ring-1 ring-[#d7a43c]"><Ic n="diamond" s={1.25} /> {FT.mineRoyalHint}</div>}
-        <button data-mine-strike="1" className="btn y press mx-auto min-h-[48px] w-full max-w-md text-base font-black" disabled={finished} onClick={strike}><Ic n="hammer" s={2.2} />{finished ? FT.mineGoodHit : FT.mineStrikeBtn}</button>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-[#50342630] pt-1.5">
-          <button data-mine-quick="1" className="btn press min-h-[48px] px-4 text-sm font-black" disabled={finished} onClick={quick}><Ic n="bolt" s={1.6} />{FT.mineQuickBtn}</button>
-          <span className="max-w-xs text-[.68rem] font-bold leading-4 text-[#66503c]">{FT.mineQuickHint}</span>
+          <Ic n="bolt" s={1.4} />
+          <span className="max-w-md text-xs font-bold leading-4 text-[#66503c]">{FT.mineQuickHint}</span>
         </div>
       </div>
     </ModalShell>

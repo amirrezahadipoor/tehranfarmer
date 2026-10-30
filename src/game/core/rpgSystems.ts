@@ -1,5 +1,5 @@
 // Deep RPG Progression, Interactive Estate Structures, Flower Synergy, Regional Fish & Homestead Customization
-import { CROPS, CROP, XP, type CropId } from '../data';
+import { ACH_OUTFIT_REWARDS, CROPS, CROP, XP, type CropId } from '../data';
 import { PAL_PLAYER, type Pal } from '../rig';
 import { WX } from '../../strings/worldExpansionText';
 import { fa, faDec } from '../../strings/fa';
@@ -202,12 +202,25 @@ export function catchRegionalFish(precisionBoost = 1): { species: FishSpeciesDef
 }
 
 // ===== ۶. شخصی‌سازی ظاهر کشاورز، نام مزرعه و دکوراسیون زندهٔ حیاط + حیوانات خانگی =====
-export const OUTFIT_THEMES: ReadonlyArray<{ id: number; swatch: string; pal: Partial<Pal>; readonly name: string }> = [
+export const OUTFIT_THEMES: ReadonlyArray<{
+  id: number; swatch: string; pal: Partial<Pal>; readonly name: string;
+  unlock?: { readonly ach: string; readonly tier: number };
+}> = [
   { id: 0, swatch: '#4a90d9', pal: { shirt: '#ff8a5b', pants: '#4a90d9', hat: '#ffd166', band: '#d9534f' }, get name() { return WX.outfit0; } },
   { id: 1, swatch: '#c83e4d', pal: { shirt: '#ffe3b3', pants: '#c83e4d', hat: '#f4c95d', band: '#6a2c70' }, get name() { return WX.outfit1; } },
   { id: 2, swatch: '#2e8b57', pal: { shirt: '#ffd699', pants: '#2e8b57', hat: '#e9c46a', band: '#e76f51' }, get name() { return WX.outfit2; } },
   { id: 3, swatch: '#d99b26', pal: { shirt: '#5c374c', pants: '#d99b26', hat: '#fff1c1', band: '#9e2a2b' }, get name() { return WX.outfit3; } },
+  { id: 4, swatch: '#d64d78', pal: { shirt: '#ffe0ea', pants: '#9c3556', hat: '#f7c8d8', band: '#7f2d4b' }, unlock: ACH_OUTFIT_REWARDS[0], get name() { return WX.outfit4; } },
+  { id: 5, swatch: '#e77b32', pal: { shirt: '#fff0c2', pants: '#b9502d', hat: '#ffd166', band: '#7d3d2b' }, unlock: ACH_OUTFIT_REWARDS[1], get name() { return WX.outfit5; } },
+  { id: 6, swatch: '#315b9a', pal: { shirt: '#bde8ef', pants: '#29456f', hat: '#d9f2f0', band: '#d9903d' }, unlock: ACH_OUTFIT_REWARDS[2], get name() { return WX.outfit6; } },
+  { id: 7, swatch: '#7250a5', pal: { shirt: '#e5d4ff', pants: '#50366f', hat: '#d4b8f0', band: '#d9a33b' }, unlock: ACH_OUTFIT_REWARDS[3], get name() { return WX.outfit7; } },
+  { id: 8, swatch: '#238b76', pal: { shirt: '#d1f0dc', pants: '#286457', hat: '#f0e6af', band: '#825b36' }, unlock: ACH_OUTFIT_REWARDS[4], get name() { return WX.outfit8; } },
 ];
+
+export function isOutfitUnlocked(idx: number): boolean {
+  const unlock = OUTFIT_THEMES[idx]?.unlock;
+  return !unlock || (S.ach[unlock.ach] ?? 0) >= unlock.tier;
+}
 
 export interface DecorDef {
   id: 'lanterns' | 'tilepool' | 'pergola' | 'sheepdog' | 'barncat';
@@ -233,13 +246,15 @@ export function syncPlayerOutfitPalette() {
   Object.assign(PAL_PLAYER, theme.pal);
 }
 
-export function setPlayerOutfit(idx: number) {
+export function setPlayerOutfit(idx: number): boolean {
+  if (!OUTFIT_THEMES[idx] || !isOutfitUnlocked(idx)) { sfx.err(); return false; }
   S.custom ??= { farmerName: WX.defaultFarmerName, farmName: WX.defaultFarmName, outfit: 0, morningCard: true };
-  S.custom.outfit = Math.max(0, Math.min(OUTFIT_THEMES.length - 1, idx));
+  S.custom.outfit = idx;
   syncPlayerOutfitPalette();
   sfx.tap();
   saveGame();
   notify();
+  return true;
 }
 
 export function setHomesteadNames(farmerName: string, farmName: string) {

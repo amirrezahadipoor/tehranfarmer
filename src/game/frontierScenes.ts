@@ -8,6 +8,7 @@ import { iconPart } from './artIcons';
 import { BH, BW, OX, OY, newBG } from './scenes';
 import { drawSignPlaque } from './worldRoads';
 import { drawFarmer } from './rig';
+import { drawBackpack, drawBackpackFront } from './backpackArt';
 import type { Walker } from './engineRender';
 import { S } from './state';
 import {
@@ -257,7 +258,11 @@ export function renderFrontierScene(
     });
   }
 
-  drawables.push({ y: farmer.y, fn: () => drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75) });
+  drawables.push({ y: farmer.y, fn: () => {
+    drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.75);
+    drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75);
+    drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.75);
+  } });
   workers.forEach((w, wi) => {
     if (wi < Math.min(2, S.workers)) drawables.push({ y: w.y, fn: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) });
   });

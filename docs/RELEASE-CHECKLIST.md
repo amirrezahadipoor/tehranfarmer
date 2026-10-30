@@ -16,6 +16,8 @@
 ```bash
 npm run roadmap:progress
 npm run check
+npm run audit:media
+npm run audit:startup
 STRICT=1 RUNS=3 npm run sim:balance
 STRICT=1 npm run sim:story
 npm run test:visual
@@ -24,7 +26,8 @@ npm run test:visual
 - [ ] صفر رشتهٔ فارسی بیرون از `src/story/**` و `src/strings/**` (`npm run lint:fa`).
 - [ ] صفر عدد جادویی اقتصادی بیرون از فایل‌های داده (`npm run lint:magic`).
 - [ ] صفر تخطی حریم خصوصی، صفر ایموجی و صفر آیکون گم‌شده (`privacy:audit` + `icons:audit`).
-- [ ] حجم فایل تک‌صفحه‌ای `dist/index.html` زیر سقف بودجهٔ واقعی اسکریپت (`< 6144KB` — حجم فعلی ≈ 5210KB با هر هفت آهنگ درون‌خطی) و کاملاً بدون لینک شبکه است (`verify:offline` + اجرای تنها در `offline-single-file.spec.ts`).
+- [ ] `audit:media` سبز است؛ رکورد `unverified` با حدس مجوز یا ساخت‌داخلی‌بودن پر نشده است.
+- [ ] حجم فایل تک‌صفحه‌ای `dist/index.html` زیر سقف بودجهٔ واقعی اسکریپت (`< 6144KB` — حجم فعلی ≈ 5330KB با هر هفت آهنگ درون‌خطی) و کاملاً بدون لینک شبکه است (`verify:offline` + اجرای تنها در `offline-single-file.spec.ts`).
 
 ## ۳. ساخت، امضا و بازرسی باینری اندروید
 ```bash

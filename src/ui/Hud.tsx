@@ -1,7 +1,7 @@
 import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
 import { hasSkill } from '../game/core/rpgSystems';
-import { tutToolBlocked, tutToolHi } from '../game/tutorial';
+import { tutOnSleep, tutToolBlocked, tutToolHi } from '../game/tutorial';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
 import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, sleepToMorning, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
@@ -19,44 +19,9 @@ import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
 import { FT } from '../strings/frontierText';
 import { MineStatusChip } from './MinePanels';
+import { WorldNavBar } from './WorldNavBar';
 
 const WEATHER = ['sun', 'cloud', 'rain', 'snow'];
-
-function WorldNavBar() {
-  const cur = UI.scene;
-  const loc = CFG.locale === 'en' ? 'en' : 'fa';
-  const eu = ESTATE_UI[loc];
-  const places = [
-    { id: 'farm', ic: 'house', label: UT.backFarm, cls: 'g' },
-    { id: 'north', ic: 'north', label: eu.goNorth, cls: 'g' },
-    { id: 'valley', ic: 'valley', label: eu.goValley, cls: 'y' },
-    { id: 'town', ic: 'cart', label: UT.goTown, cls: 'y' },
-    { id: 'river', ic: 'fish', label: UT.goRiver, cls: 'b' },
-    { id: 'cave', ic: 'cave', label: FT.navCave, cls: 'b' },
-    { id: 'apiary', ic: 'honey', label: UT.goApiary, cls: 'p' },
-    { id: 'forest', ic: 'forest', label: FT.navForest, cls: 'g' },
-  ] as const;
-  return (
-    <div className="paper pointer-events-auto max-[700px]:grid max-[700px]:grid-cols-4 flex flex-wrap items-center justify-center gap-0.5 p-0.5 xl:gap-1 xl:p-1">
-      {places.map((pl) => {
-        const active = cur === pl.id;
-        return (
-          <button
-            key={pl.id}
-            data-nav={pl.id}
-            aria-label={pl.label}
-            title={pl.label}
-            disabled={active}
-            onClick={() => { sfx.tap(); cmd.travelTo(pl.id); }}
-            className={`btn ${pl.cls} press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.35rem)] !p-0.5 xl:!p-1 ${active ? 'ring-2 ring-[#503426] !opacity-100 !filter-none' : ''}`}
-          >
-            <Ic n={pl.ic} s={UI.portrait ? 1.32 : 1.5} />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 export function Hud() {
   const sn = season();
@@ -131,10 +96,10 @@ export function Hud() {
             )}
           </div>
           <div className="pointer-events-auto flex flex-wrap items-start justify-end gap-1">
-            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={() => { sleepToMorning(); sfx.tap(); }}>
+            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={() => { tutOnSleep(); sleepToMorning(); sfx.tap(); }}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
             </button>
-            <button aria-label={UT.u133} className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
+            <button aria-label={UT.u133} data-open-inventory="1" className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
               <Ic n="bag" s={UI.portrait ? 1.65 : 1.9} />
               <span className="text-xs font-black" dir="ltr">{fa(packCount())}/{fa(packCap())}</span>
             </button>
@@ -163,7 +128,7 @@ export function Hud() {
             <button
               aria-label={FT.atlasTitle}
               data-open-atlas="1"
-              className="btn g press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
+              className="btn g press max-[900px]:!hidden !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1 min-[901px]:inline-flex"
               onClick={() => { sfx.tap(); UI.modal = 'atlas'; notify(); }}
               title={FT.atlasTitle}
             >
@@ -378,6 +343,7 @@ function DebtChip() {
     <>
       <button
         className="hud-debt paper pointer-events-auto press flex min-h-[48px] w-48 items-center gap-1 px-2 py-0.5"
+        data-open-ledger="1"
         onClick={() => { UI.modal = 'ledger'; sfx.tap(); notify(); }}
         title={note?.name ?? UT.u36}
       >

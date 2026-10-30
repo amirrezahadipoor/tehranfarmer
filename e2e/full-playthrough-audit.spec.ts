@@ -136,12 +136,16 @@ try {
 } catch {
   // درگاهی ظاهر نشد — حالت عمودی از قبل پذیرفته شده؛ ادامه می‌دهیم
 }
-// در پروفایل انگلیسی، نام دکمه‌ها انگلیسی است؛ پس با data-nav پایدار انتخاب می‌کنیم.
-await page.locator('[data-nav="river"]').click();
+// در نمای باریک همهٔ مقصدها از Atlas واقعی باز می‌شوند، نه نوار هشت‌دکمه‌ای desktop.
+const mobileTravel = async (destination: 'river' | 'apiary') => {
+  await page.locator('[data-mobile-atlas="1"]').click();
+  await page.locator(`[data-atlas-go="${destination}"]`).click();
+};
+await mobileTravel('river');
 await expect(page.locator('[data-scene-id="area-intro-river"]')).toBeVisible({ timeout: 20_000 });
 await skipScene(page);
 
-await page.locator('[data-nav="apiary"]').click();
+await mobileTravel('apiary');
 await expect(page.locator('[data-scene-id="area-intro-apiary"]')).toBeVisible({ timeout: 20_000 });
 await skipScene(page);
 

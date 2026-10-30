@@ -72,10 +72,26 @@ export function mineWeakPoint(floor: number, idx: number, stage: number) {
   return { center, width };
 }
 
-export function mineAccuracyAt(floor: number, idx: number, stage: number, marker: number) {
-  const target = mineWeakPoint(floor, idx, stage);
+export function mineAccuracyAt(
+  floor: number, idx: number, stage: number, marker: number,
+  runtime?: { center: number; width: number; open?: boolean },
+) {
+  if (runtime?.open === false) return 0;
+  const target = runtime ?? mineWeakPoint(floor, idx, stage);
   const distance = Math.abs(marker - target.center);
   return Math.max(0, Math.min(1, 1 - distance / Math.max(1, target.width / 2)));
+}
+
+/** Floor 2 has a drifting seam; floor 3 keeps its position but pulses on a readable timer. */
+export function mineWeakPointAt(floor: number, idx: number, stage: number, elapsed: number) {
+  const base = mineWeakPoint(floor, idx, stage);
+  if (floor !== 2) return base;
+  const center = Math.max(10, Math.min(90, base.center + Math.sin(elapsed * 1.55 + idx * 0.7) * 10));
+  return { ...base, center };
+}
+
+export function mineTargetOpenAt(floor: number, elapsed: number): boolean {
+  return floor < 3 || (Math.max(0, elapsed) % 2.8) < 2;
 }
 
 export function currentMineEncounter() {

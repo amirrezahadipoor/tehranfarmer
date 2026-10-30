@@ -30,6 +30,9 @@
     "test:visual:update": "playwright test --update-snapshots",
     "lint:magic": "node scripts/lint-magic.mjs",
     "privacy:audit": "node scripts/privacy-audit.mjs",
+    "audit:media": "node scripts/media-audit.mjs",
+    "audit:media:report": "node scripts/media-audit.mjs --report",
+    "audit:startup": "node scripts/startup-audit.mjs",
     "audit:agents": "node scripts/agents-audit.mjs",
     "build:e2e": "node scripts/e2e-build.mjs",
     "version:bump": "node scripts/version-bump.mjs"

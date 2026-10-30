@@ -315,7 +315,7 @@ export default function App() {
     if (__DEV_TOOLS__) {
       (window as unknown as { __gameApi?: unknown }).__gameApi = {
         openModal: (m: typeof UI.modal) => { UI.modal = m; notify(); },
-        setEnv: (patch: { scene?: typeof UI.scene; day?: number; hour?: number; weather?: number; chapter?: number; postgame?: boolean; land?: number; soil?: number; coins?: number; infoIdx?: number | null }) => {
+        setEnv: (patch: { scene?: typeof UI.scene; day?: number; hour?: number; weather?: number; chapter?: number; postgame?: boolean; land?: number; soil?: number; bag?: number; coins?: number; infoIdx?: number | null }) => {
           if (cinema.active || S.story.pending) { UI.afterModal = null; UI.afterTalkNpc = null; clearSceneQueue(); skipActiveCutscene(); endSceneStage(); }
           if (patch.scene) { cmd.resetMotion(); UI.modal = null; UI.afterModal = null; UI.afterTalkNpc = null; UI.scene = patch.scene; }
           if (typeof patch.day === 'number') S.day = patch.day;
@@ -325,6 +325,7 @@ export default function App() {
           if (typeof patch.postgame === 'boolean') S.story.postgame = patch.postgame;
           if (typeof patch.land === 'number') S.lv.land = patch.land;
           if (typeof patch.soil === 'number') S.lv.soil = patch.soil;
+          if (typeof patch.bag === 'number') S.lv.bag = Math.max(0, Math.min(6, Math.round(patch.bag)));
           if (typeof patch.coins === 'number') S.coins = patch.coins;
           if (patch.infoIdx !== undefined) UI.info = patch.infoIdx === null ? null : { plot: patch.infoIdx, x: 120, y: 120 };
           notify();
