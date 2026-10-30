@@ -3,7 +3,7 @@ import { xpNeed } from '../data';
 import { fresh, S, UI } from '../state';
 import { resetLvCache } from './progress';
 import { freshFrontier } from './frontier';
-import { activeMineNodes, completeMineNode, stepMineFloor } from './mining';
+import { activeMineNodes, completeMineNode, minePrecisionStatus, stepMineFloor } from './mining';
 
 function stubStorage() {
   const values = new Map<string, string>();
@@ -43,6 +43,17 @@ describe('early mining balance and destinations', () => {
   it('caps a perfect starter-floor vein at one item', () => {
     const result = completeMineNode(1, 0, [1, 1, 1]);
     expect(result).toMatchObject({ good: 'quartz', qty: 1, perfect: true });
+  });
+
+  it('uses the same bonus predicate for progress, readiness and the core grant', () => {
+    expect(minePrecisionStatus(1, 'quartz', [1, 1, 1], 3)).toMatchObject({ perfect: true, bonusReady: false });
+    expect(minePrecisionStatus(2, 'quartz', [1, 1], 3)).toMatchObject({ complete: false, bonusOnTrack: true, bonusReady: false });
+    expect(minePrecisionStatus(2, 'quartz', [1, 1, 1], 3)).toMatchObject({ complete: true, bonusOnTrack: true, bonusReady: true });
+    const boundary = minePrecisionStatus(2, 'quartz', [1, 0.91, 0.91], 3);
+    expect(boundary.accuracy).toBeCloseTo(0.94);
+    expect(boundary.bonusReady).toBe(true);
+    expect(minePrecisionStatus(2, 'quartz', [1, 0.9, 0.8], 3)).toMatchObject({ bonusOnTrack: false, bonusReady: false });
+    expect(minePrecisionStatus(2, 'ruby', [1, 1, 1, 1], 4)).toMatchObject({ rewardGood: 'diamond', bonusReady: false });
   });
 
   it('awards a second item only for flawless deeper extraction, not a 72% run', () => {

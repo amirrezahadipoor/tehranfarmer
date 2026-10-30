@@ -3,7 +3,7 @@ import { GOOD, fa } from '../game/data';
 import { S, UI, holdCount, notify } from '../game/state';
 import { faPct } from '../strings/fa';
 import {
-  completeFestivalContest, ensureFrontier, isTownFestivalActive,
+  canStartFestivalContest, completeFestivalContest, ensureFrontier, FESTIVAL_CONTEST_STAMINA, FESTIVAL_GOLD_COINS, festivalBoothPlayed, isTownFestivalActive,
   judgeFestivalSubmission, redeemFestivalTokens, ringTownFestivalBell,
 } from '../game/core/frontier';
 import { sfx } from '../game/sound';
@@ -83,7 +83,7 @@ export function FestivalModal() {
   };
 
   const fireArrow = () => {
-    if (arrowsLeft <= 0) return;
+    if (arrowsLeft <= 0 || !canStartFestivalContest('archery')) return;
     const dist = Math.abs(sight - 50);
     const pts = dist <= 9 ? 1 : dist <= 22 ? 0.65 : 0.25;
     const nextHits = archHits + pts;
@@ -111,7 +111,7 @@ export function FestivalModal() {
                 type="button"
                 data-ring-fair-bell="1"
                 aria-label={FT.fairOpenBell}
-                className="btn y press !px-3 !py-1.5 text-xs font-black"
+                className="btn y press min-w-0 !whitespace-normal !px-3 !py-1.5 text-xs font-black leading-snug"
                 onClick={() => ringTownFestivalBell()}
               >
                 <Ic n="star" s={1.5} />
@@ -172,8 +172,8 @@ export function FestivalModal() {
               type="button"
               data-judge-submit="1"
               aria-label={FT.judgeSubmit}
-              disabled={!validPicked.length || f.fairPlayed.judge === S.day}
-              className="btn y press w-full !py-2 text-sm font-black"
+              disabled={!fairLive || !validPicked.length || festivalBoothPlayed('judge')}
+              className="btn y press min-w-0 !whitespace-normal w-full !py-2 text-sm font-black leading-snug"
               onClick={() => {
                 const res = judgeFestivalSubmission(validPicked);
                 if (res) {
@@ -183,7 +183,7 @@ export function FestivalModal() {
               }}
             >
               <Ic n="crown" s={1.7} />
-              <span>{f.fairPlayed.judge === S.day ? FT.fairDoneToday : FT.judgeSubmit}</span>
+              <span>{!fairLive ? FT.fairClosed : festivalBoothPlayed('judge') ? FT.fairDoneToday : FT.judgeSubmit}</span>
             </button>
           </div>
         )}
@@ -207,15 +207,15 @@ export function FestivalModal() {
                 type="button"
                 data-stir-start="1"
                 aria-label={FT.stirStart}
-                disabled={f.fairPlayed.cauldron === S.day}
-                className="btn g press w-full !py-2 text-sm font-black"
+                disabled={!canStartFestivalContest('cauldron')}
+                className="btn g press min-w-0 !whitespace-normal w-full !py-2 text-sm font-black leading-snug"
                 onClick={() => {
                   stirRef.current = { heat: 50, sweet: 50, okTime: 0, elapsed: 0, stoking: false };
                   setStirRunning(true);
                 }}
               >
                 <Ic n="fire" s={1.6} />
-                <span>{f.fairPlayed.cauldron === S.day ? FT.fairDoneToday : FT.stirStart}</span>
+                <span>{!fairLive ? FT.fairClosed : festivalBoothPlayed('cauldron') ? FT.fairDoneToday : S.stamina < FESTIVAL_CONTEST_STAMINA ? FT.fairNeedStamina(FESTIVAL_CONTEST_STAMINA) : FT.stirStart}</span>
               </button>
             ) : (
               <button
@@ -224,7 +224,7 @@ export function FestivalModal() {
                 aria-describedby="festival-stir-hint"
                 aria-pressed={stoking}
                 data-stir-hold="1"
-                className={'btn press touch-none w-full !py-2.5 text-sm font-black ' + (stoking ? 'y' : 'g')}
+                className={'btn press touch-none min-w-0 !whitespace-normal w-full !py-2.5 text-sm font-black leading-snug ' + (stoking ? 'y' : 'g')}
                 onPointerDown={() => setStoking(true)}
                 onPointerUp={() => setStoking(false)}
                 onPointerLeave={() => setStoking(false)}
@@ -258,12 +258,12 @@ export function FestivalModal() {
               type="button"
               data-archery-fire="1"
               aria-label={FT.archeryFire}
-              disabled={arrowsLeft <= 0 || f.fairPlayed.archery === S.day}
-              className="btn y press w-full !py-2 text-sm font-black"
+              disabled={arrowsLeft <= 0 || !canStartFestivalContest('archery')}
+              className="btn y press min-w-0 !whitespace-normal w-full !py-2 text-sm font-black leading-snug"
               onClick={fireArrow}
             >
               <Ic n="target" s={1.6} />
-              <span>{f.fairPlayed.archery === S.day ? FT.fairDoneToday : `${FT.archeryFire} (${fa(arrowsLeft)})`}</span>
+              <span>{!fairLive ? FT.fairClosed : festivalBoothPlayed('archery') ? FT.fairDoneToday : S.stamina < FESTIVAL_CONTEST_STAMINA ? FT.fairNeedStamina(FESTIVAL_CONTEST_STAMINA) : `${FT.archeryFire} (${fa(arrowsLeft)})`}</span>
             </button>
           </div>
         )}
@@ -274,7 +274,7 @@ export function FestivalModal() {
               ['elixir', 'herbal-elixir', FT.recElixirName, 3],
               ['saffron', 'seed:saffron', GOOD.saffron.fa + ' ×' + fa(3), 3],
               ['turquoise', 'turquoise', FT.goodTurquoise + ' ×' + fa(2), 4],
-              ['gold', 'coin', '+' + fa(650), 5],
+              ['gold', 'coin', '+' + fa(FESTIVAL_GOLD_COINS), 5],
             ] as const).map(([pid, ic, title, cost]) => (
               <div key={pid} className="paper flex items-center justify-between gap-2 p-2.5 text-xs font-black">
                 <div className="flex items-center gap-2">

@@ -152,7 +152,8 @@ function Start() {
         <div className={compactLand ? 'mt-1 flex items-center justify-center gap-2.5' : 'mt-2.5 flex items-center justify-center gap-3'}>
           <Ic n="cow" s={compactLand ? 2.35 : 3.2} cls="bob" />
           <div
-            className={'ft whitespace-nowrap leading-none ' + (compactLand ? 'text-[2.1rem]' : isPortrait ? 'text-[2.85rem]' : 'text-[3.4rem]')}
+            data-start-title="1"
+            className={'ft min-w-0 max-w-full whitespace-normal break-words text-center leading-none ' + (compactLand ? 'text-[2.1rem]' : isPortrait ? 'text-[2.85rem]' : 'text-[3.4rem]')}
             style={{ textShadow: '.13rem .13rem 0 rgba(80,52,38,.3)' }}
           >
             <span style={{ color: '#e8564a' }}>{UT.u1}</span>{' '}

@@ -45,9 +45,9 @@ export const VALLEY_PLOTS_COUNT = VALLEY_COLS * VALLEY_ROWS; // 60 (> 54 Norther
  *  0->1: Buy Northern Meadow Farm (54 plots, Lv 4 / Ch 2)
  *  1->2: Restore Northern Meadow Qanat (Lv 9 / Ch 3-4)
  *  2->3: Buy Sunlit Valley Farm (60 plots, Lv 14 / Ch 4-5)
- *  3->4: Unify Three-Estate Heritage Charter (Lv 21 / Ch 6)
+ *  3->4: Unify Three-Estate Heritage Charter (Lv 18 / Ch 6)
  */
-export const ESTATE_LV_REQ = [4, 9, 14, 21] as const;
+export const ESTATE_LV_REQ = [4, 9, 14, 18] as const;
 
 /** Real, calibrated crop growth rate per farm (specialty microclimate boosts regional crops cleanly inside every 7-day season!) */
 /** Calibrated estate growth rate (when a dedicated regional seed is assigned to North/Valley, its microclimate boosts ripening into every 7-day season!) */

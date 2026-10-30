@@ -143,22 +143,39 @@ export function caveBG(season: number, floor = 1): HTMLCanvasElement {
 export function forestBG(season: number, layer = 1): HTMLCanvasElement {
   const { cv, c } = newBG();
   const r = rng(1410 + season * 29 + layer * 53);
-  const sky = ['#bfe8d8', '#b8e2c8', '#edd6b4', '#dce6ee'][season] ?? '#bfe8d8';
-  const turf = ['#5fa85b', '#4d9852', '#a88444', '#cfdce2'][season] ?? '#5fa85b';
-  const leaf = ['#3f8f4e', '#2f7a44', '#c96f32', '#7d98a6'][season] ?? '#3f8f4e';
+  const depth = Math.max(0, Math.min(2, layer - 1));
+  const palettes = [
+    { sky: ['#bfe8d8', '#b8e2c8', '#edd6b4', '#dce6ee'], turf: ['#5fa85b', '#4d9852', '#a88444', '#cfdce2'], leaf: ['#3f8f4e', '#2f7a44', '#c96f32', '#7d98a6'] },
+    { sky: ['#8fc4b8', '#91bda6', '#c5a77e', '#b7cad2'], turf: ['#39764c', '#326844', '#806735', '#aebfca'], leaf: ['#235f42', '#28533c', '#96502d', '#627f8d'] },
+    { sky: ['#d8ecc5', '#d2e4b5', '#f0cf93', '#dbe4e7'], turf: ['#658e48', '#647f3e', '#aa7c39', '#c3d0d3'], leaf: ['#738b3c', '#7c7934', '#d18a2e', '#8b9b91'] },
+  ] as const;
+  const palette = palettes[depth];
+  const sky = palette.sky[season] ?? palette.sky[0];
+  const turf = palette.turf[season] ?? palette.turf[0];
+  const leaf = palette.leaf[season] ?? palette.leaf[0];
   c.fillStyle = sky;
   c.fillRect(-OX, -OY, BW, BH);
 
-  // Layered misty Hyrcanian ancient tree silhouettes & sunbeams
-  for (let i = 0; i < 9; i++) {
-    const tx = -260 + i * 215 + r() * 40;
-    shape(c, box(tx, 165, 36, 330), { fill: '#4c382a', hatch: 0.14, line: 3, jit: 2 });
-    shape(c, ell(tx, 95, 112, 68, 16), { fill: leaf, hatch: 0.1, line: 3.2, jit: 4 });
+  // Each glade has its own readable silhouette rhythm: open woodland, dense
+  // deep-forest columns, then a few massive golden ancient trees.
+  const treeCounts = [9, 13, 7] as const;
+  const treeSteps = [215, 150, 285] as const;
+  const trunkWidths = [36, 27, 54] as const;
+  const trunkHeights = [330, 390, 360] as const;
+  for (let i = 0; i < treeCounts[depth]; i++) {
+    const tx = -260 + i * treeSteps[depth] + r() * 40;
+    const baseY = depth === 1 ? 195 : 165;
+    shape(c, box(tx, baseY, trunkWidths[depth], trunkHeights[depth]), { fill: depth === 2 ? '#67452b' : '#4c382a', hatch: 0.14, line: 3, jit: 2 });
+    shape(c, ell(tx, depth === 1 ? 82 : 95, depth === 1 ? 86 : depth === 2 ? 138 : 112, depth === 2 ? 84 : 68, 16), { fill: leaf, hatch: 0.1, line: 3.2, jit: 4 });
+    if (depth === 2) {
+      ln(c, [[tx, baseY + trunkHeights[depth] / 2 - 20], [tx - 36, baseY + trunkHeights[depth] / 2 + 12]], 8, '#67452b');
+      ln(c, [[tx, baseY + trunkHeights[depth] / 2 - 20], [tx + 36, baseY + trunkHeights[depth] / 2 + 12]], 8, '#67452b');
+    }
   }
   for (let b = 0; b < 4; b++) {
     const bx = 180 + b * 290;
     c.save();
-    c.globalAlpha = 0.16;
+    c.globalAlpha = [0.16, 0.07, 0.23][depth];
     c.fillStyle = '#fff9d6';
     c.beginPath();
     c.moveTo(bx - 35, -OY); c.lineTo(bx + 45, -OY); c.lineTo(bx + 150, 560); c.lineTo(bx + 25, 560);
@@ -170,7 +187,7 @@ export function forestBG(season: number, layer = 1): HTMLCanvasElement {
   // Forest floor + winding woodland trail
   shape(c, [[-OX, 378], [430, 368], [940, 374], [1700, 384], [1700, 920], [-OX, 920]],
     { fill: turf, hatch: 0.1, line: 4, jit: 4 });
-  dirtRoad(c, [[-420, 588], [210, 582], [650, 574], [1142, 520], [1700, 514]], 32, '#c8ab78', 71 + layer);
+  dirtRoad(c, [[-420, 588], [210, 582], [650, 574], [1142, 520], [1700, 514]], depth === 1 ? 25 : 32, depth === 2 ? '#d7b76f' : depth === 1 ? '#a99167' : '#c8ab78', 71 + layer);
 
   // Ancient Heartwood Shrine Tree at center-north (x = 640, y = 342)
   shape(c, box(640, 268, 74, 158), { fill: '#5b3c28', hatch: 0.18, line: 3.6, jit: 2 });
@@ -269,7 +286,13 @@ export function renderFrontierScene(
   drawables.sort((a, b) => a.y - b.y);
   for (const d of drawables) d.fn();
 
-  // Charter monument in Forest or Cavern
+  drawFrontierScenePlaques(ctx, scene);
+}
+
+/** Interactive labels are shared by the world pass and the post-night contrast pass. */
+export function drawFrontierScenePlaques(ctx: CanvasRenderingContext2D, scene: 'cave' | 'forest') {
+  const f = ensureFrontier();
+  const layer = scene === 'cave' ? f.caveFloor : f.forestLayer;
   const frCharter = activeCharter('frontier');
   if (scene === 'cave' && frCharter === 'quarry') {
     drawSignPlaque(ctx, 355, 298, FT.caveFloorLabel + ' — ' + fa(layer) + '/' + fa(3));

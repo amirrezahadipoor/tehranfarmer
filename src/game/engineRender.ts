@@ -10,7 +10,7 @@ import { faPct } from '../strings/fa';
 import { cinema, drawCinemaForegroundUI, drawCinemaWorldExtras, isActorStagedInScene } from './cinemaStage';
 import { drawAnimalStatusExtra, drawFieldUpgradesAndHover, drawFullScarecrow, liveAnimalScale } from './farmVisuals';
 import { renderEstateFieldScene } from './estateScenes';
-import { drawTownWorldExpansions, renderFrontierScene } from './frontierScenes';
+import { drawFrontierScenePlaques, drawTownWorldExpansions, renderFrontierScene } from './frontierScenes';
 import { drawFarmlandPlotsLayer, drawGlasshouseSpan, drawSignPlaque } from './worldRoads';
 import { FT } from '../strings/frontierText';
 import { WX } from '../strings/worldExpansionText';
@@ -254,7 +254,7 @@ export function createSceneRenderer(
       ctx.fill();
     }
     // شب، هالهٔ گرم فانوس‌ها، پنجره‌های روشن و مه صبحگاهی (P8-04)
-    const na = nightAlpha(renderHr) + (S.weather >= 2 ? 0.12 : 0);
+    const na = Math.min(0.62, nightAlpha(renderHr) + (S.weather >= 2 ? 0.1 : 0));
     if (na > 0.01) { ctx.fillStyle = `rgba(14,20,72,${na})`; ctx.fillRect(-1600, -1600, 4800, 4400); }
     if (renderHr > 17 && renderHr < 20) { ctx.fillStyle = `rgba(255,130,50,${0.14 * Math.sin(((renderHr - 17) / 3) * Math.PI)})`; ctx.fillRect(-1600, -1600, 4800, 4400); }
     if (na > 0.22) {
@@ -287,6 +287,7 @@ export function createSceneRenderer(
         }
       }
     }
+    if (na > 0.01) drawNightReadablePlaques();
     if (S.hour >= 5.2 && S.hour <= 7.8) {
       const mistA = 0.16 * Math.sin(((S.hour - 5.2) / 2.6) * Math.PI);
       ctx.fillStyle = `rgba(244,250,255,${mistA})`;
@@ -361,6 +362,31 @@ export function createSceneRenderer(
   const viewMinX = () => -activeTx / activeSc - 96;
   const viewMaxX = () => (cw - activeTx) / activeSc + 96;
 
+  function drawVisibleSignPlaque(x: number, postBaseY: number, label: string) {
+    if (x + 150 < viewMinX() || x - 150 > viewMaxX()) return;
+    drawSignPlaque(ctx, x, postBaseY, label);
+  }
+
+  function drawNightReadablePlaques() {
+    if (UI.scene === 'farm') {
+      drawVisibleSignPlaque(1216, 344, WX.gateTown);
+      drawVisibleSignPlaque(696, worldLabelBoost() > 1 ? 336 : 214, WX.gateNorth);
+      drawVisibleSignPlaque(1212, 464, WX.gateValley);
+      drawVisibleSignPlaque(60, 628, WX.gateRiver);
+      drawVisibleSignPlaque(316, 628, WX.gateApiary);
+    } else if (UI.scene === 'river') {
+      drawVisibleSignPlaque(1212, 576, WX.gateFarm);
+      drawVisibleSignPlaque(96, 576, FT.gateCave);
+    } else if (UI.scene === 'apiary') {
+      drawVisibleSignPlaque(1218, 626, WX.gateFarm);
+      drawVisibleSignPlaque(84, 626, FT.gateForest);
+    } else if (UI.scene === 'town') {
+      drawVisibleSignPlaque(68, 608, WX.gateFarm);
+    } else if (UI.scene === 'cave' || UI.scene === 'forest') {
+      drawFrontierScenePlaques(ctx, UI.scene);
+    }
+  }
+
   function renderFarm() {
     blitVisibleBG();
     const vx0 = viewMinX(), vx1 = viewMaxX();
@@ -370,7 +396,7 @@ export function createSceneRenderer(
       for (const wx of [106, 232]) ctx.fillRect(wx + 2, 174, 36, 34);
     }
     drawFestivalDecor(ctx, 'farm', t);
-    drawCourtyardDecor(ctx, t, nightAlpha(UI.started ? S.hour : 10.5));
+    drawCourtyardDecor(ctx, t, nightAlpha(UI.started ? S.hour : 10.5), vx0, vx1);
     // زمین‌ها (لایهٔ یکپارچهٔ کش‌شده برای اجرای روان ۶۰ فریم روی گوشی‌های اقتصادی اندروید)
     drawFarmlandPlotsLayer(ctx, 'farm', FX, FY, COLS, ROWS, PLOT_DX, PLOT_DY, S.plots, true, (i) => isUnlocked(i, S.lv.land));
     // === گلخانه: سازهٔ شیشه‌ای و چوبی یکپارچه و شفاف روی ستون‌های پوشیده ===
@@ -398,18 +424,18 @@ export function createSceneRenderer(
       ctx.save(); ctx.strokeStyle = colr[q.kind] ?? '#fff'; ctx.lineWidth = 4; ctx.setLineDash([8, 7]); ctx.lineDashOffset = -t * 20;
       ctx.beginPath(); ctx.ellipse(cx, cy + 2, 36, 28, 0, 0, 6.3); ctx.stroke(); ctx.restore();
     }
-    drawWorldMachines(ctx, S.machines, S.auto, t);
+    drawWorldMachines(ctx, S.machines, S.auto, t, vx0, vx1);
     const list: Dr[] = [];
     // صندوق پست دست‌ساز مزرعه کنار مسیر ایوان خانه با پرچم سرخ هنگام وجود نامهٔ تازه (صفر هم‌پوشانی!)
     if (vx0 <= POSTBOX_GEOM.x + 50 && vx1 >= POSTBOX_GEOM.x - 50) {
       list.push({ y: POSTBOX_GEOM.y, f: () => drawWorldPostbox(ctx, unreadMailCount(), t) });
     }
     // === سیلوی خوراک کنار انبار سرخ (کاملاً پایین‌تر از HUD بدهی و بیرون از دروازهٔ شمالی) ===
-    if (S.silo > 0) {
+    if (S.silo > 0 && vx0 <= 1000 && vx1 >= 820) {
       list.push({ y: 230, f: () => drawCachedSilo(ctx, 910, 230, S.silo) });
     }
     // Full-body hand-drawn scarecrow cleanly in South-East corner below Valley signpost
-    if (vx1 >= 1120) {
+    if (vx0 <= 1280 && vx1 >= 1120) {
       list.push({ y: 628, f: () => drawFullScarecrow(ctx, 1196, 628, t, S.debt?.scarecrow ?? 0) });
     }
     for (let i = 0; i < COLS * ROWS; i++) {
@@ -437,7 +463,7 @@ export function createSceneRenderer(
       });
     }
     list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.72); } });
-    sceneWorkers.forEach((w) => { list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) }); });
+    sceneWorkers.forEach((w) => { if (w.x >= vx0 && w.x <= vx1) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) }); });
     if (bph !== 'off') list.push({ y: builder.y, f: () => drawFarmer(ctx, builder.rig, builder.x, builder.y, builder.face, 0.72) });
     for (const a of animals.values()) {
       if (a.x < vx0 || a.x > vx1) continue;
@@ -468,11 +494,11 @@ export function createSceneRenderer(
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
     // پلاک خوانای مقصد بالای هر ۵ تابلوی خروجی مزرعه
-    drawSignPlaque(ctx, 1216, 344, WX.gateTown);
-    drawSignPlaque(ctx, 696, worldLabelBoost() > 1 ? 336 : 214, WX.gateNorth); // موبایل: زیر HUD و بالای کرت‌ها
-    drawSignPlaque(ctx, 1212, 464, WX.gateValley);
-    drawSignPlaque(ctx, 60, 628, WX.gateRiver);
-    drawSignPlaque(ctx, 316, 628, WX.gateApiary);
+    drawVisibleSignPlaque(1216, 344, WX.gateTown);
+    drawVisibleSignPlaque(696, worldLabelBoost() > 1 ? 336 : 214, WX.gateNorth); // موبایل: زیر HUD و بالای کرت‌ها
+    drawVisibleSignPlaque(1212, 464, WX.gateValley);
+    drawVisibleSignPlaque(60, 628, WX.gateRiver);
+    drawVisibleSignPlaque(316, 628, WX.gateApiary);
     // تابلوی جمع‌وجور پیشرفت ساخت‌وساز در حیاط باز بالای کرت‌ها (صفر تداخل با محصولات یا HUD!)
     const job0 = S.builds[0];
     if (job0 && (bph === 'work' || bph === 'walk')) {
@@ -506,11 +532,11 @@ export function createSceneRenderer(
     });
     const list: Dr[] = [];
     list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.75); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.75); } });
-    sceneWorkers.forEach((w) => { list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.75) }); });
+    sceneWorkers.forEach((w) => { if (w.x >= viewMinX() && w.x <= viewMaxX()) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.75) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
-    drawSignPlaque(ctx, 1212, 576, WX.gateFarm);
-    drawSignPlaque(ctx, 96, 576, FT.gateCave);
+    drawVisibleSignPlaque(1212, 576, WX.gateFarm);
+    drawVisibleSignPlaque(96, 576, FT.gateCave);
     drawRiverCastGauge(ctx, farmer.x, farmer.y);
   }
 
@@ -536,11 +562,11 @@ export function createSceneRenderer(
     }
     const list: Dr[] = [];
     list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.74); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.74); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.74); } });
-    sceneWorkers.forEach((w) => { list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.74) }); });
+    sceneWorkers.forEach((w) => { if (w.x >= viewMinX() && w.x <= viewMaxX()) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.74) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
-    drawSignPlaque(ctx, 1218, 626, WX.gateFarm);
-    drawSignPlaque(ctx, 84, 626, FT.gateForest);
+    drawVisibleSignPlaque(1218, 626, WX.gateFarm);
+    drawVisibleSignPlaque(84, 626, FT.gateForest);
   }
 
   function renderTown() {
@@ -587,7 +613,7 @@ export function createSceneRenderer(
     });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
-    drawSignPlaque(ctx, 68, 608, WX.gateFarm);
+    drawVisibleSignPlaque(68, 608, WX.gateFarm);
   }
 
     render();

@@ -125,13 +125,13 @@ export function Ledger() {
               <button className="btn b press !px-2" onClick={() => payDebt(minPay())}><span className="text-sm font-black">{UT.u47}</span></button>
               <button className="btn g press !px-2" onClick={() => payDebt(d.remaining)}><span className="text-sm font-black">{UT.u51}</span></button>
             </div>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <input
                 value={custom}
                 onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, ''))}
                 inputMode="numeric"
                 placeholder={UT.u52}
-                className="w-32 rounded-md border-2 border-[#503426] bg-[#fff4d8] px-2 py-1 text-sm font-black"
+                className="min-h-[48px] w-32 max-w-full rounded-md border-2 border-[#503426] bg-[#fff4d8] px-2 py-1 text-sm font-black"
                 dir="ltr"
               />
               <button className="btn y press !px-2" onClick={() => { payDebt(Number(custom || 0)); setCustom(''); }}>

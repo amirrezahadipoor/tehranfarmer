@@ -63,10 +63,11 @@ export function drawRiverCastGauge(ctx: Ctx, x: number, y: number) {
   ctx.restore();
 }
 
-export function drawCourtyardDecor(ctx: Ctx, t: number, nightA: number) {
+export function drawCourtyardDecor(ctx: Ctx, t: number, nightA: number, vx0 = -Infinity, vx1 = Infinity) {
   const D = S.decor ?? {};
+  const visible = (x: number, pad = 80) => x + pad >= vx0 && x - pad <= vx1;
   // 1) Turquoise Persian Tile Pool in sunny front courtyard (clean gap between house, well & sheep pen)
-  if (D.tilepool) {
+  if (D.tilepool && visible(318)) {
     const px = 318, py = 252;
     shape(ctx, ell(px, py, 19, 8.5, 14), { fill: '#1d9bf0', line: 2.6 });
     shape(ctx, ell(px, py, 22, 10.5, 14), { fill: 'rgba(29,155,240,0.18)', line: 2 });
@@ -75,7 +76,7 @@ export function drawCourtyardDecor(ctx: Ctx, t: number, nightA: number) {
     circ(ctx, px, py - 3.5 - jet, 2.2, '#ffffff', 1);
   }
   // 2) Wooden Resting Pergola on open west lawn beside farmhouse (zero tree or chicken-coop overlap)
-  if (D.pergola) {
+  if (D.pergola && visible(46)) {
     const gx = 46, gy = 246;
     ln(ctx, [[gx - 18, gy], [gx - 18, gy - 42]], 3.2, '#7a4b2a');
     ln(ctx, [[gx + 18, gy], [gx + 18, gy - 42]], 3.2, '#7a4b2a');
@@ -88,6 +89,7 @@ export function drawCourtyardDecor(ctx: Ctx, t: number, nightA: number) {
   if (D.lanterns) {
     const glow = courtyardLanternGlow();
     for (const [lx, ly] of [[80, 248], [414, 242], [1142, 242]] as const) {
+      if (!visible(lx, 35)) continue;
       ln(ctx, [[lx, ly], [lx, ly - 28]], 2.8, '#4a3525');
       if (nightA > 0.14) {
         ctx.save();
@@ -99,7 +101,7 @@ export function drawCourtyardDecor(ctx: Ctx, t: number, nightA: number) {
     }
   }
   // 4) Purring Tabby Barn Cat on sunny porch doorstep
-  if (D.barncat) {
+  if (D.barncat && visible(188)) {
     const cx = 188 + Math.sin(t * 0.7) * 5, cy = 256;
     ctx.save();
     oval(ctx, cx, cy - 6, 10, 6.5, '#e09f5a', 0, 2);
@@ -110,7 +112,7 @@ export function drawCourtyardDecor(ctx: Ctx, t: number, nightA: number) {
     ctx.restore();
   }
   // 5) Loyal Sheepdog guarding barn forecourt (cleanly beside barn, above field kerb)
-  if (D.sheepdog) {
+  if (D.sheepdog && visible(944)) {
     const dx = 944 + Math.sin(t * 0.9) * 8, dy = 236;
     ctx.save();
     oval(ctx, dx, dy - 10, 14, 8.2, '#d8c3a5', 0, 2.2);

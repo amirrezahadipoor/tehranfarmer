@@ -127,6 +127,32 @@ export function drawCinemaSetPiece(c: Ctx, kind: StagePropKind, x: number, y: nu
       circ(c, 0, -2, 6, '#ffd43b', 2);
       break;
     }
+    case 'guardian-bell': {
+      const glow = 0.16 + Math.sin(clock * 2.2) * 0.035;
+      c.fillStyle = `rgba(255,222,105,${glow})`;
+      c.beginPath(); c.arc(0, -55, 82, 0, Math.PI * 2); c.fill();
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2 + clock * 0.04;
+        ln(c, [[Math.cos(a) * 58, -55 + Math.sin(a) * 58], [Math.cos(a) * 74, -55 + Math.sin(a) * 74]], 2.2, '#ffe893');
+      }
+      oval(c, 0, 18, 58, 12, 'rgba(40,25,20,.22)', 0, 0);
+      shape(c, [[-52, 14], [52, 14], [43, -3], [-43, -3]], { fill: '#c5b9a2', line: 2.8, smooth: false });
+      shape(c, [[-40, -3], [40, -3], [34, -18], [-34, -18]], { fill: '#f0d083', line: 2.4, smooth: false });
+      for (const px of [-39, 39]) {
+        ln(c, [[px, -16], [px, -100]], 8, '#6a4428');
+        circ(c, px, -102, 6, '#ffd95a', 2);
+      }
+      shape(c, [[-52, -105], [0, -124], [52, -105], [46, -95], [0, -110], [-46, -95]], { fill: '#a76d31', line: 2.8, smooth: false });
+      c.fillStyle = '#f7c948'; c.lineWidth = 2.8;
+      c.beginPath();
+      c.moveTo(-25, -47); c.quadraticCurveTo(-22, -82, 0, -91); c.quadraticCurveTo(22, -82, 25, -47);
+      c.lineTo(32, -38); c.lineTo(-32, -38); c.closePath(); c.fill(); c.stroke();
+      oval(c, 0, -36, 35, 7, '#ffe37d', 0, 2.4);
+      circ(c, 0, -27 + Math.sin(clock * 3) * 2, 6, '#d88b2c', 2);
+      circ(c, 0, -4, 11, '#fff0a6', 2.2);
+      shape(c, [[0, -13], [3, -7], [10, -7], [5, -2], [7, 5], [0, 1], [-7, 5], [-5, -2], [-10, -7], [-3, -7]], { fill: '#d99a28', line: 1.4, smooth: false });
+      break;
+    }
     case 'qanat-fountain': {
       const h = 72 + Math.sin(clock * 8) * 14;
       oval(c, 0, 12, 42, 12, '#9aa5b1', 0, 2.8);

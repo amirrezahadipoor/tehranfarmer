@@ -443,6 +443,9 @@ export function Cutscene() {
         const safeTop = Math.max(46, barH.top + 4);
         const safeBot = Math.max(44, barH.bot + 4);
         const by = shopDialogue ? safeTop + 4 : Math.min(vh - safeBot, Math.max(safeTop + boxSize.h, anchor.y));
+        // Keep unusually long choice bubbles between the measured letterbox bars.
+        // Only the body scrolls; the hand-drawn frame and tail remain stationary.
+        const bubbleBodyMaxH = Math.max(140, vh - safeTop - safeBot - 24);
         const tailDx = shopDialogue ? 0 : Math.max(-(halfW - 22), Math.min(halfW - 22, anchor.x - bx));
         return isNarrator ? (
           <div
@@ -466,6 +469,10 @@ export function Cutscene() {
             }}
             className={'pointer-events-none fixed w-fit min-w-[9.5rem] rounded-2xl border-[3px] border-[#503426] bg-[#fffdf4]/97 text-[#3d251a] shadow-xl ' + (compact ? 'max-w-[min(76vw,21.5rem)] px-3 py-1.5' : 'max-w-[min(82vw,24.5rem)] px-3.5 py-2.5')}
           >
+            <div
+              data-cutscene-bubble-body="1"
+              style={{ maxHeight: `${bubbleBodyMaxH}px`, overflowY: 'auto', overscrollBehavior: 'contain', pointerEvents: 'auto', scrollbarWidth: 'thin' }}
+            >
             <span className="sr-only">{speakerName}: {full}</span>
             <div aria-hidden="true" className="mb-0.5 flex items-center gap-1.5">
               <span className="ft rounded-md border border-[#503426] bg-[#ffe6a3] px-2 py-0.2 text-xs sm:text-sm text-[#503426]">
@@ -481,12 +488,6 @@ export function Cutscene() {
                 {!done && <span className="opacity-40">|</span>}
               </div>
             </div>
-            {/* Hand-drawn pointer tail aimed directly toward the live actor's head */}
-            <div
-              aria-hidden="true"
-              style={{ left: `calc(50% + ${tailDx}px)` }}
-              className="absolute -bottom-[9px] h-3.5 w-3.5 -translate-x-1/2 rotate-45 border-b-[3px] border-r-[3px] border-[#503426] bg-[#fffdf4]"
-            />
             {sceneChoices && (
               <div
                 className="pointer-events-auto mt-2 grid grid-cols-1 gap-1 border-t border-[#d8c498] pt-1.5"
@@ -507,6 +508,14 @@ export function Cutscene() {
                 ))}
               </div>
             )}
+            </div>
+            {/* Hand-drawn pointer tail aimed directly toward the live actor's head */}
+            <div
+              aria-hidden="true"
+              style={{ left: `calc(50% + ${tailDx}px)` }}
+              className="absolute -bottom-[9px] h-3.5 w-3.5 -translate-x-1/2 rotate-45 border-b-[3px] border-r-[3px] border-[#503426] bg-[#fffdf4]"
+            />
+
           </div>
         );
       })()}
@@ -524,14 +533,14 @@ export function Cutscene() {
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-extrabold leading-snug">
+        <div data-cutscene-objective="1" className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-extrabold leading-snug">
           <Ic n="star" s={1.5} cls="shrink-0" />
-          <div className="min-w-0 flex-1 line-clamp-2 sm:line-clamp-2">
+          <div className="min-w-0 flex-1 whitespace-normal break-words leading-relaxed [overflow-wrap:anywhere]">
             <span className="text-[#ffd93b]">{ui.objectivePrefix} </span>
             <span>{objText}</span>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div data-cutscene-actions="1" className="flex shrink-0 items-center gap-2">
           <div className="hidden md:flex items-center gap-1 text-xs opacity-75">
             {effectiveScript.beats.map((_, i) => (
               <span key={i} className={i === beatIdx ? 'text-[#ffd93b]' : 'opacity-40'}>•</span>

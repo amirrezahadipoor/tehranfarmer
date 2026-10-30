@@ -356,7 +356,7 @@ export const EN_LINES: Record<string, string[]> = {
   ],
   'secret-true-epilogue': [
     'The grand valley bell rings out across the hills as everyone gathers beside the golden museum statue!',
-    'You didn’t just pay off the farm debt—you uncovered every ancient secret your grandfather left behind, kid!',
+    'You didn’t just pay off the farm debt—you brought so many of your grandfather’s ancient secrets back to life, kid!',
     'From this day on, your name stands in the valley chronicles as Eternal Master of the Farm!',
     'Three cheers for the greatest farmer this village has ever seen!',
   ],
@@ -389,7 +389,7 @@ export const OBJECTIVES: Record<'fa' | 'en', Record<string, string>> = {
     ch2: 'Build 2 ponds & 2 hives, reach Level 10, and pay off Deed #3 (250,000 coins)',
     ch3: 'Build a Greenhouse, restore Northern Qanat, reach Level 14, and clear Deed #4 (700,000 coins)',
     ch4: 'Hire 3 farmhands, claim Sunlit Valley, reach Level 18, and pay Deed #5 (1,600,000 coins)',
-    ch5: 'Complete All 3 Estates (154 plots), reach Level 22, and clear Final Deed (3,365,000 coins)',
+    ch5: 'Complete All 3 Estates (154 plots), reach Level 18, and clear Final Deed (2,400,000 coins)',
     q1done: 'Chapter 1 quest complete! Open the Ledger and finish paying Deed #1',
     q2done: 'Chapter 2 quest complete! Open the Ledger and finish paying Deed #2',
     q3done: 'Chapter 3 quest complete! Open the Ledger and finish paying Deed #3',

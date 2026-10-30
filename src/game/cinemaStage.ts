@@ -510,7 +510,8 @@ function activeSetPiece(): { kind: SceneScript['setPiece'] extends infer T ? T e
   if (curId === 'p4' || curId === 'p5' || curId === 'p7' || curId === 'ch6-outro') {
     return { kind: 'deed-table', x: 912, y: 658 };
   }
-  if (curId === 'finale' || curId === 'secret-true-epilogue') {
+  if (curId === 'secret-true-epilogue') return { kind: 'guardian-bell', x: 846, y: 626 };
+  if (curId === 'finale') {
     return { kind: 'treasure-chest', x: 846, y: 664 };
   }
   if (curId === 'secret-midnight-well' || curId === 'ch4-outro') {

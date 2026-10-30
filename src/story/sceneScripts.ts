@@ -178,16 +178,16 @@ const BEAT_OVERRIDES: Record<string, BeatOverride[]> = {
     {
       area: 'town',
       marks: [
-        { actor: 'grandma', x: 700, y: 655, face: 1, prop: 'bread' },
-        { actor: 'sara', x: 752, y: 664, face: 1 },
-        { actor: 'player', x: 812, y: 656, face: 1 },
-        { actor: 'jahangir', x: 882, y: 656, face: -1, prop: 'teacup' },
-        { actor: 'engineer', x: 938, y: 664, face: -1 },
-        { actor: 'rancher', x: 990, y: 655, face: -1 },
+        { actor: 'grandma', x: 640, y: 674, face: 1, prop: 'bread' },
+        { actor: 'sara', x: 704, y: 682, face: 1 },
+        { actor: 'player', x: 776, y: 676, face: 1 },
+        { actor: 'jahangir', x: 914, y: 676, face: -1, prop: 'teacup' },
+        { actor: 'engineer', x: 978, y: 682, face: -1 },
+        { actor: 'rancher', x: 1040, y: 674, face: -1 },
       ],
-      cam: { x: 845, y: 626, zoom: 1.24 },
+      cam: { x: 845, y: 604, zoom: 1.42 },
       cue: 'cheer',
-      burst: { kind: 'coin', x: 845, y: 640, count: 16 },
+      burst: { kind: 'star', x: 846, y: 548, count: 24 },
     },
     { pose: 'laugh', prop: 'teacup', emote: 'heart', cam: { x: 855, y: 626, zoom: 1.48 }, cue: 'coins', burst: { kind: 'coin', actor: 'jahangir', count: 14 } },
     { pose: 'cheer', prop: 'bread', emote: 'music', react: { actor: 'player', pose: 'cheer', emote: 'heart' }, cam: { x: 835, y: 624, zoom: 1.3 }, cue: 'cheer', burst: { kind: 'heart', x: 825, y: 635, count: 12 } },
@@ -367,7 +367,8 @@ function setPieceFor(id: string, area: SceneArea): { kind: StagePropKind; x: num
   if (id === 'area-intro-north' || id.startsWith('estate-north') || id === 'shop-intro-work' || id.startsWith('npc-q-engineer-') || id === 'quest-done-q4') {
     return { kind: 'kaveh-drone', x: shopXOr(id, cx), y: gy };
   }
-  if (id === 'finale' || id === 'secret-grandpa-tree' || id === 'secret-silk-merchant' || id === 'secret-true-epilogue') {
+  if (id === 'secret-true-epilogue') return { kind: 'guardian-bell', x: 846, y: 626 };
+  if (id === 'finale' || id === 'secret-grandpa-tree' || id === 'secret-silk-merchant') {
     return { kind: 'treasure-chest', x: area === 'town' ? 846 : cx, y: gy };
   }
   if (id === 'ch4-outro' || id === 'secret-midnight-well') return { kind: 'qanat-fountain', x: 372, y: 266 };

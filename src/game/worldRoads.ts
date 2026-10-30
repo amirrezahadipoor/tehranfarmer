@@ -160,12 +160,18 @@ export function drawFarmlandPlotsLayer(
   ctx.drawImage(entry.cv, fx, fy);
 }
 
+const signPlaqueWidths = new Map<string, number>();
+
 /** Draws a pre-cached hand-drawn parchment destination plaque right above a signpost (0 per-frame HarfBuzz text shaping!) */
 export function drawSignPlaque(ctx: Ctx, x: number, postBaseY: number, label: string) {
-  ctx.save();
-  ctx.font = '700 15px Vazirmatn, sans-serif';
-  const rawW = Math.ceil(ctx.measureText(label).width);
-  ctx.restore();
+  let rawW = signPlaqueWidths.get(label);
+  if (rawW === undefined) {
+    ctx.save();
+    ctx.font = '700 15px Vazirmatn, sans-serif';
+    rawW = Math.ceil(ctx.measureText(label).width);
+    ctx.restore();
+    signPlaqueWidths.set(label, rawW);
+  }
   const tw = Math.max(62, rawW + 26);
   const bw = tw + 14;
   const sp = cached(`sign-plaque:${label}:${bw}`, bw, 36, bw * 0.5, 18, (c) => {

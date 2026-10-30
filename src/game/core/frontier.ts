@@ -22,7 +22,9 @@ export interface FrontierState {
   monoculture: Record<string, number>;
   monoWeek: number;
   decreeClaimed: Record<string, boolean>;
+  /** Legacy field name; stores the seven-day festival week key. */
   fairBellSeason: number;
+  /** Last festival week in which each booth granted its full reward. */
   fairPlayed: Record<string, number>;
   festivalTokens: number;
   charters: Partial<Record<CharterKey, CharterValue>>;
@@ -428,15 +430,34 @@ export function useFrontierLandmark(_scene: 'forest'): boolean {
 }
 
 // ===== ۴. جشنوارهٔ قابل‌بازی میدان شهر =====
+export type FestivalBooth = 'judge' | 'cauldron' | 'archery';
+export const FESTIVAL_CONTEST_STAMINA = 6;
+export const FESTIVAL_GOLD_COINS = 140;
+export const festivalWeekKey = (day = S.day) => Math.floor((Math.max(1, day) - 1) / 7);
+
+export function festivalBoothPlayed(kind: FestivalBooth): boolean {
+  return ensureFrontier().fairPlayed[kind] === festivalWeekKey();
+}
+
+export function canStartFestivalContest(kind: 'cauldron' | 'archery'): boolean {
+  return isTownFestivalActive() && !festivalBoothPlayed(kind) && S.stamina >= FESTIVAL_CONTEST_STAMINA;
+}
+
 export function isTownFestivalActive(): boolean {
   const f = ensureFrontier();
-  const seasonIdx = Math.floor((S.day - 1) / 4);
-  return S.day % 7 === 0 || S.event?.id === 'festival' || S.event?.id === 'yalda' || f.fairBellSeason === seasonIdx;
+  // Day 7 is the guaranteed weekly fair. The bell can open the same fair
+  // earlier, but cannot create a second reward cycle or a four-day time block.
+  return S.day % 7 === 0 || S.event?.id === 'festival' || S.event?.id === 'yalda' || f.fairBellSeason === festivalWeekKey();
 }
 
 export function ringTownFestivalBell(): boolean {
   const f = ensureFrontier();
-  f.fairBellSeason = Math.floor((S.day - 1) / 4);
+  if (f.fairBellSeason === festivalWeekKey()) {
+    sfx.err();
+    toast('star', FT.fairBellCooldown);
+    return false;
+  }
+  f.fairBellSeason = festivalWeekKey();
   sfx.fanfare();
   saveGame();
   notify();
@@ -445,7 +466,8 @@ export function ringTownFestivalBell(): boolean {
 
 export function judgeFestivalSubmission(itemIds: string[]): { score: number; rank: 1 | 2 | 3; coins: number; tokens: number } | null {
   const f = ensureFrontier();
-  if (f.fairPlayed.judge === S.day) { sfx.err(); toast('star', FT.fairDoneToday); return null; }
+  if (!isTownFestivalActive()) { sfx.err(); toast('star', FT.fairClosed); return null; }
+  if (festivalBoothPlayed('judge')) { sfx.err(); toast('star', FT.fairDoneToday); return null; }
   // تصمیم طراحی: قلم‌های داوری «تقدیم» می‌شوند (مصرف از کوله اول، بعد انبار) و کل موجودی بازیکن به‌شمار می‌آید
   const valid = itemIds.filter((id, i) => id && GOOD[id] && holdCount(id) > 0 && itemIds.indexOf(id) === i).slice(0, 3);
   if (!valid.length) { sfx.err(); return null; }
@@ -460,9 +482,9 @@ export function judgeFestivalSubmission(itemIds: string[]): { score: number; ran
   }
   const score = Math.min(100, Math.round(28 + Math.min(42, valSum / 9) + cats.size * 10));
   const rank: 1 | 2 | 3 = score >= 78 ? 1 : score >= 54 ? 2 : 3;
-  const coins = rank === 1 ? 750 : rank === 2 ? 420 : 220;
-  const tokens = rank === 1 ? 5 : rank === 2 ? 3 : 2;
-  f.fairPlayed.judge = S.day;
+  const coins = rank === 1 ? 320 : rank === 2 ? 200 : 100;
+  const tokens = rank === 1 ? 3 : rank === 2 ? 2 : 1;
+  f.fairPlayed.judge = festivalWeekKey();
   f.festivalTokens += tokens;
   S.coins += coins;
   S.earned += coins;
@@ -476,16 +498,22 @@ export function judgeFestivalSubmission(itemIds: string[]): { score: number; ran
 
 export function completeFestivalContest(kind: 'cauldron' | 'archery', ratio: number): { coins: number; tokens: number } | null {
   const f = ensureFrontier();
-  if (f.fairPlayed[kind] === S.day) { sfx.err(); toast('star', FT.fairDoneToday); return null; }
+  if (!isTownFestivalActive()) { sfx.err(); toast('star', FT.fairClosed); return null; }
+  if (festivalBoothPlayed(kind)) { sfx.err(); toast('star', FT.fairDoneToday); return null; }
+  if (S.stamina < FESTIVAL_CONTEST_STAMINA) {
+    sfx.err();
+    toast('bolt', FT.fairNeedStamina(FESTIVAL_CONTEST_STAMINA));
+    return null;
+  }
   const safeRatio = Number.isFinite(ratio) ? ratio : 0.5;
   const clean = Math.max(0.15, Math.min(1, safeRatio));
-  const coins = Math.round(180 + clean * 520);
-  const tokens = clean >= 0.8 ? 4 : clean >= 0.5 ? 3 : 2;
-  f.fairPlayed[kind] = S.day;
+  const coins = Math.round(70 + clean * 160);
+  const tokens = clean >= 0.8 ? 2 : 1;
+  S.stamina = Math.max(0, S.stamina - FESTIVAL_CONTEST_STAMINA);
+  f.fairPlayed[kind] = festivalWeekKey();
   f.festivalTokens += tokens;
   S.coins += coins;
   S.earned += coins;
-  S.stamina = Math.min(stamCap(), S.stamina + 25);
   addXp(Math.round(35 + clean * 60));
   sfx.fanfare();
   saveGame();
@@ -501,7 +529,7 @@ export function redeemFestivalTokens(prizeId: 'elixir' | 'saffron' | 'turquoise'
   if (prizeId === 'elixir') { S.stamina = stamCap(); grantGoodWithMailOverflow('herb', 2, 'grandma', 'fair'); }
   else if (prizeId === 'saffron') { S.seeds.saffron = (S.seeds.saffron ?? 0) + 3; }
   else if (prizeId === 'turquoise') { grantGoodWithMailOverflow('turquoise', 2, 'engineer', 'fair'); }
-  else { S.coins += 650; S.earned += 650; }
+  else { S.coins += FESTIVAL_GOLD_COINS; S.earned += FESTIVAL_GOLD_COINS; }
   sfx.buy();
   saveGame();
   notify();

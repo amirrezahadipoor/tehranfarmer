@@ -432,7 +432,7 @@ function PondModal() {
           <span className="text-xs font-bold opacity-75">{UT.unifiedPondSub}</span>
         </div>
         {n > 0 && (
-          <button className="btn g press !px-2.5 !py-1 text-xs font-black" onClick={() => { manageAllPonds(); }}>
+          <button data-pond-manage-all="1" className="btn g press w-full !whitespace-normal !px-2.5 !py-1 text-xs font-black sm:w-auto" onClick={() => { manageAllPonds(); }}>
             <Ic n="fish" s={1.4} />
             <span>{UT.manageAllPonds}</span>
           </button>
@@ -441,12 +441,12 @@ function PondModal() {
 
       {n > 0 ? (
         <div className="paper mb-3 flex flex-col gap-2.5 p-3.5" data-unified-pond="1">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               <Ic n="pond" s={4.2} />
-              <div>
-                <div className="text-base font-extrabold">{UT.unifiedPondTitle} — {UT.u112}{fa(n)}</div>
-                <div className="text-xs font-bold opacity-75">
+              <div className="min-w-0 flex-1">
+                <div className="break-words text-base font-extrabold">{UT.unifiedPondTitle} — {UT.u112}{fa(n)}</div>
+                <div className="break-words text-xs font-bold opacity-75">
                   {stockedN > 0
                     ? (readyN > 0 ? UT.u113 : (fa(Math.ceil(maxGrowLeft / DAY_RATE)) + UT.u114))
                     : UT.u116}
@@ -492,10 +492,10 @@ function PondModal() {
       ) : null}
 
       {n < POND_MAX && (
-        <div className="paper flex items-center justify-between gap-3 p-3">
-          <div className="flex items-center gap-2.5">
+        <div className="paper flex flex-wrap items-center justify-between gap-3 p-3">
+          <div className="flex min-w-0 items-center gap-2.5">
             <Ic n="pond" s={3.6} cls="opacity-70" />
-            <div className="text-sm font-extrabold">{n > 0 ? UT.expandUnifiedPond : UT.buildUnifiedPond}</div>
+            <div className="break-words text-sm font-extrabold">{n > 0 ? UT.expandUnifiedPond : UT.buildUnifiedPond}</div>
           </div>
           <BuildingBadge kind="pond" keyName="pond" />
           {!buildingNow('pond', 'pond') && (

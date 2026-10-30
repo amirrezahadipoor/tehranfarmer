@@ -126,7 +126,10 @@ export function landPrice(i: number): number {
   // پیشنهاد بهبود (گزارش ۳۰۰X): ضریب ثروت فقط از «درآمدِ ۳۰ روز اخیر» می‌آید تا
   // بازیکنِ پس‌اندازکننده (درآمدِ عمری بالا، جریانِ فعلی عادی) به خاطر پساندازش تنبیه نشود.
   const recent = (S.earn30 ?? []).reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
-  const richMult = 1 + Math.min(WEALTH_MULT_CAP, recent / WEALTH_DIVISOR);
+  // The final heritage charter must not become more expensive merely because
+  // the player improved their income; other estate tiers retain the existing curve.
+  const wealthCap = i === LAND_PRICES.length - 1 ? 0.5 : WEALTH_MULT_CAP;
+  const richMult = 1 + Math.min(wealthCap, recent / WEALTH_DIVISOR);
   return Math.round(base * richMult);
 }
 

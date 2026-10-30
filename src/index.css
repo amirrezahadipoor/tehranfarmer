@@ -44,7 +44,7 @@ button, [role="button"], .btn, [data-tap], select, label { touch-action: manipul
    روی نمایشگرهای کوچک (۶۴۰×۳۶۰ و گوشی‌های ۹۱۵×۴۱۲) ریشهٔ rem تا ۹.۵px پایین می‌آمد و
    متن‌های text-xs (۰.۷۵rem) به ۷px می‌رسیدند. این قاعده یک کف واقعی ۱۱px برای متن‌های
    ریزِ HUD/مودال‌ها می‌گذارد؛ ارتفاع لمسی دکمه‌ها از قبل با min-height ۴۸px تضمین شده است. */
-.text-xs, .text-\[0\.6rem\], .text-\[0\.62rem\], .text-\[0\.64rem\], .text-\[0\.65rem\],
+.text-xs, .text-\[0\.6rem\], .text-\[0\.62rem\], .text-\[0\.63rem\], .text-\[0\.64rem\], .text-\[0\.65rem\],
 .text-\[0\.66rem\], .text-\[0\.68rem\], .text-\[0\.7rem\], .text-\[0\.72rem\], .text-\[0\.75rem\] {
   font-size: max(11px, 0.7rem);
   line-height: 1.25;
@@ -53,10 +53,10 @@ button, [role="button"], .btn, [data-tap], select, label { touch-action: manipul
    نوشته شده‌اند؛ سلکتورهای قدیمیِ «0.72rem» با آن‌ها match نمی‌شدند. این مقادیر فقط در
    viewport کوچک اعمال می‌شوند تا pixel-baseline های دسکتاپ کاملاً ثابت بمانند. */
 @media (max-width: 900px), (max-height: 500px) {
-  .text-xs, .text-\[\.58rem\], .text-\[\.6rem\], .text-\[\.62rem\], .text-\[\.64rem\],
+  .text-xs, .text-\[\.58rem\], .text-\[\.6rem\], .text-\[\.62rem\], .text-\[\.63rem\], .text-\[\.64rem\],
   .text-\[\.65rem\], .text-\[\.66rem\], .text-\[\.68rem\], .text-\[\.7rem\],
   .text-\[\.72rem\], .text-\[\.75rem\], .text-\[0\.58rem\], .text-\[0\.6rem\],
-  .text-\[0\.62rem\], .text-\[0\.64rem\], .text-\[0\.65rem\], .text-\[0\.66rem\],
+  .text-\[0\.62rem\], .text-\[0\.63rem\], .text-\[0\.64rem\], .text-\[0\.65rem\], .text-\[0\.66rem\],
   .text-\[0\.68rem\], .text-\[0\.7rem\], .text-\[0\.72rem\], .text-\[0\.74rem\], .text-\[0\.75rem\] {
     font-size: max(13px, 0.75rem);
     line-height: 1.3;
@@ -208,6 +208,78 @@ html[data-reduce-motion="1"] .bar > i { transition: none !important; }
   .tutorial-coach { bottom: calc(var(--safe-bottom) + 164px); }
 }
 
+/* Narrow HUD: reflow complete controls instead of allowing two intrinsic-width
+   flex clusters to push Inventory, Quests or Settings outside the viewport.
+   Every action remains present and keeps its real 48px touch target. */
+@media (max-width: 600px) {
+  .hud-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: .3rem;
+    min-width: 0;
+  }
+  .hud-controls {
+    order: -1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .3rem;
+  }
+  .hud-clock-wrap { align-items: flex-end; min-width: 0; max-width: 100%; }
+  .hud-clock { max-width: 100%; min-width: 0; flex-wrap: wrap; justify-content: center; }
+  .hud-season-label { white-space: normal; overflow-wrap: anywhere; }
+  .hud-event { max-width: 100%; flex-wrap: wrap; text-align: center; }
+  .hud-actions {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .25rem;
+  }
+  .hud-action { max-width: 100%; flex: 0 1 auto; }
+  .hud-action > span { min-width: 0; }
+  .hud-status { width: 100%; min-width: 0; max-width: 100%; gap: .25rem; }
+  .hud-wallet-row, .hud-debt-row {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    align-items: stretch;
+    gap: .25rem;
+  }
+  .hud-wallet {
+    flex: 1 1 11rem;
+    min-width: 0;
+    max-width: 100%;
+    justify-content: space-between;
+    gap: .35rem;
+  }
+  .hud-wallet > div { min-width: 0; }
+  .hud-coin-value { font-size: clamp(.95rem, 5vw, 1.25rem); overflow-wrap: anywhere; }
+  .hud-level { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+  .hud-debt-row { flex-wrap: wrap; }
+  .hud-debt { width: 100%; min-width: 0; max-width: 100%; }
+  .hud-debt > span { min-width: 0; }
+  .hud-build-card { width: min(11rem, 100%); max-width: 100%; min-width: 0; flex: 1 1 11rem; }
+  .hud-mine-status { width: 100%; max-width: 100%; flex: 1 1 100%; }
+  .hud-mine-status .whitespace-nowrap { white-space: normal; flex-wrap: wrap; }
+}
+
+/* Cutscene controls may occupy two rows on narrow screens; the objective is
+   never line-clamped, and the live bubble observers measure the real bar size. */
+@media (max-width: 600px) {
+  [data-cutscene-topbar] { flex-wrap: wrap; gap: .3rem; }
+  [data-cutscene-topbar] > div { min-width: 0; max-width: 100%; flex-wrap: wrap; gap: .25rem; }
+  [data-cutscene-topbar] > div:last-child { margin-inline-start: auto; }
+  [data-cutscene-topbar] .btn { max-width: 100%; white-space: normal; }
+  [data-cutscene-bottombar] { flex-wrap: wrap; gap: .3rem; }
+  [data-cutscene-bottombar] [data-cutscene-objective] { flex: 1 1 100%; }
+  [data-cutscene-bottombar] [data-cutscene-actions] { margin-inline-start: auto; }
+}
+
 /* Keyboard/screen-reader scene mirror: visually out of the way until focused,
    then a high-contrast, scrollable control panel with 44px minimum targets. */
 .scene-a11y {
@@ -263,3 +335,89 @@ html[data-reduce-motion="1"] .bar > i { transition: none !important; }
   outline: 3px solid #155e75;
   outline-offset: 2px;
 }
+
+@media (max-width: 639px) {
+  .atlas-node { flex-wrap: wrap; align-content: center; }
+  .atlas-node-sub { flex-basis: 100%; text-align: center; }
+  [data-shop-back-lobby="1"] { flex: 1 1 100%; width: 100%; white-space: normal; }
+  [data-shop-purchase] > .relative { flex-shrink: 0; }
+}
+
+@media (max-width: 600px) {
+  .hud-inventory { position: relative; }
+}
+
+/* 320px-class devices: use the horizontal budget as two deliberate columns.
+   Build/warning cards auto-flow below, while the main status and controls share
+   rows instead of stacking four full-width bands. */
+@media (max-width: 360px) {
+  .hud-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-auto-flow: row;
+    align-items: start;
+    gap: .3rem;
+  }
+  .hud-status { display: contents; }
+  .hud-wallet-row {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: .25rem;
+  }
+  .hud-wallet { width: 100%; flex: 0 0 auto; flex-wrap: wrap; padding-inline: .35rem; }
+  .hud-wallet > div { width: 100%; justify-content: center; }
+  .hud-level { width: 100%; justify-content: center; }
+  .hud-debt-row { display: contents; }
+  .hud-debt, .hud-mine-status {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-inline: .3rem;
+  }
+  .hud-controls {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    order: initial;
+    width: 150px;
+    align-items: stretch;
+  }
+  .hud-clock-wrap, .hud-clock { width: 150px; align-items: stretch; }
+  .hud-clock { padding-inline: .3rem; }
+  .hud-actions {
+    width: 150px;
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    justify-content: end;
+    gap: .2rem;
+  }
+  .hud-actions .hud-action { width: 48px; max-width: 48px; }
+  .hud-inventory-count {
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: 0;
+    max-width: 100%;
+    border: 1px solid #503426;
+    border-radius: .35rem;
+    background: #fff4d8;
+    padding: 0 .12rem;
+    font-size: 11px;
+    line-height: 1.15;
+  }
+  .hud-build-card { grid-column: auto; width: 100%; flex: 0 0 auto; }
+  [data-debt-warning="1"] { grid-column: 1 / -1; justify-content: center; }
+}
+@media (max-width: 360px) {
+  .hud-season-icon { display: none; }
+  .hud-build-card { gap: .25rem; padding-inline: .3rem; }
+  .hud-build-card > svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .hud-build-card [data-build-label] { font-size: 11px; line-height: 1.15; }
+  .hud-build-card > .ft { font-size: 11px; }
+}
+.tutorial-coach .text-\[\.85rem\] { font-size: max(11px, .85rem); }
+.tutorial-coach .text-\[\.92rem\] { font-size: max(12px, .92rem); }

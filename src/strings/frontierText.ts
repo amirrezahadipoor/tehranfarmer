@@ -182,7 +182,8 @@ export const FT = {
   get mineQuickBtn() { return en() ? 'Quick extraction' : 'استخراج سریع'; },
   get mineQuickHint() { return en() ? 'Skip timing: guaranteed base gem, no accuracy bonus.' : 'بدون زمان‌بندی: گوهر پایهٔ تضمینی، بدون جایزهٔ دقت.'; },
   get mineExtracting() { return en() ? 'Extracting…' : 'در حال استخراج…'; },
-  get mineBonusReady() { return en() ? 'Accuracy bonus armed' : 'جایزهٔ دقت فعال شد'; },
+  get mineBonusReady() { return en() ? 'Bonus ore guaranteed' : 'گوهر اضافه تضمین شد'; },
+  get mineBonusProgress() { return en() ? 'On track — keep every strike flawless' : 'در مسیر جایزه — همهٔ ضربه‌ها را بی‌نقص نگه دار'; },
   get mineBonusHint() { return en() ? 'Flawless deeper-floor extraction earns bonus ore' : 'استخراج بی‌نقص در طبقات عمیق‌تر گوهر اضافه می‌دهد'; },
   mineFocusStreak(n: number) { return en() ? `Precision streak ×${n}` : `زنجیرهٔ دقیق ×${fa(n)}`; },
   mineStamCost(n: number) { return en() ? `-${n} Stamina` : `${fa(n)} نیرو`; },
@@ -234,7 +235,7 @@ export const FT = {
 
   // Town Square Interactive Festivals
   get fairTitle() { return en() ? 'Seasonal Festival' : 'جشنوارهٔ فصل'; },
-  get fairSub() { return en() ? 'Visit a booth or compete here for coins, Standing and Tokens.' : 'در غرفه‌ها شرکت کن و سکه، اعتبار و ژتون جشن ببر.'; },
+  get fairSub() { return en() ? 'One full reward per booth each festival week. Contests cost 6 Stamina.' : 'هر غرفه در هر هفتهٔ جشنواره یک جایزهٔ کامل دارد؛ هر مسابقه ۶ انرژی هزینه دارد.'; },
   get fairBoothJudge() { return en() ? 'Harvest Judging' : 'داوری محصول برتر'; },
   get fairBoothCauldron() { return en() ? 'Cauldron Stir' : 'دیگ سمنو و حلوا'; },
   get fairBoothArchery() { return en() ? 'Target Toss' : 'کمان‌گیری سیب'; },
@@ -248,7 +249,10 @@ export const FT = {
   get stirHold() { return en() ? 'HOLD: STOKE FLAME!' : 'نگه دار: دمیدن به شعله!'; },
   get archeryHint() { return en() ? 'Watch the wind pennant & release 3 arrows right as the sight crosses the golden bullseye!' : 'حرکت نشانه را دنبال کن و دقیقاً وسط خال طلایی ۳ تیر رها کن!'; },
   get archeryFire() { return en() ? 'RELEASE ARROW!' : 'رها کردن تیر کمان!'; },
-  get fairDoneToday() { return en() ? 'Competed today — come back next fair!' : 'امروز جایزهٔ این غرفه را برده‌ای!'; },
+  get fairDoneToday() { return en() ? 'Reward claimed this festival week — come back next week!' : 'جایزهٔ این غرفه را در این هفته برده‌ای؛ هفتهٔ بعد برگرد!'; },
+  get fairBellCooldown() { return en() ? 'The festival bell has already rung this week.' : 'زنگ جشنواره در این هفته نواخته شده است.'; },
+  get fairClosed() { return en() ? 'Ring the bell to open this week’s festival first' : 'برای بازشدن جشنوارهٔ این هفته، ابتدا زنگ شهر را بنواز'; },
+  fairNeedStamina(cost: number) { return en() ? `You need ${fa(cost)} Stamina to enter this contest.` : `برای این مسابقه به ${fa(cost)} انرژی نیاز داری.`; },
 
   // World Atlas, Charters & Late-Game Shocks / Decrees
   get atlasTitle() { return en() ? 'Connected Valley Atlas, Village Charters & Royal Decrees' : 'اطلس پیوستهٔ دره، منشورهای دهکده و فرمان‌های بزرگ'; },

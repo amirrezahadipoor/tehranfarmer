@@ -102,9 +102,13 @@ export function drawWorldMachines(
   machines: Record<string, number | undefined>,
   auto: Record<string, boolean | undefined>,
   t: number,
+  vx0 = -Infinity,
+  vx1 = Infinity,
 ) {
   const anim = !isReducedMotion();
+  const visible = (x: number, pad = 90) => x + pad >= vx0 && x - pad <= vx1;
   const padUnit = (name: string, x: number, y: number, sc: number, lv: number, on: boolean) => {
+    if (!visible(x)) return;
     // Ground contact shadow + gentle engine idle hum when active in Auto Panel
     ctx.fillStyle = 'rgba(40,30,15,0.16)';
     ctx.beginPath();
@@ -127,6 +131,7 @@ export function drawWorldMachines(
 
   if (machines.sprinkler) {
     for (const [x, y] of [[416, 244], [1140, 244], [416, 572], [1140, 572]] as const) {
+      if (!visible(x, 45)) continue;
       put(ctx, iconPart('sprinkler'), x, y, 0.78);
       if (auto.water && anim) {
         ctx.fillStyle = 'rgba(120,205,255,0.75)';
@@ -144,6 +149,6 @@ export function drawWorldMachines(
   if (machines.drone) {
     const hoverX = anim ? 700 + Math.sin(t * 0.7) * 260 : 700;
     const hoverY = anim ? 286 + Math.sin(t * 1.3) * 32 : 286;
-    put(ctx, iconPart('drone'), hoverX, hoverY, 1.0, anim ? Math.sin(t * 2) * 0.06 : 0);
+    if (visible(hoverX, 60)) put(ctx, iconPart('drone'), hoverX, hoverY, 1.0, anim ? Math.sin(t * 2) * 0.06 : 0);
   }
 }

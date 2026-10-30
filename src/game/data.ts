@@ -1,4 +1,5 @@
 import { FT } from '../strings/frontierText';
+import { TOTAL_DEBT } from '../story/debtData';
 
 export type CropId = 'wheat' | 'carrot' | 'corn' | 'tomato' | 'strawberry' | 'watermelon' | 'pumpkin' | 'saffron' | 'potato' | 'onion' | 'rice' | 'grape' | 'olive' | 'pepper' | 'cucumber' | 'sunflower' | 'fig' | 'plum' | 'cherry' | 'peach' | 'orange' | 'pomegranate' | 'pistachio' | 'rose';
 export type GemId = 'quartz' | 'turquoise' | 'amber' | 'amethyst' | 'garnet' | 'opal' | 'sapphire' | 'emerald' | 'ruby' | 'diamond';
@@ -322,7 +323,7 @@ export const ACHS: AchDef[] = [
   { id: 'level', icon: 'medal', fa: GT.g144, stat: 'level', tiers: [{ n: 5, reward: 500 }, { n: 10, reward: 2500 }, { n: 15, reward: 9000 }, { n: 20, reward: 30000 }, { n: 25, reward: 90000 }, { n: 30, reward: 250000 }] },
   { id: 'animals', icon: 'cow', fa: GT.g145, stat: 'animals', tiers: [{ n: 4, reward: 250 }, { n: 8, reward: 1200 }, { n: 12, reward: 5000 }, { n: 16, reward: 18000 }] },
   { id: 'day', icon: 'sun', fa: GT.g146, stat: 'day', tiers: [{ n: 30, reward: 400 }, { n: 90, reward: 2000 }, { n: 200, reward: 8000 }, { n: 500, reward: 30000 }, { n: 1200, reward: 120000 }] },
-  { id: 'debtPaid', icon: 'ledger', fa: GT.achDebtPaid, stat: 'debtPaid', tiers: [{ n: 15000, reward: 250 }, { n: 250000, reward: 1200 }, { n: 1500000, reward: 5000 }, { n: 6000000, reward: 25000 }] },
+  { id: 'debtPaid', icon: 'ledger', fa: GT.achDebtPaid, stat: 'debtPaid', tiers: [{ n: 15000, reward: 250 }, { n: 250000, reward: 1200 }, { n: 1500000, reward: 5000 }, { n: TOTAL_DEBT, reward: 25000 }] },
   { id: 'chapter', icon: 'note', fa: GT.achChapter, stat: 'chapter', tiers: [{ n: 2, reward: 200 }, { n: 4, reward: 900 }, { n: 6, reward: 3500 }, { n: 7, reward: 15000 }] },
   { id: 'scarecrow', icon: 'scarecrow', fa: GT.achScarecrow, stat: 'scarecrow', tiers: [{ n: 1, reward: 180 }, { n: 2, reward: 600 }, { n: 3, reward: 1800 }] },
   { id: 'stash', icon: 'stash', fa: GT.achStash, stat: 'stash', tiers: [{ n: 2000, reward: 150 }, { n: 25000, reward: 700 }, { n: 150000, reward: 2800 }] },

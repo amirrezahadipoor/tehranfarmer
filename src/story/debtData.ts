@@ -41,17 +41,17 @@ const mkNote = (idx: number, amount: number, rate: number, monthsTarget: number,
   get why() { return CFG.locale === 'en' ? NOTES_EN[idx].why : NOTES_FA[idx].why; },
 });
 
-/** ۶ سند — جمعاً ۶٬۰۰۰٬۰۰۰ سکه (طبق DEBT_DESIGN) */
+/** شش سند با سند پایانیِ کوتاه‌تر؛ TOTAL_DEBT از همین مقادیر محاسبه می‌شود. */
 export const NOTES: NoteDef[] = [
   mkNote(0, 15000, 0, 4, 0, 1),
   mkNote(1, 70000, 0.01, 7, 26, 2),
   mkNote(2, 250000, 0.014, 9, 34, 3),
   mkNote(3, 700000, 0.016, 11, 40, 4),
   mkNote(4, 1600000, 0.015, 10, 45, 5),
-  mkNote(5, 3365000, 0.01, 10, 50, 6),
+  mkNote(5, 1200000, 0.008, 8, 50, 6),
 ];
 
-export const TOTAL_DEBT = NOTES.reduce((a, n) => a + n.amount, 0); // ۶٬۰۰۰٬۰۰۰
+export const TOTAL_DEBT = NOTES.reduce((a, n) => a + n.amount, 0);
 export const NOTE_COUNT = NOTES.length;
 
 // ===== قسط و سود =====

@@ -53,7 +53,7 @@ export function Hud() {
       <div
         ref={topBarRef}
         data-hud-topbar="1"
-        className="pointer-events-none fixed z-20 flex items-start justify-between gap-1.5"
+        className="hud-topbar pointer-events-none fixed z-20 flex items-start justify-between gap-1.5"
         style={{
           left: 'calc(var(--safe-left) + .5rem)',
           right: 'calc(var(--safe-right) + .5rem)',
@@ -61,12 +61,12 @@ export function Hud() {
         }}
       >
         {/* خوشهٔ وضعیت بازیکن (چپ در RTL / راست در LTR در جریان طبیعی): فقط دو ردیف فشرده به جای ستون بلند ۴ کارتی */}
-        <div className="flex flex-col items-start gap-1">
-          <div className="flex flex-wrap items-center gap-1">
-            <div className="paper pointer-events-auto flex items-center gap-2 px-2.5 py-0.5">
+        <div className="hud-status flex flex-col items-start gap-1">
+          <div className="hud-wallet-row flex flex-wrap items-center gap-1">
+            <div className="hud-wallet paper pointer-events-auto flex items-center gap-2 px-2.5 py-0.5">
               <div className="flex items-center gap-1">
                 <Ic n="coin" s={1.75} />
-                <span className="ft text-xl leading-none">{fa(S.coins)}</span>
+                <span className="hud-coin-value ft text-xl leading-none">{fa(S.coins)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Ic n="bolt" s={1.55} />
@@ -77,10 +77,10 @@ export function Hud() {
             </div>
             <LevelChip />
           </div>
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="hud-debt-row flex flex-wrap items-center gap-1">
             {UI.scene === 'cave' ? <MineStatusChip /> : <DebtChip />}
             {S.builds.slice(0, 2).map((b) => (
-              <div key={b.id} data-build-card={b.id} role="group" aria-label={buildJobLabel(b)} className="paper flex w-44 shrink-0 items-center gap-1.5 px-2 py-0.5">
+              <div key={b.id} data-build-card={b.id} role="group" aria-label={buildJobLabel(b)} className="hud-build-card paper flex w-44 shrink-0 items-center gap-1.5 px-2 py-0.5">
                 <Ic n={b.icon} s={1.6} cls="bob" />
                 <div className="min-w-0 flex-1">
                   <div data-build-label={b.id} title={buildJobLabel(b)} className="whitespace-normal break-words text-[.72rem] font-black leading-tight">{buildJobLabel(b)}</div>
@@ -93,37 +93,37 @@ export function Hud() {
         </div>
 
         {/* خوشهٔ ساعت، فصل و دکمه‌های کنترلی در یک گروه انعطاف‌پذیر بدون امکان هم‌پوشانی در هیچ ابعادی */}
-        <div className="flex flex-wrap-reverse items-start justify-end gap-1.5">
-          <div className="flex flex-col items-end">
-            <div className="paper flex items-center gap-2 px-2 py-0.5">
-              <Ic n={UI.scene === 'cave' ? 'cave' : nightNow && sn === 1 ? 'star' : ['spring', 'summer', 'autumn', 'winter'][sn]} s={1.85} />
+        <div className="hud-controls flex flex-wrap-reverse items-start justify-end gap-1.5">
+          <div className="hud-clock-wrap flex flex-col items-end">
+            <div className="hud-clock paper flex items-center gap-2 px-2 py-0.5">
+              <Ic n={UI.scene === 'cave' ? 'cave' : nightNow && sn === 1 ? 'star' : ['spring', 'summer', 'autumn', 'winter'][sn]} s={1.85} cls="hud-season-icon" />
               <div className="leading-tight">
-                <div className="text-[.72rem] font-extrabold whitespace-nowrap">{SEASONS[sn]}{UT.u32}{fa(((S.day - 1) % 7) + 1)}</div>
+                <div className="hud-season-label text-[.72rem] font-extrabold whitespace-nowrap">{SEASONS[sn]}{UT.u32}{fa(((S.day - 1) % 7) + 1)}</div>
                 <div className="ft text-base leading-none">{faClock(S.hour)}</div>
               </div>
               <Ic n={UI.scene === 'cave' ? 'cave' : nightNow ? 'moon' : WEATHER[S.weather]} s={1.85} />
               {UI.scene !== 'cave' && nightNow && S.weather > 0 ? <Ic n={WEATHER[S.weather]} s={1.5} /> : null}
             </div>
             {S.event && (
-              <div data-event-id={S.event.id} className="paper mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 text-xs font-extrabold">
+              <div data-event-id={S.event.id} className="hud-event paper mt-1 flex items-center justify-center gap-1.5 px-2 py-0.5 text-xs font-extrabold">
                 <Ic n={S.event.icon} s={1.45} />
                 <span>{S.event.title}</span>
               </div>
             )}
           </div>
-          <div className="pointer-events-auto flex flex-wrap items-start justify-end gap-1">
-            <button aria-label={UT.restAnytime} data-rest-anytime="1" className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={UT.restSub} onClick={() => requestSleep('quick')}>
+          <div className="hud-actions pointer-events-auto flex flex-wrap items-start justify-end gap-1">
+            <button aria-label={UT.restAnytime} data-rest-anytime="1" className="hud-action btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={UT.restSub} onClick={() => requestSleep('quick')}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
             </button>
-            <button aria-label={UT.u133} data-open-inventory="1" className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
+            <button aria-label={UT.u133} data-open-inventory="1" className="hud-inventory hud-action btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
               <Ic n="bag" s={UI.portrait ? 1.65 : 1.9} />
-              <span className="text-xs font-black" dir="ltr">{fa(packCount())}/{fa(packCap())}</span>
+              <span className="hud-inventory-count text-xs font-black" dir="ltr">{fa(packCount())}/{fa(packCap())}</span>
             </button>
             {UI.scene === 'river' && (
               <button
                 aria-label={FT.fishModalTitle}
                 data-open-fishing="1"
-                className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
+                className="hud-action btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
                 onClick={() => { sfx.tap(); UI.modal = 'fishing'; notify(); }}
                 title={FT.fishModalTitle}
               >
@@ -134,7 +134,7 @@ export function Hud() {
               <button
                 aria-label={FT.fairTitle}
                 data-open-festival="1"
-                className="btn p press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
+                className="hud-action btn p press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
                 onClick={() => { sfx.tap(); UI.modal = 'festival'; notify(); }}
                 title={FT.fairTitle}
               >
@@ -144,7 +144,7 @@ export function Hud() {
             <button
               aria-label={FT.atlasTitle}
               data-open-atlas="1"
-              className="btn g press max-[900px]:!hidden !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1 min-[901px]:inline-flex"
+              className="hud-action btn g press max-[900px]:!hidden !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1 min-[901px]:inline-flex"
               onClick={() => { sfx.tap(); UI.modal = 'atlas'; notify(); }}
               title={FT.atlasTitle}
             >
@@ -155,7 +155,7 @@ export function Hud() {
               data-open-mail="1"
               data-mail-attention={mailAttention}
               data-mail-icon={mailAttention > 0 ? 'mail' : 'mailopen'}
-              className="btn y press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
+              className="hud-action btn y press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1"
               onClick={() => { sfx.paper(); UI.modal = 'mail'; notify(); }}
               title={MAIL_UI.title}
             >
@@ -166,7 +166,7 @@ export function Hud() {
                 </span>
               )}
             </button>
-            <button data-open-quests="1" aria-label={UT.u34} className="btn p press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'quests'; notify(); }} title={UT.u34}>
+            <button data-open-quests="1" aria-label={UT.u34} className="hud-action btn p press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'quests'; notify(); }} title={UT.u34}>
               <Ic n="scroll" s={UI.portrait ? 1.7 : 1.9} />
               {readyQuestCount() > 0 && (
                 <span className="absolute -left-1.5 -top-1.5 rounded-full border-2 border-[#503426] bg-[#ffd93b] px-1 text-[.68rem] font-black leading-none text-[#503426]">
@@ -174,7 +174,7 @@ export function Hud() {
                 </span>
               )}
             </button>
-            <button data-open-settings="1" aria-label={UT.u134} className="btn g press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'menu'; notify(); }}><Ic n="gear" s={UI.portrait ? 1.7 : 1.9} /></button>
+            <button data-open-settings="1" aria-label={UT.u134} className="hud-action btn g press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'menu'; notify(); }}><Ic n="gear" s={UI.portrait ? 1.7 : 1.9} /></button>
           </div>
         </div>
       </div>
@@ -192,7 +192,7 @@ export function Hud() {
           <div className="flex w-full items-center justify-between gap-2">
             <div className="pointer-events-auto">
               {ownedFarm && (
-                <button aria-label={UT.u35} className="btn b press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.3} /></button>
+                <button aria-label={UT.u35} className="hud-action btn b press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.3} /></button>
               )}
             </div>
             <WorldNavBar />
@@ -201,7 +201,7 @@ export function Hud() {
             <div className="paper pointer-events-auto flex items-center gap-2 px-3 py-1">
               <Ic n="land" s={1.7} />
               <span className="text-xs font-extrabold">{UI.scene === 'north' ? eu.deedBoardNorth : eu.deedBoardValley}</span>
-              <button className="btn y press !min-h-[max(48px,2rem)] !min-w-[max(48px,3rem)] !px-2.5 !py-0.5 text-xs font-black" onClick={() => { sfx.tap(); UI.modal = 'estate'; notify(); }}>
+              <button className="hud-action btn y press !min-h-[max(48px,2rem)] !min-w-[max(48px,3rem)] !px-2.5 !py-0.5 text-xs font-black" onClick={() => { sfx.tap(); UI.modal = 'estate'; notify(); }}>
                 {eu.buyDeedBtn}
               </button>
             </div>
@@ -218,14 +218,14 @@ export function Hud() {
         >
           <div className="pointer-events-auto">
             {ownedFarm ? (
-              <button aria-label={UT.u35} className="btn b press !min-h-[max(48px,2.6rem)] !min-w-[max(48px,2.6rem)] !p-1.5" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.7} /></button>
+              <button aria-label={UT.u35} className="hud-action btn b press !min-h-[max(48px,2.6rem)] !min-w-[max(48px,2.6rem)] !p-1.5" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.7} /></button>
             ) : <div />}
           </div>
           {ownedFarm ? <Toolbar /> : farm ? (
             <div className="paper pointer-events-auto mb-0.5 flex items-center gap-2.5 px-3.5 py-1.5">
               <Ic n="land" s={1.85} />
               <span className="text-xs font-extrabold">{UI.scene === 'north' ? eu.deedBoardNorth : eu.deedBoardValley}</span>
-              <button className="btn y press !min-h-[max(48px,2.1rem)] !min-w-[max(48px,3rem)] !px-3 !py-0.5 text-xs font-black" onClick={() => { sfx.tap(); UI.modal = 'estate'; notify(); }}>
+              <button className="hud-action btn y press !min-h-[max(48px,2.1rem)] !min-w-[max(48px,3rem)] !px-3 !py-0.5 text-xs font-black" onClick={() => { sfx.tap(); UI.modal = 'estate'; notify(); }}>
                 {eu.buyDeedBtn}
               </button>
             </div>
@@ -250,7 +250,7 @@ export function Hud() {
         <button
           type="button"
           data-buy-rod-cta="1"
-          className="btn y press pointer-events-auto fixed left-1/2 z-30 -translate-x-1/2 !px-3.5 !py-1 text-xs font-black shadow-lg"
+          className="hud-action btn y press pointer-events-auto fixed left-1/2 z-30 -translate-x-1/2 !px-3.5 !py-1 text-xs font-black shadow-lg"
           style={{ bottom: 'calc(var(--safe-bottom) + 4.2rem)' }}
           onClick={() => { UI.needRodHint = 0; UI.afterModal = 'carp'; cmd.travelTo('town'); sfx.tap(); notify(); }}
         >
@@ -318,7 +318,7 @@ export function Hud() {
             </div>
             <button
               type="button"
-              className="btn g press pointer-events-auto shrink-0 !min-h-[max(48px,1.9rem)] !min-w-[max(48px,3rem)] !px-2.5 !py-0.5 text-xs font-black"
+              className="hud-action btn g press pointer-events-auto shrink-0 !min-h-[max(48px,1.9rem)] !min-w-[max(48px,3rem)] !px-2.5 !py-0.5 text-xs font-black"
               onClick={() => dismissMorningReport()}
             >
               {WX.morningOk}
@@ -336,7 +336,7 @@ function DebtChip() {
   if (S.story.postgame) {
     return (
       <button
-        className="paper pointer-events-auto press flex min-h-[48px] w-48 items-center gap-1.5 px-2.5 py-1"
+        className="hud-debt paper pointer-events-auto press flex min-h-[48px] w-48 items-center gap-1.5 px-2.5 py-1"
         onClick={() => { UI.modal = 'museum'; sfx.tap(); notify(); }}
         title={UT.museumTitle}
       >
@@ -398,7 +398,7 @@ function LevelChip() {
   const p = xpProgress();
   const L = farmLevel();
   return (
-    <button className="paper pointer-events-auto press flex min-h-[48px] min-w-[48px] items-center gap-1 px-2 py-0.5" onClick={() => { UI.modal = 'achieve'; notify(); }} title={UT.u40}>
+    <button className="hud-level paper pointer-events-auto press flex min-h-[48px] min-w-[48px] items-center gap-1 px-2 py-0.5" onClick={() => { UI.modal = 'achieve'; notify(); }} title={UT.u40}>
       <Ic n="medal" s={1.65} />
       <span className="ft text-base leading-none">{fa(L)}</span>
       <div className="bar !h-2.5 w-10 sm:w-14"><i style={{ width: `${Math.min(100, (p.cur / p.need) * 100)}%`, background: '#b48aff' }} /></div>
@@ -513,7 +513,7 @@ function Info() {
           <Ic n={def ? def.id : p.st === 0 ? 'hoe' : 'seedbag'} s={2.4} />
           <div className="font-extrabold leading-tight">{def ? def.fa : p.st === 0 ? UT.u41 : UT.plotTilled}</div>
         </div>
-        <button aria-label={UT.closeBtn} className="btn r press !min-h-[max(48px,2.05rem)] !min-w-[max(48px,2.05rem)] !p-0.5" onClick={() => { UI.info = null; notify(); }}>
+        <button aria-label={UT.closeBtn} className="hud-action btn r press !min-h-[max(48px,2.05rem)] !min-w-[max(48px,2.05rem)] !p-0.5" onClick={() => { UI.info = null; notify(); }}>
           <Ic n="close" s={1.1} />
         </button>
       </div>
@@ -550,7 +550,7 @@ function Info() {
       {canUp && p.last && CROP[p.last] && <div className="mt-1 text-xs font-bold opacity-80">{UT.plotLastCrop}{CROP[p.last].fa}</div>}
       {quickAction && (
         <button
-          className="btn g press mt-1.5 w-full !min-h-[max(48px,2.1rem)] !py-1 text-xs font-black"
+          className="hud-action btn g press mt-1.5 w-full !min-h-[max(48px,2.1rem)] !py-1 text-xs font-black"
           onClick={() => { const pl = inf.plot; UI.info = null; cmd.actPlot(quickAction.k, pl); notify(); }}
         >
           <Ic n={quickAction.ic} s={1.4} />

@@ -5,7 +5,9 @@ describe('adaptive render quality', () => {
   it('moves one DPR step at a time in both directions', () => {
     expect(lowerQualityCap(2)).toBe(1.5);
     expect(lowerQualityCap(1.5)).toBe(1);
-    expect(lowerQualityCap(1)).toBe(1);
+    expect(lowerQualityCap(1)).toBe(0.75);
+    expect(lowerQualityCap(0.75)).toBe(0.75);
+    expect(raiseQualityCap(0.75)).toBe(1);
     expect(raiseQualityCap(1)).toBe(1.5);
     expect(raiseQualityCap(1.5)).toBe(2);
     expect(raiseQualityCap(2)).toBe(2);

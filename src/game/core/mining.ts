@@ -86,6 +86,29 @@ export function mineAccuracyAt(
   return Math.max(0, Math.min(1, 1 - distance / Math.max(1, target.width / 2)));
 }
 
+export interface MinePrecisionStatus {
+  accuracy: number;
+  complete: boolean;
+  perfect: boolean;
+  rewardGood: GoodId;
+  bonusEligible: boolean;
+  bonusOnTrack: boolean;
+  bonusReady: boolean;
+}
+
+/** Single source of truth for the minigame badge and the real extra-ore grant. */
+export function minePrecisionStatus(floor: number, good: GoodId, accuracies: number[], requiredStrikes: number): MinePrecisionStatus {
+  const scores = accuracies.slice(0, requiredStrikes).map((n) => Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0)));
+  const complete = requiredStrikes > 0 && scores.length === requiredStrikes;
+  const accuracy = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const preciseSoFar = scores.length > 0 && scores.every((n) => n >= 0.9) && accuracy >= 0.94;
+  const perfect = complete && preciseSoFar;
+  const rewardGood: GoodId = good === 'ruby' && perfect ? 'diamond' : good;
+  const bonusEligible = floor > 1 && (GOOD[rewardGood]?.base ?? 0) <= 650;
+  const bonusOnTrack = bonusEligible && preciseSoFar;
+  return { accuracy, complete, perfect, rewardGood, bonusEligible, bonusOnTrack, bonusReady: bonusEligible && perfect };
+}
+
 /** Floor 2 has a drifting seam; floor 3 keeps its position but pulses on a readable timer. */
 export function mineWeakPointAt(floor: number, idx: number, stage: number, elapsed: number) {
   const base = mineWeakPoint(floor, idx, stage);
@@ -133,14 +156,11 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
   if (!spot || isMineNodeHarvested(idx, floor)) return null;
   const scores = accuracies.slice(0, spot.strikes).map((n) => Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0)));
   if (scores.length !== spot.strikes || S.stamina < spot.stam) return null;
-  const accuracy = scores.reduce((a, b) => a + b, 0) / scores.length;
-  const perfect = scores.every((n) => n >= 0.9) && accuracy >= 0.94;
-  let good = spot.good;
-  if (good === 'ruby' && perfect) good = 'diamond';
-  const base = GOOD[good]?.base ?? 0;
+  const precision = minePrecisionStatus(floor, spot.good, scores, spot.strikes);
+  const { accuracy, perfect, rewardGood: good } = precision;
   // دقت بالا بازی را سریع‌تر نمی‌کند؛ فقط استخراج بی‌نقص در طبقات عمیق‌تر
   // و برای گوهرهای کم‌ارزش‌تر یک کالای پاداش اضافه می‌دهد.
-  const qty = 1 + (floor > 1 && perfect && base <= 650 ? 1 : 0);
+  const qty = 1 + (precision.bonusReady ? 1 : 0);
   S.stamina = Math.max(0, S.stamina - spot.stam);
   f.nodesDone[mineNodeKey(floor, idx)] = true;
   const stored = grantGoodWithMailOverflow(good, qty, 'engineer', 'mine-vein');

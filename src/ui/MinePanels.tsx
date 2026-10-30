@@ -20,7 +20,7 @@ export function MineStatusChip() {
     ? `${fa(progress.cleared)}/${fa(progress.total)} ${FT.mineVeinsShort}`
     : `${fa(progress.cleared)}/${fa(progress.required)} · ${FT.mineLiftShort}`;
   return (
-    <button data-open-mine-map="1" aria-label={FT.mineOpenMap} className="paper press pointer-events-auto flex min-h-[48px] min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-start sm:flex-none" onClick={openMineMap}>
+    <button data-open-mine-map="1" aria-label={FT.mineOpenMap} className="hud-mine-status paper press pointer-events-auto flex min-h-[48px] min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-start sm:flex-none" onClick={openMineMap}>
       <Ic n="cave" s={2.35} />
       <span className="min-w-0">
         <span className="flex items-center gap-1 whitespace-nowrap text-xs font-black"><span>{mineFloorTitle(floor)}</span><span className="rounded bg-[#dce9e4] px-1 text-[.65rem]">{detail}</span></span>

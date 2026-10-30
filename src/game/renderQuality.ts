@@ -1,10 +1,10 @@
-export type RenderQualityCap = 1 | 1.5 | 2;
+export type RenderQualityCap = 0.75 | 1 | 1.5 | 2;
 
 /** روی صفحه‌های لمسی DPR پیش‌فرض ۱٫۵ است؛ افزایش تطبیعی نیز از همین سقف بالاتر نمی‌رود. */
 export const qualityCeiling = (coarsePointer: boolean): RenderQualityCap => coarsePointer ? 1.5 : 2;
 
-export const lowerQualityCap = (cap: RenderQualityCap): RenderQualityCap => cap === 2 ? 1.5 : 1;
-export const raiseQualityCap = (cap: RenderQualityCap): RenderQualityCap => cap === 1 ? 1.5 : 2;
+export const lowerQualityCap = (cap: RenderQualityCap): RenderQualityCap => cap === 2 ? 1.5 : cap === 1.5 ? 1 : 0.75;
+export const raiseQualityCap = (cap: RenderQualityCap): RenderQualityCap => cap === 0.75 ? 1 : cap === 1 ? 1.5 : 2;
 
 /** آستانه‌ها برای فاصلهٔ فریمِ واقعیِ رندر، نه rAFهایی که بدون رندر رد می‌شوند. */
 export const frameIsSlow = (ms: number, active: boolean) => ms > (active ? 22 : 40);

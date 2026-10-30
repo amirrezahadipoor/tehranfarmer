@@ -31,6 +31,7 @@ export type ActPose =
 export type StagePropKind =
   | 'deed-table'
   | 'treasure-chest'
+  | 'guardian-bell'
   | 'qanat-fountain'
   | 'golden-fish'
   | 'bee-swarm'

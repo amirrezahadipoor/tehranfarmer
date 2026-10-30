@@ -1,5 +1,5 @@
 // ===== راهنمای روز اول: کارت خوانا، هدف زنده و کنترل آشکار؛ بدون قفل‌کردن بازی =====
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
 import { FIELD_X, FIELD_Y, PLOT_DX, PLOT_DY } from '../game/scenes';
@@ -74,6 +74,15 @@ export function TutorialOverlay() {
   const scene = UI.scene;
   const [target, setTarget] = useState<TargetRect | null>(null);
   const [minimized, setMinimized] = useState(false);
+  const [autoMinimized, setAutoMinimized] = useState(false);
+  const [manualExpanded, setManualExpanded] = useState(false);
+  const coachRef = useRef<HTMLElement | null>(null);
+  const compact = minimized || (autoMinimized && !manualExpanded);
+
+  useEffect(() => {
+    setAutoMinimized(false);
+    setManualExpanded(false);
+  }, [step]);
 
   useEffect(() => {
     if (!active) { setTarget(null); return; }
@@ -81,11 +90,47 @@ export function TutorialOverlay() {
     const follow = () => {
       const next = findTarget(step);
       setTarget((previous) => sameRect(previous, next) ? previous : next);
+
+      // Choose a real free rectangle rather than assuming that a fixed bottom
+      // offset fits every camera, locale and font scale. If even the best card
+      // position covers the objective, use the 48px summary button for this step.
+      const coach = coachRef.current;
+      if (coach) {
+        const rect = coach.getBoundingClientRect();
+        const margin = 8;
+        const hud = document.querySelector<HTMLElement>('[data-hud-topbar="1"]')?.getBoundingClientRect();
+        let minY = Math.max(margin, (hud?.bottom ?? 0) + margin);
+        const bottomReserve = innerWidth > 900 && innerHeight >= 500 ? 140 : UI.portrait ? 164 : 88;
+        let maxY = innerHeight - bottomReserve - rect.height;
+        if (maxY < minY) { minY = margin; maxY = Math.max(margin, innerHeight - rect.height - margin); }
+        const maxX = Math.max(margin, innerWidth - rect.width - margin);
+        const xs = [...new Set([maxX, margin, Math.max(margin, (innerWidth - rect.width) / 2)])];
+        const ys = [...new Set([Math.max(minY, maxY), minY])];
+        let best = { x: maxX, y: Math.max(minY, maxY), overlap: 0, order: 0 };
+        let order = 0;
+        for (const y of ys) for (const x of xs) {
+          let overlap = 0;
+          if (next) {
+            const w = Math.max(0, Math.min(x + rect.width, next.x + next.w) - Math.max(x, next.x));
+            const h = Math.max(0, Math.min(y + rect.height, next.y + next.h) - Math.max(y, next.y));
+            overlap = (w * h) / Math.max(1, next.w * next.h);
+          }
+          if (overlap < best.overlap - 0.001 || (order === 0 && best.order === 0)) {
+            if (order === 0 || overlap < best.overlap - 0.001) best = { x, y, overlap, order };
+          }
+          order++;
+        }
+        coach.style.left = `${Math.round(best.x)}px`;
+        coach.style.top = `${Math.round(best.y)}px`;
+        coach.style.right = 'auto';
+        coach.style.bottom = 'auto';
+        if (next && best.overlap > 0.12 && !minimized && !manualExpanded) setAutoMinimized(true);
+      }
       raf = requestAnimationFrame(follow);
     };
     raf = requestAnimationFrame(follow);
     return () => cancelAnimationFrame(raf);
-  }, [active, step, scene]);
+  }, [active, step, scene, compact, minimized, manualExpanded]);
 
   if (!active) return null;
   const copy = TUTORIAL_COPY[CFG.locale === 'en' ? 'en' : 'fa'];
@@ -102,7 +147,7 @@ export function TutorialOverlay() {
     <div
       data-tutorial="1"
       data-tutorial-step={step}
-      data-tutorial-minimized={minimized ? '1' : '0'}
+      data-tutorial-minimized={compact ? '1' : '0'}
       className="pointer-events-none fixed inset-0 z-[45]"
     >
       {target && (
@@ -113,26 +158,27 @@ export function TutorialOverlay() {
           style={{ left: target.x, top: target.y, width: target.w, height: target.h }}
         />
       )}
-      {minimized ? (
+      {compact ? (
         <button
           type="button"
-          className="tutorial-coach paper press pointer-events-auto flex !w-auto items-center gap-2 px-3 text-sm font-black"
+          ref={coachRef as React.RefObject<HTMLButtonElement>}
+          className="tutorial-coach paper press pointer-events-auto flex min-h-[48px] !w-auto items-center gap-2 px-3 text-sm font-black"
           aria-label={copy.expand}
-          onClick={() => setMinimized(false)}
+          onClick={() => { setMinimized(false); setManualExpanded(true); }}
         >
           <Ic n={current.icon} s={1.7} />
           <span>{copy.short}</span>
           <span className="rounded-full bg-[#503426] px-2 py-0.5 text-xs text-white" dir="ltr">{fa(step + 1)}/{fa(TUT_STEP_COUNT)}</span>
         </button>
       ) : (
-        <section className="tutorial-coach paper popin pointer-events-auto p-[10px]" aria-label={copy.region} data-tutorial-card="1">
-          <div className="flex items-center gap-[8px]">
+        <section ref={coachRef} className="tutorial-coach paper popin pointer-events-auto p-2.5" aria-label={copy.region} data-tutorial-card="1">
+          <div className="flex items-center gap-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#503426] bg-[#ffd93b]">
               <Ic n={current.icon} s={2.15} cls="tutorial-step-icon" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="whitespace-nowrap text-[11px] font-black leading-tight text-[#765337]">{copy.kicker} · {stepLabel}</div>
-              <div className="text-[16px] font-black leading-tight text-[#3d251a]" data-tutorial-title="1">{current.title}</div>
+              <div className="whitespace-normal text-[.85rem] font-black leading-tight text-[#765337]">{copy.kicker} · {stepLabel}</div>
+              <div className="text-[1rem] font-black leading-tight text-[#3d251a]" data-tutorial-title="1">{current.title}</div>
             </div>
             <button
               type="button"
@@ -147,20 +193,20 @@ export function TutorialOverlay() {
             </button>
             <button
               type="button"
-              className="btn press shrink-0 !min-h-[48px] !min-w-[48px] !bg-[#fff9e9] !px-[8px] !py-1 text-[12px]"
+              className="btn press shrink-0 !min-h-[48px] !min-w-[48px] !bg-[#fff9e9] !px-2 !py-1 text-[.75rem]"
               aria-label={copy.skip}
               onClick={() => tutSkip()}
             >
               {copy.skip}
             </button>
           </div>
-          <p className="mt-[6px] text-[13px] font-bold leading-[1.55] text-[#503426]" aria-live="polite" aria-atomic="true">{hint}</p>
+          <p className="mt-1.5 text-[.92rem] font-bold leading-relaxed text-[#503426]" aria-live="polite" aria-atomic="true">{hint}</p>
           {(step === 2 || step === 3) && (
-            <p data-tutorial-practice="1" className="mt-1 text-[11px] font-bold leading-4 text-emerald-800">{copy.practiceNote}</p>
+            <p data-tutorial-practice="1" className="mt-1 text-[.85rem] font-bold leading-relaxed text-emerald-800">{copy.practiceNote}</p>
           )}
-          <div className="mt-[6px] flex items-center gap-[8px]">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <div
-              className="flex flex-1 gap-1"
+              className="flex min-w-20 flex-1 gap-1"
               role="progressbar"
               aria-label={copy.progress}
               aria-valuemin={1}
@@ -177,7 +223,7 @@ export function TutorialOverlay() {
                 />
               ))}
             </div>
-            <span className="whitespace-nowrap text-[11px] font-black text-[#6a492e]">{copy.targetPrefix}{current.target}</span>
+            <span className="min-w-0 whitespace-normal break-words text-[.85rem] font-black text-[#6a492e]">{copy.targetPrefix}{current.target}</span>
           </div>
         </section>
       )}

@@ -5,7 +5,7 @@ import { CFG } from '../game/settings';
 import { GOOD, fa, faPct } from '../game/data';
 import { sfx } from '../game/sound';
 import {
-  closeMineEncounter, currentMineEncounter, finishMineEncounter, mineAccuracyAt, mineFloorProgress, mineTargetOpenAt, mineWeakPointAt,
+  closeMineEncounter, currentMineEncounter, finishMineEncounter, mineAccuracyAt, mineFloorProgress, minePrecisionStatus, mineTargetOpenAt, mineWeakPointAt,
 } from '../game/core/mining';
 
 /** استخراج مهارتی کوتاه: سه/چهار نقطهٔ شکست، بدون شکست سخت یا خالی‌آمدن شانسی. */
@@ -106,11 +106,12 @@ export function MiningModal() {
 
   const modifierHint = floor === 2 ? FT.mineDriftHint : floor === 3 ? FT.minePulseHint : FT.mineWeakPointHint;
   const flashText = flash === 'perfect' ? FT.minePerfectHit : flash === 'good' ? FT.mineGoodHit : flash === 'miss' ? FT.mineMissHit : modifierHint;
-  const average = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  const precision = minePrecisionStatus(floor, spot.good, scores, spot.strikes);
+  const average = precision.accuracy;
   let precisionStreak = 0;
   for (let i = scores.length - 1; i >= 0 && scores[i] >= 0.9; i--) precisionStreak++;
-  const bonusEligible = (GOOD[spot.good]?.base ?? 0) <= 900;
-  const bonusReady = bonusEligible && scores.length > 0 && average >= 0.72;
+  const bonusState = precision.bonusReady ? 'ready' : precision.bonusOnTrack ? 'progress' : 'pending';
+  const bonusText = precision.bonusReady ? FT.mineBonusReady : precision.bonusOnTrack ? FT.mineBonusProgress : FT.mineBonusHint;
   const actionBar = (
     <div className="flex items-center gap-1.5">
       <button data-mine-strike="1" className="btn y press min-h-[48px] flex-1 text-sm font-black" disabled={finished} onClick={strike}><Ic n="hammer" s={2} />{finished ? FT.mineExtracting : FT.mineStrikeBtn}</button>
@@ -167,7 +168,7 @@ export function MiningModal() {
         <div className="flex min-h-6 flex-wrap items-center justify-center gap-1.5 text-xs font-black">
           <span className={flash === 'perfect' ? 'text-[#8a5a00]' : flash === 'miss' ? 'text-[#8b493b]' : 'text-[#385b45]'} aria-live="polite">{flashText}</span>
           {precisionStreak >= 2 && <span data-mine-streak="1" className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">{FT.mineFocusStreak(precisionStreak)}</span>}
-          {bonusEligible && scores.length > 0 && <span data-mine-bonus={bonusReady ? 'ready' : 'pending'} className={`rounded-full px-2 py-0.5 ${bonusReady ? 'bg-emerald-100 text-emerald-900' : 'bg-black/5 text-[#66503c]'}`}>{bonusReady ? FT.mineBonusReady : FT.mineBonusHint}</span>}
+          {scores.length > 0 && <span data-mine-bonus={bonusState} className={`rounded-full px-2 py-0.5 ${precision.bonusReady ? 'bg-emerald-100 text-emerald-900' : precision.bonusOnTrack ? 'bg-amber-100 text-amber-900' : 'bg-black/5 text-[#66503c]'}`}>{bonusText}</span>}
         </div>
         {royal && <div className="rounded-lg bg-[#fff0c2] px-2 py-1 text-xs font-black text-[#793343] ring-1 ring-[#d7a43c]"><Ic n="diamond" s={1.25} /> {FT.mineRoyalHint}</div>}
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-[#50342630] pt-1.5">
