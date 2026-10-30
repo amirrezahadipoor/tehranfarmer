@@ -1,0 +1,274 @@
+.
+├── .github/
+│   └── workflows/
+│       └── android.yml
+├── android/
+│   ├── app/
+│   │   ├── src/
+│   │   │   └── main/
+│   │   │       ├── java/
+│   │   │       │   └── ir/
+│   │   │       │       └── mazraerangi/
+│   │   │       │           └── game/
+│   │   │       │               └── MainActivity.java
+│   │   │       ├── res/
+│   │   │       │   ├── drawable/
+│   │   │       │   │   ├── ic_launcher_background.xml
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-land-hdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-land-mdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-land-xhdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-land-xxhdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-land-xxxhdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-port-hdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-port-mdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-port-xhdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-port-xxhdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-port-xxxhdpi/
+│   │   │       │   │   └── splash.png
+│   │   │       │   ├── drawable-v24/
+│   │   │       │   │   └── ic_launcher_foreground.xml
+│   │   │       │   ├── layout/
+│   │   │       │   │   └── activity_main.xml
+│   │   │       │   ├── mipmap-anydpi-v26/
+│   │   │       │   │   ├── ic_launcher.xml
+│   │   │       │   │   └── ic_launcher_round.xml
+│   │   │       │   ├── mipmap-hdpi/
+│   │   │       │   │   ├── ic_launcher.png
+│   │   │       │   │   ├── ic_launcher_foreground.png
+│   │   │       │   │   └── ic_launcher_round.png
+│   │   │       │   ├── mipmap-mdpi/
+│   │   │       │   │   ├── ic_launcher.png
+│   │   │       │   │   ├── ic_launcher_foreground.png
+│   │   │       │   │   └── ic_launcher_round.png
+│   │   │       │   ├── mipmap-xhdpi/
+│   │   │       │   │   ├── ic_launcher.png
+│   │   │       │   │   ├── ic_launcher_foreground.png
+│   │   │       │   │   └── ic_launcher_round.png
+│   │   │       │   ├── mipmap-xxhdpi/
+│   │   │       │   │   ├── ic_launcher.png
+│   │   │       │   │   ├── ic_launcher_foreground.png
+│   │   │       │   │   └── ic_launcher_round.png
+│   │   │       │   ├── mipmap-xxxhdpi/
+│   │   │       │   │   ├── ic_launcher.png
+│   │   │       │   │   ├── ic_launcher_foreground.png
+│   │   │       │   │   └── ic_launcher_round.png
+│   │   │       │   ├── values/
+│   │   │       │   │   ├── colors.xml
+│   │   │       │   │   ├── ic_launcher_background.xml
+│   │   │       │   │   ├── strings.xml
+│   │   │       │   │   └── styles.xml
+│   │   │       │   └── xml/
+│   │   │       │       └── file_paths.xml
+│   │   │       └── AndroidManifest.xml
+│   │   ├── .gitignore
+│   │   ├── build.gradle
+│   │   ├── capacitor.build.gradle
+│   │   └── proguard-rules.pro
+│   ├── gradle/
+│   │   └── wrapper/
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── .gitignore
+│   ├── build.gradle
+│   ├── capacitor.settings.gradle
+│   ├── gradle.properties
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── settings.gradle
+│   └── variables.gradle
+├── public/
+│   ├── music/
+│   │   ├── ch2.mp3
+│   │   ├── ch3.mp3
+│   │   ├── ch4.mp3
+│   │   ├── ch5.mp3
+│   │   ├── ch6.mp3
+│   │   ├── ch7.mp3
+│   │   └── peaceful-forest.mp3
+│   ├── icon.svg
+│   ├── manifest.webmanifest
+│   └── sw.js
+├── scripts/
+│   └── android-build.mjs
+├── src/
+│   ├── assets/
+│   │   ├── fonts/
+│   │   │   ├── lalezar-arabic.woff2
+│   │   │   ├── lalezar-latin.woff2
+│   │   │   ├── Vazirmatn-Bold.woff2
+│   │   │   ├── Vazirmatn-Medium.woff2
+│   │   │   └── Vazirmatn-Regular.woff2
+│   │   └── sfx/
+│   │       ├── bank.ts
+│   │       ├── boop.mp3
+│   │       ├── buy.mp3
+│   │       ├── cluck.mp3
+│   │       ├── coin.mp3
+│   │       ├── dig.mp3
+│   │       ├── err.mp3
+│   │       ├── fanfare.mp3
+│   │       ├── guitar.mp3
+│   │       ├── nibble.mp3
+│   │       ├── pad.mp3
+│   │       ├── paper.mp3
+│   │       ├── pop.mp3
+│   │       ├── splash.mp3
+│   │       ├── step.mp3
+│   │       ├── tap.mp3
+│   │       └── water.mp3
+│   ├── game/
+│   │   ├── core/
+│   │   │   ├── advisor.ts
+│   │   │   ├── artisan.ts
+│   │   │   ├── autoMachines.ts
+│   │   │   ├── build.ts
+│   │   │   ├── dayLoop.ts
+│   │   │   ├── debt.ts
+│   │   │   ├── economy.ts
+│   │   │   ├── events.ts
+│   │   │   ├── farmDeep.ts
+│   │   │   ├── frontier.ts
+│   │   │   ├── mailbox.ts
+│   │   │   ├── mining.ts
+│   │   │   ├── ponds.ts
+│   │   │   ├── progress.ts
+│   │   │   ├── rpgSystems.ts
+│   │   │   ├── saveMigrations.ts
+│   │   │   └── workers.ts
+│   │   ├── a11y.ts
+│   │   ├── androidNav.ts
+│   │   ├── animalArt.ts
+│   │   ├── art.ts
+│   │   ├── artIcons.ts
+│   │   ├── backpackArt.ts
+│   │   ├── cinemaArt.ts
+│   │   ├── cinemaAudio.ts
+│   │   ├── cinemaStage.ts
+│   │   ├── data.ts
+│   │   ├── engine.ts
+│   │   ├── engineA11y.ts
+│   │   ├── engineInput.ts
+│   │   ├── engineRender.ts
+│   │   ├── engineTasks.ts
+│   │   ├── engineTypes.ts
+│   │   ├── engineWorkerVisuals.ts
+│   │   ├── errorLog.ts
+│   │   ├── estates.ts
+│   │   ├── estateScenes.ts
+│   │   ├── farmLive.ts
+│   │   ├── farmVisuals.ts
+│   │   ├── farmZones.ts
+│   │   ├── frontierScenes.ts
+│   │   ├── gemArt.ts
+│   │   ├── labelScale.ts
+│   │   ├── nativeHaptics.ts
+│   │   ├── nativeStorage.ts
+│   │   ├── npcLabels.ts
+│   │   ├── plantingQueue.ts
+│   │   ├── postboxArt.ts
+│   │   ├── preloader.ts
+│   │   ├── rig.ts
+│   │   ├── rng.ts
+│   │   ├── saveSummary.ts
+│   │   ├── scenes.ts
+│   │   ├── settings.ts
+│   │   ├── shops.ts
+│   │   ├── soilArt.ts
+│   │   ├── sound.ts
+│   │   ├── state.ts
+│   │   ├── thirstWarn.ts
+│   │   ├── toasts.ts
+│   │   ├── touchBridge.ts
+│   │   ├── tutorial.ts
+│   │   ├── worldRoads.ts
+│   │   └── worldVisuals.ts
+│   ├── story/
+│   │   ├── cinemaTypes.ts
+│   │   ├── dailyQuests.ts
+│   │   ├── debtData.ts
+│   │   ├── engine.ts
+│   │   ├── newTriggers.ts
+│   │   ├── npcQuests.ts
+│   │   ├── questCapacity.ts
+│   │   ├── quests.ts
+│   │   ├── sceneScripts.ts
+│   │   ├── secrets.ts
+│   │   ├── sharkhar.ts
+│   │   ├── socialVillagers.ts
+│   │   ├── story.ts
+│   │   ├── townNpc.ts
+│   │   └── types.ts
+│   ├── strings/
+│   │   ├── cinemaLocales.ts
+│   │   ├── en.ts
+│   │   ├── estateStoryText.ts
+│   │   ├── fa.ts
+│   │   ├── frontierText.ts
+│   │   ├── gameText.ts
+│   │   ├── inventoryText.ts
+│   │   ├── journeyText.ts
+│   │   ├── mailText.ts
+│   │   ├── sceneA11yText.ts
+│   │   ├── shopText.ts
+│   │   ├── tutorialText.ts
+│   │   ├── uiText.ts
+│   │   ├── version.ts
+│   │   └── worldExpansionText.ts
+│   ├── ui/
+│   │   ├── AlmanacModal.tsx
+│   │   ├── AnimalModal.tsx
+│   │   ├── AutoPanelModal.tsx
+│   │   ├── BootLoader.tsx
+│   │   ├── Cutscene.tsx
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── FarmhouseModal.tsx
+│   │   ├── FestivalModal.tsx
+│   │   ├── FishingModal.tsx
+│   │   ├── Hud.tsx
+│   │   ├── InventoryModal.tsx
+│   │   ├── layout.ts
+│   │   ├── Ledger.tsx
+│   │   ├── MailboxModal.tsx
+│   │   ├── MinePanels.tsx
+│   │   ├── MiningModal.tsx
+│   │   ├── Modals.tsx
+│   │   ├── Museum.tsx
+│   │   ├── palette.ts
+│   │   ├── parts.tsx
+│   │   ├── portraits.tsx
+│   │   ├── Quests.tsx
+│   │   ├── SceneA11y.tsx
+│   │   ├── SceneDebugMenu.tsx
+│   │   ├── SettingsPanel.tsx
+│   │   ├── ShopExperience.tsx
+│   │   ├── ShopInteriorArt.tsx
+│   │   ├── shopKit.tsx
+│   │   ├── Shops2.tsx
+│   │   ├── TutorialOverlay.tsx
+│   │   ├── WorldAtlasModal.tsx
+│   │   └── WorldNavBar.tsx
+│   ├── utils/
+│   │   └── cn.ts
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+├── .gitignore
+├── .nvmrc
+├── capacitor.config.ts
+├── index.html
+├── LICENSE
+├── package-lock.json
+├── package.json
+├── PROJECT-TREE.txt
+├── tsconfig.json
+└── vite.config.ts

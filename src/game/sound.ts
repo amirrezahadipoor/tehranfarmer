@@ -200,7 +200,7 @@ export const sfx = {
   },
 };
 
-// ===== موسیقی هر فصل — آثار رایگان CC0 از OpenGameArt (جزئیات در CREDITS.md) =====
+// ===== موسیقی هر فصل — آثار رایگان CC0 از OpenGameArt =====
 // فصل ۱: Peaceful Forest (Samza) · فصل ۲: Countryside (TAD) · فصل ۳: Feel-good ambient w/ beat (annandistance)
 // فصل ۴: Florist (TAD) · فصل ۵: A cup of tea (TAD) · فصل ۶: Town Theme (cynicmusic) · فصل ۷: Forest Ambience (TinyWorlds)
 // فصل ۱ استریو 96kbps است؛ فصل‌های ۲–۷ مونو ۲۴–۳۲kbps و حدود ۹۰ تا ۱۴۰ ثانیه با فِید نرم‌اند.

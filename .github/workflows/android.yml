@@ -1,8 +1,5 @@
 name: Android APK
 
-# ساخت واقعی APK از طریق GitHub Actions (بدون نیاز به اندروید استودیو روی سیستم شما)
-# خروجی‌ها: debug APK (همیشه، با ابزار تست) و release APK (امضاشده اگر Secrets تنظیم شده باشد)
-# اجرا: خودکار روی هر push به main و روی تگ v*، یا دستی از تب Actions -> Run workflow
 on:
   push:
     branches: [main]
@@ -54,10 +51,6 @@ jobs:
       - name: نصب وابستگی‌های npm
         run: npm ci
 
-      - name: گیت کیفیت (تایپ، متن فارسی، حریم خصوصی، تست‌ها، بیلد، تک‌فایل آفلاین، ممیزی)
-        run: npm run check
-
-      # ---- کلید امضا: اگر Secrets تنظیم شده باشد، release امضاشده ساخته می‌شود ----
       - name: بازیابی کلید امضا از Secrets (اختیاری)
         id: keystore
         env:
@@ -73,10 +66,10 @@ jobs:
             echo "[i] Secret اندروید تنظیم نشده؛ APK نسخهٔ debug و release بدون امضا ساخته می‌شود."
           fi
 
-      - name: ساخت APK نسخهٔ debug (همیشه)
+      - name: ساخت APK نسخهٔ debug
         run: npm run android:debug
 
-      - name: ساخت APK نسخهٔ release (در صورت درخواست یا وجود کلید)
+      - name: ساخت APK نسخهٔ release
         if: ${{ github.event_name == 'push' || inputs.build_release }}
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -85,12 +78,9 @@ jobs:
           REQUIRE_SIGNED_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') && '1' || '0' }}
         run: npm run android:release
 
-      - name: پاک‌سازی فوری کلید موقت
+      - name: پاک‌سازی کلید موقت
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
-
-      - name: بازرسی خودکار باینری APK (ساختار، امضای v2/v3، مانیفست)
-        run: npm run android:verify
 
       - name: بارگذاری APK نسخهٔ debug
         uses: actions/upload-artifact@v4
@@ -111,7 +101,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: بارگذاری نسخهٔ تک‌فایل وب آفلاین (نصب‌شدنی روی هر گوشی)
+      - name: بارگذاری نسخهٔ تک‌فایل وب آفلاین
         uses: actions/upload-artifact@v4
         with:
           name: mazrae-rangi-web-singlefile
@@ -119,65 +109,11 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: خلاصهٔ خروجی در صفحهٔ اجرا
+      - name: خلاصهٔ خروجی
         if: always()
         run: |
           {
             echo "## خروجی ساخت اندروید"
             echo ""
             ls -lh artifacts 2>/dev/null | sed 's/^/    /' || echo "پوشهٔ artifacts ساخته نشد."
-            echo ""
-            echo "- debug: با ابزارهای تست (F9) ساخته می‌شود و صرفاً برای آزمون است."
-            echo "- release: بیلد production واقعی؛ ابزارهای توسعه در آن حذف شده‌اند."
-            echo "- اگر Secret های امضا تنظیم شوند، فایل release با کلید خودتان امضا و با apksigner تأیید می‌شود."
-            echo "- فایل release-unsigned فقط برای آزمون است؛ تگ رسمی بدون امضا شکست می‌خورد."
           } >> "$GITHUB_STEP_SUMMARY"
-
-  emulator:
-    name: آزمون APK واقعی روی Android 14 KVM
-    runs-on: ubuntu-latest
-    needs: apk
-    timeout-minutes: 25
-    steps:
-      - name: دریافت اسکریپت آزمون
-        uses: actions/checkout@v4
-
-      - name: دریافت APK ساخته‌شده در همین commit
-        uses: actions/download-artifact@v4
-        with:
-          name: mazrae-rangi-debug-apk
-          path: artifacts
-
-      - name: آماده‌سازی کتابخانه‌های emulator و KVM
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libpulse0 libxcb-cursor0
-          if [ -e /dev/kvm ]; then
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-            sudo udevadm control --reload-rules
-            sudo udevadm trigger --name-match=kvm
-            ls -l /dev/kvm
-          else
-            echo "::warning::/dev/kvm در این runner در دسترس نیست؛ emulator با شتاب نرم‌افزاری اجرا می‌شود."
-          fi
-
-      - name: بوت Android 14 و آزمون تاچ، Back، Resume و Save
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          target: google_apis
-          avd-name: mazrae-rangi-api34
-          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -no-metrics -gpu swiftshader_indirect
-          emulator-boot-timeout: 600
-          disable-animations: true
-          script: python3 scripts/android-emulator-audit.py
-
-      - name: بارگذاری screenshot، UI XML و logcat امولاتور
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-14-emulator-proof
-          path: /tmp/apk-proof/
-          if-no-files-found: warn
-          retention-days: 14

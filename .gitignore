@@ -1,47 +1,30 @@
-# وابستگی‌ها و بیلد
+# Dependencies and builds
 node_modules/
 dist/
 *.log
 __pycache__/
 *.pyc
 .DS_Store
+.vite/
 
-# رمزها و کلیدها — هرگز در گیت نروند
+# Secrets
 .secrets/
 .env
 .env.*
 *.keystore
 *.jks
+*.p12
+*.pfx
+*.pem
 key.properties
 keystore.properties
-*.p12
-*.pem
 
-# پوشه‌های بیلد اندروید و ابزار
+# Android
 android/local.properties
 android/.gradle/
 android/build/
 android/app/build/
-android/capacitor-cordova-android-plugins/build/
-artifacts/*.apk
-*.keystore
-*.jks
-*.p12
-*.pfx
-keystore.properties
-.vite/
-coverage/
-playwright-report/
-test-results/
-e2e/__screenshots__/
-artifacts/*.png
-
-
-# پوشهٔ تولیدی Capua: در بیلد ساخته می‌شود (Capacitor 8 آن را از قالب خود می‌سازد)
 android/capacitor-cordova-android-plugins/
 
-# خروجی‌های تولیدی آزمون و بیلد
-test-results/
-playwright-report/
+# Local outputs
 artifacts/
-e2e/.scene-layout-report.json
