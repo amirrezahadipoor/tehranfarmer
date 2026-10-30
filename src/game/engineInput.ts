@@ -13,7 +13,7 @@ import { sfx } from './sound';
 import { talkToSharkhar } from '../story/engine';
 import { checkSecretTriggers } from '../story/secrets';
 import { npcOverheadLayout } from './npcLabels';
-import { tutOnPlotAction, tutTapOk } from './tutorial';
+import { tutTapOk } from './tutorial';
 import { fishCast } from './worldVisuals';
 import { GT } from '../strings/gameText';
 import { FT } from '../strings/frontierText';
@@ -76,7 +76,7 @@ export function createSceneTapRouter(d: SceneInputDeps) {
         const pl = S.plots[i];
         if (pl && pl.st === 2 && pl.ripe && !pl.dead) {
           UI.info = null;
-          if (d.enqueuePlot('harvest', i)) tutOnPlotAction(i);
+          d.enqueuePlot('harvest', i);
           if (first) notify();
           return;
         }
@@ -87,7 +87,7 @@ export function createSceneTapRouter(d: SceneInputDeps) {
           UI.info = UI.info?.plot === i ? null : { plot: i, x: sp.x, y: sp.y };
           UI.seedTray = false; notify();
         }
-      } else { UI.info = null; if (d.enqueuePlot(UI.tool, i)) tutOnPlotAction(i); if (first) notify(); }
+      } else { UI.info = null; d.enqueuePlot(UI.tool, i); if (first) notify(); }
       return;
     }
     if (!first) return;

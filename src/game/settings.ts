@@ -2,6 +2,9 @@
 export interface UserSettings {
   sound: boolean;
   music: boolean;
+  musicVolume: number;
+  sfxVolume: number;
+  lowPower: boolean;
   haptics: boolean;
   fontScale: 1 | 1.1 | 1.2;
   reduceMotion: boolean;
@@ -17,6 +20,9 @@ export const SETTINGS_KEY = 'mazrae-rangi-settings-v1';
 const DEFAULTS: UserSettings = {
   sound: true,
   music: true,
+  musicVolume: 100,
+  sfxVolume: 100,
+  lowPower: false,
   haptics: false,
   fontScale: 1,
   reduceMotion: false,
@@ -49,6 +55,9 @@ export function loadSettings(): UserSettings {
     const parsed = JSON.parse(raw) as Partial<UserSettings>;
     Object.assign(CFG, DEFAULTS, parsed);
     if (![1, 1.5, 2].includes(CFG.actionSpeed)) CFG.actionSpeed = 1;
+    CFG.musicVolume = Number.isFinite(Number(CFG.musicVolume)) ? Math.max(0, Math.min(100, Number(CFG.musicVolume))) : 100;
+    CFG.sfxVolume = Number.isFinite(Number(CFG.sfxVolume)) ? Math.max(0, Math.min(100, Number(CFG.sfxVolume))) : 100;
+    CFG.lowPower = CFG.lowPower === true;
     applySettingsToDom();
   } catch (e) { setLastError(`settings-load-failed:${String((e as Error)?.message ?? e)}`, 'storage'); }
   return CFG;

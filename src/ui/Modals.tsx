@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ACHS, ACH_OUTFIT_REWARDS, CROPS, CROP, FEED_PRICE, FINGER_PRICE, GOOD, GOODS, HIVE_MAX,
   FERT_PRICE, HONEY_CAP_PER_HIVE, MACHINES, MACHINE_LIST, MK_FA, POND_GROW_DAYS, POND_MAX, STAM_CAP,
@@ -8,7 +8,7 @@ import {
 import {
   S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract,
   effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
-  isNight, OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, sleepToMorning, srcHave, stockPond, holdCount,
+  isNight, OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, srcHave, stockPond, holdCount,
 } from '../game/state';
 import { sfx } from '../game/sound';
 import { Bar, Coin, Ic, Modal, Trend, useDialogFocus } from './parts';
@@ -33,7 +33,8 @@ import { FT } from '../strings/frontierText';
 import { bestEstateForCrop, estateGrowthRate } from '../game/estates';
 import { offerContractBoard, signBoardContract } from '../story/socialVillagers';
 import { WX } from '../strings/worldExpansionText';
-import { tutOnSale, tutOnSleep } from '../game/tutorial';
+import { tutOnSale } from '../game/tutorial';
+import { performSleep, requestSleep, sleepConfirmMessage } from '../game/sleep';
 import { SettingsPanel } from './SettingsPanel';
 import { CFG, setShortBeat, updateSetting } from '../game/settings';
 import { APP_VERSION, CHANGELOG, formatVersion } from '../strings/version';
@@ -76,6 +77,7 @@ export function Modals() {
       {UI.modal === 'atlas' && <WorldAtlasModal />}
       {UI.modal === 'almanac' && <AlmanacModal />}
       {UI.modal === 'mail' && <MailboxModal />}
+      {UI.confirm === 'sleep' && <Confirm icon="moon" msg={sleepConfirmMessage()} onYes={performSleep} />}
       {UI.confirm === 'reset' && <Confirm icon="trash" msg={UT.confirmResetMsg} onYes={() => { UI.confirm = null; UI.modal = null; resetGame(); window.location.reload(); }} />}
       {UI.confirm === 'newgame' && <Confirm icon="trash" msg={UT.confirmNewGameMsg} onYes={() => { UI.confirm = null; UI.modal = null; resetGame(); UI.started = true; maybeStartPrologue(); sfx.fanfare(); notify(); }} />}
       {UI.confirm === 'exit' && <Confirm icon="house" msg={UT.exitPrompt} onYes={() => { UI.confirm = null; notify(); exitNativeApp(); }} />}
@@ -206,7 +208,21 @@ function SeedShop() {
 }
 
 function Market() {
+  const [showAll, setShowAll] = useState(false);
   const rows = GOODS.filter((g) => g.id !== 'feed' && g.id !== 'fingerling');
+  const visibleRows = showAll ? rows : rows.filter((g) => srcHave(g.id) > 0);
+  useEffect(() => {
+    if (!S.tut?.active || S.tut.step !== 4) return;
+    const raf = requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLElement>('[data-sell-one="wheat"]');
+      const scroller = target?.closest<HTMLElement>('[data-modal-scroll="1"]');
+      if (!target || !scroller) return;
+      const tr = target.getBoundingClientRect();
+      const sr = scroller.getBoundingClientRect();
+      scroller.scrollTop += tr.top - sr.top - (sr.height - tr.height) / 2;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
   let total = 0;
   for (const g of rows) {
     const keep = S.contract && S.contract.good === g.id ? S.contract.qty : 0;
@@ -251,8 +267,14 @@ function Market() {
           </span>
         ))}
       </div>
+      <div className="mb-2 flex justify-center">
+        <button type="button" data-market-show-all="1" aria-pressed={showAll} className="btn b press !min-h-[48px] !px-3 !py-1 text-xs font-black" onClick={() => setShowAll((v) => !v)}>
+          {showAll ? UT.marketOnlyOwned : UT.marketShowAll}
+        </button>
+      </div>
+      {visibleRows.length === 0 && <div className="paper mb-2 p-3 text-center text-xs font-black" role="status">{UT.marketNoGoods}</div>}
       <div className={grid}>
-        {rows.map((g) => {
+        {visibleRows.map((g) => {
           const q = srcHave(g.id);
           const offSeason = !!CROP[g.id] && !CROP[g.id].seasons.includes(season());
           return (
@@ -574,7 +596,7 @@ function Menu() {
           <Ic n="note" s={4.5} /><span className="ft text-xl">{UT.alwaysShort}</span>
           <span className="text-xs font-black">{CFG.shortBeat ? UT.shortOn : UT.shortOff}</span>
         </button>
-        <button className="btn b press flex-col !p-3" onClick={() => { tutOnSleep(); sleepToMorning(); sfx.buy(); close(); }}>
+        <button className="btn b press flex-col !p-3" onClick={requestSleep}>
           <Ic n="moon" s={4.5} /><span className="ft text-xl">{isNight() ? UT.u33 : UT.restAnytime}</span>
           <span className="text-xs font-black">{isNight() ? UT.u137 : UT.restSub}</span>
         </button>

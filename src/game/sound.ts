@@ -13,7 +13,19 @@ export const AUDIO_SAMPLE_URIS = SFX_DATA_URIS;
 export type SampleId = keyof typeof AUDIO_SAMPLE_URIS;
 
 let ac: AudioContext | null = null;
+let sfxBus: GainNode | null = null;
+let sfxLimiter: DynamicsCompressorNode | null = null;
 export const snd = { on: true };
+export const MAX_SFX_VOICES = 12;
+const activeVoices = new Set<AudioScheduledSourceNode>();
+let activeHtmlVoices = 0;
+const voiceCount = () => activeVoices.size + activeHtmlVoices;
+function claimVoice(node: AudioScheduledSourceNode): boolean {
+  if (voiceCount() >= MAX_SFX_VOICES) return false;
+  activeVoices.add(node);
+  node.addEventListener('ended', () => { activeVoices.delete(node); }, { once: true });
+  return true;
+}
 
 // مولد مستقل نوسان ظریف صوتی تا هرگز RNG گیم‌پلی را جابه‌جا نکند
 let nSeed = 987654321;
@@ -91,6 +103,22 @@ export function isAudioSuspended(): boolean {
   return bgAudioPaused || Boolean(ac && ac.state === 'suspended');
 }
 
+function sfxOutput(a: AudioContext): GainNode {
+  if (!sfxBus || sfxBus.context !== a) {
+    sfxBus = a.createGain();
+    sfxLimiter = a.createDynamicsCompressor();
+    sfxLimiter.threshold.value = -3;
+    sfxLimiter.knee.value = 2;
+    sfxLimiter.ratio.value = 20;
+    sfxLimiter.attack.value = 0.001;
+    sfxLimiter.release.value = 0.16;
+    sfxBus.connect(sfxLimiter);
+    sfxLimiter.connect(a.destination);
+  }
+  sfxBus.gain.setTargetAtTime(Math.max(0, Math.min(1, CFG.sfxVolume / 100)), a.currentTime, 0.01);
+  return sfxBus;
+}
+
 export function audioCtx(): AudioContext | null {
   if (!snd.on || !CFG.sound || bgAudioPaused) return null;
   if (typeof document !== 'undefined' && document.hidden) return null;
@@ -102,6 +130,7 @@ export function audioCtx(): AudioContext | null {
     if (ac) {
       if (ac.state === 'suspended') void ac.resume().catch(() => {});
       warmDecodeSamples(ac);
+      sfxOutput(ac);
     }
     return ac;
   } catch { return null; }
@@ -111,6 +140,7 @@ export function audioCtx(): AudioContext | null {
 function gentleFallbackTone(a: AudioContext, f: number, d: number, v = 0.045, to = 0, delay = 0) {
   const t = a.currentTime + delay;
   const o = a.createOscillator();
+  if (!claimVoice(o)) return;
   const g = a.createGain();
   o.type = 'sine';
   o.frequency.setValueAtTime(f, t);
@@ -119,7 +149,7 @@ function gentleFallbackTone(a: AudioContext, f: number, d: number, v = 0.045, to
   g.gain.linearRampToValueAtTime(v, t + Math.min(0.018, d * 0.32));
   g.gain.exponentialRampToValueAtTime(0.0001, t + d);
   o.connect(g);
-  g.connect(a.destination);
+  g.connect(sfxOutput(a));
   o.start(t);
   o.stop(t + d + 0.02);
 }
@@ -131,6 +161,7 @@ export function playSample(
 ): boolean {
   if (!snd.on || !CFG.sound || bgAudioPaused) return false;
   if (typeof document !== 'undefined' && document.hidden) return false;
+  if (voiceCount() >= MAX_SFX_VOICES) return false;
   const vol = opts?.vol ?? 0.55;
   const jit = opts?.jitter ? 1 + (audioRnd() - 0.5) * 2 * opts.jitter : 1;
   const rate = Math.max(0.35, Math.min(3.2, (opts?.rate ?? 1) * jit));
@@ -141,6 +172,7 @@ export function playSample(
     const buf = decodedBank.get(id);
     if (buf) {
       const src = a.createBufferSource();
+      if (!claimVoice(src)) return false;
       src.buffer = buf;
       if (src.playbackRate) src.playbackRate.value = rate;
       const g = a.createGain();
@@ -150,7 +182,7 @@ export function playSample(
       g.gain.linearRampToValueAtTime(vol, now + Math.min(0.008, dur * 0.2));
       g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
       src.connect(g);
-      g.connect(a.destination);
+      g.connect(sfxOutput(a));
       src.start(now);
       if (typeof src.stop === 'function') src.stop(now + dur + 0.03);
       scheduleIdleAudioSuspend(a);
@@ -165,9 +197,13 @@ export function playSample(
   if (typeof Audio !== 'undefined') {
     try {
       const el = new Audio(AUDIO_SAMPLE_URIS[id]);
-      el.volume = Math.max(0, Math.min(1, vol));
+      activeHtmlVoices++;
+      let released = false;
+      const release = () => { if (released) return; released = true; activeHtmlVoices = Math.max(0, activeHtmlVoices - 1); el.onended = null; el.onerror = null; };
+      el.onended = release; el.onerror = release;
+      el.volume = Math.max(0, Math.min(1, vol * CFG.sfxVolume / 100));
       el.playbackRate = rate;
-      void el.play().catch(() => {});
+      try { void el.play().catch(release); } catch (err) { release(); throw err; }
       return true;
     } catch { /* */ }
   }
@@ -203,7 +239,8 @@ export const sfx = {
 // ===== موسیقی هر فصل — آثار رایگان CC0 از OpenGameArt =====
 // فصل ۱: Peaceful Forest (Samza) · فصل ۲: Countryside (TAD) · فصل ۳: Feel-good ambient w/ beat (annandistance)
 // فصل ۴: Florist (TAD) · فصل ۵: A cup of tea (TAD) · فصل ۶: Town Theme (cynicmusic) · فصل ۷: Forest Ambience (TinyWorlds)
-// فصل ۱ استریو 96kbps است؛ فصل‌های ۲–۷ مونو ۲۴–۳۲kbps و حدود ۹۰ تا ۱۴۰ ثانیه با فِید نرم‌اند.
+// هر هفت آهنگ با loudnorm دوپاس به حدود ۱۸٫۴ LUFS- و true peak زیر صفر master شده‌اند.
+// فصل ۱ استریو 96kbps و فصل‌های ۲–۷ مونو 64kbps‌اند؛ loudness و limiter در mixer نیز مستقل تنظیم می‌شوند.
 const MUSIC_FILES: Record<number, string> = {
   1: 'peaceful-forest.mp3',
   2: 'ch2.mp3',
@@ -251,7 +288,13 @@ let musicBaseVolume = 0.27;
 let musicDuck = 1;
 
 function updateMusicVolume() {
-  if (musicEl) musicEl.volume = Math.max(0, Math.min(0.6, musicBaseVolume * musicDuck));
+  if (musicEl) musicEl.volume = Math.max(0, Math.min(0.6, musicBaseVolume * musicDuck * CFG.musicVolume / 100));
+}
+
+/** اعمال فوری sliderها روی صدای در حال پخش، بدون انتظار برای action یا آهنگ بعدی. */
+export function syncAudioSettings() {
+  if (ac && sfxBus) sfxOutput(ac);
+  updateMusicVolume();
 }
 
 // هر فصل یک آهنگ مکمل دارد؛ تعویض در پایان طبیعی قطعه، بدون timer و بدون مصرف
@@ -322,8 +365,12 @@ export const ambient = {
   },
 };
 
+let lastHapticAt = -Infinity;
 export function haptic(kind: 'light' | 'medium' | 'heavy' = 'light'): number {
   if (!CFG.haptics || bgAudioPaused) return 0;
+  const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  if (now - lastHapticAt < 30) return 0;
+  lastHapticAt = now;
   const ms = kind === 'heavy' ? 35 : kind === 'medium' ? 18 : 8;
   // رفع U-3: اول پلاگین بومی @capacitor/haptics (اندروید/iOS)، بعد fallback به vibrate وب
   const style = kind === 'heavy' ? 'HEAVY' : kind === 'medium' ? 'MEDIUM' : 'LIGHT';

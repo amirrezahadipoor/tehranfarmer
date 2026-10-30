@@ -67,7 +67,11 @@ export function syncTut(): void {
   const p = S.plots[TUT_PLOT];
   const before = t.step;
   while (t.step < 3 && stepDone(t.step, p)) t.step++;
-  if (t.step !== before) prepareStep(t.step);
+  if (t.step !== before) {
+    prepareStep(t.step);
+    saveGame();
+    notify();
+  }
   if (t.step >= 4) { UI.seedTray = false; return; }
   if (t.step === 3) ripenPracticeCrop();
 }
@@ -81,11 +85,15 @@ function persistStep(step: number): void {
   notify();
 }
 
-export function tutOnPlotAction(i: number): void {
-  if (!tutActive() || tutStep() >= 4 || i !== TUT_PLOT || UI.tool !== tutExpectedTool()) return;
+/** فقط اتمام واقعی ضربه، آموزش را جلو می‌برد؛ انتخاب ابزار یا قرارگرفتن در صف کافی نیست. */
+export function tutOnPlotCompleted(kind: string, i: number): void {
+  if (!tutActive() || i !== TUT_PLOT || kind !== tutExpectedTool()) return;
   const t = S.tut!;
-  persistStep(t.step + 1);
-  if (t.step === 4) sfx.coin();
+  if (t.step < 3) { syncTut(); return; }
+  if (t.step === 3 && kind === 'harvest') {
+    persistStep(4);
+    sfx.coin();
+  }
 }
 
 export function tutOnSale(): void {

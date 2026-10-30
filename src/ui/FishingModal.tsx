@@ -8,20 +8,22 @@ import { FT } from '../strings/frontierText';
 import { UT } from '../strings/uiText';
 import { GT } from '../strings/gameText';
 import { Ic, useDialogFocus } from './parts';
+import { advanceFishMotion, createFishMotionState, type FishBehavior } from '../game/fishMotion';
 
 interface FishProfile {
   nameKey: 'fishSpeciesTrout' | 'fishSpeciesCarp' | 'fishSpeciesSalmon' | 'fishSpeciesPearl' | 'fishSpeciesSturgeon';
   speed: number;
   barH: number;
   bonusMult: number;
+  behavior: FishBehavior;
 }
 
 const PROFILES: readonly FishProfile[] = [
-  { nameKey: 'fishSpeciesTrout', speed: 0.72, barH: 30, bonusMult: 1.0 },
-  { nameKey: 'fishSpeciesCarp', speed: 0.9, barH: 28, bonusMult: 1.15 },
-  { nameKey: 'fishSpeciesSalmon', speed: 1.15, barH: 25, bonusMult: 1.3 },
-  { nameKey: 'fishSpeciesPearl', speed: 1.28, barH: 23, bonusMult: 1.5 },
-  { nameKey: 'fishSpeciesSturgeon', speed: 1.48, barH: 21, bonusMult: 1.85 },
+  { nameKey: 'fishSpeciesTrout', speed: 0.72, barH: 30, bonusMult: 1.0, behavior: 'sine' },
+  { nameKey: 'fishSpeciesCarp', speed: 0.9, barH: 28, bonusMult: 1.15, behavior: 'dart' },
+  { nameKey: 'fishSpeciesSalmon', speed: 1.15, barH: 25, bonusMult: 1.3, behavior: 'pause' },
+  { nameKey: 'fishSpeciesPearl', speed: 1.28, barH: 23, bonusMult: 1.5, behavior: 'surge' },
+  { nameKey: 'fishSpeciesSturgeon', speed: 1.48, barH: 21, bonusMult: 1.85, behavior: 'dive' },
 ];
 
 export function FishingModal() {
@@ -36,11 +38,12 @@ export function FishingModal() {
   const [progress, setProgress] = useState(34);
   const [chestProg, setChestProg] = useState(0);
   const [holding, setHolding] = useState(false);
+  const [phase, setPhase] = useState<'ready' | 'playing' | 'result'>('ready');
   const [resultMsg, setResultMsg] = useState<string | null>(null);
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stRef = useRef({
-    barY: 52, vel: 0, fishY: 48, fishTarget: 32, retarget: 0.5,
+    ...createFishMotionState(), barY: 52, vel: 0,
     progress: 34, chestProg: 0, missed: 0, holding: false, ended: false,
   });
   stRef.current.holding = holding;
@@ -56,6 +59,7 @@ export function FishingModal() {
   const settleCatch = (won: boolean, perfect: boolean, gotChest: boolean) => {
     if (stRef.current.ended) return;
     stRef.current.ended = true;
+    setPhase('result');
     if (S.stamina < FISH_STAM) {
       sfx.err();
       toast('bolt', GT.g35);
@@ -102,6 +106,7 @@ export function FishingModal() {
   };
 
   useEffect(() => {
+    if (phase !== 'playing') return;
     let raf = 0;
     let prev = performance.now();
     const step = (now: number) => {
@@ -110,21 +115,13 @@ export function FishingModal() {
       const s = stRef.current;
       if (s.ended) return;
 
-      // Buoyant lift vs water gravity
       const accel = s.holding ? -135 : 108;
       s.vel = Math.max(-92, Math.min(92, s.vel * 0.9 + accel * dt));
       s.barY += s.vel * dt;
       if (s.barY < 4) { s.barY = 4; s.vel = Math.max(0, s.vel * -0.25); }
       if (s.barY > 96 - prof.barH) { s.barY = 96 - prof.barH; s.vel = Math.min(0, s.vel * -0.25); }
 
-      // Fish AI darting movement
-      s.retarget -= dt;
-      if (s.retarget <= 0) {
-        s.retarget = 0.45 + ((now % 7) * 0.09);
-        const wave = Math.sin(now * 0.0023 * prof.speed) * 34;
-        s.fishTarget = Math.max(8, Math.min(90, 48 + wave));
-      }
-      s.fishY += (s.fishTarget - s.fishY) * Math.min(1, dt * 2.8 * prof.speed);
+      advanceFishMotion(s, prof.behavior, prof.speed, now, dt);
 
       const inside = s.fishY >= s.barY - 3 && s.fishY <= s.barY + prof.barH + 3;
       if (inside) s.progress = Math.min(100, s.progress + dt * 29);
@@ -152,10 +149,11 @@ export function FishingModal() {
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
-    return () => {
-      cancelAnimationFrame(raf);
-      if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
-    };
+    return () => cancelAnimationFrame(raf);
+  }, [phase]);
+
+  useEffect(() => () => {
+    if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
   }, []);
 
   const quickCast = () => {
@@ -173,6 +171,7 @@ export function FishingModal() {
 
   const beginHolding = () => {
     if (stRef.current.ended) return;
+    if (phase === 'ready') setPhase('playing');
     setHolding(true);
     sfx.water();
   };
@@ -196,6 +195,8 @@ export function FishingModal() {
       aria-label={FT.fishModalTitle}
       tabIndex={-1}
       data-fishing-minigame="1"
+      data-fish-phase={phase}
+      data-fish-behavior={prof.behavior}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-2 select-none"
       onPointerUp={() => setHolding(false)}
       onPointerCancel={() => setHolding(false)}
@@ -229,7 +230,7 @@ export function FishingModal() {
 
         <div className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
           <div>{FT[prof.nameKey]}</div>
-          <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{FT.fishHoldHint}</div>
+          <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{phase === 'ready' ? FT.fishReadyHint : FT.fishHoldHint}</div>
         </div>
 
         {/* Interactive Water Column + Tension Progress Gauge */}
@@ -302,7 +303,7 @@ export function FishingModal() {
               onBlur={stopHolding}
             >
               <Ic n="fish" s={1.8} />
-              <span>{FT.fishHoldBtn}</span>
+              <span>{phase === 'ready' ? FT.fishStartBtn : FT.fishHoldBtn}</span>
             </button>
             <button
               type="button"

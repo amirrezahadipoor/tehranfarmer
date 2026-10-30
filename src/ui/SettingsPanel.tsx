@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { S, UI, exportSaveJson, importSaveJson, listBackupSlots, notify, restoreBackupSlot, toast } from '../game/state';
 import { CFG, resetSettings, updateSetting } from '../game/settings';
 import { fa, faDec } from '../strings/fa';
-import { sfx } from '../game/sound';
+import { sfx, syncAudioSettings } from '../game/sound';
 import { GT } from '../strings/gameText';
 import { UT } from '../strings/uiText';
 import { CINEMA_UI } from '../strings/cinemaLocales';
@@ -17,7 +17,7 @@ const openSceneDirector = DEV_TOOLS
 export function SettingsPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const toggle = (k: 'sound' | 'music' | 'haptics' | 'reduceMotion' | 'colorblind' | 'shortBeat', label: string) => {
+  const toggle = (k: 'sound' | 'music' | 'haptics' | 'reduceMotion' | 'colorblind' | 'shortBeat' | 'lowPower', label: string) => {
     const on = CFG[k];
     return (
       <button
@@ -64,7 +64,25 @@ export function SettingsPanel() {
         {toggle('reduceMotion', UT.setMotion)}
         {toggle('colorblind', UT.setColorblind)}
         {toggle('shortBeat', UT.alwaysShort)}
+        {toggle('lowPower', UT.setLowPower)}
       </div>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2" data-audio-sliders="1">
+        {([
+          ['musicVolume', UT.setMusicVolume],
+          ['sfxVolume', UT.setSfxVolume],
+        ] as const).map(([key, label]) => (
+          <label key={key} className="rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1 text-xs font-black">
+            <span className="flex items-center justify-between gap-2"><span>{label}</span><span dir="ltr">{fa(CFG[key])}{UT.u46}</span></span>
+            <input
+              type="range" min="0" max="100" step="5" value={CFG[key]} aria-label={label}
+              data-audio-volume={key}
+              className="mt-1 h-[48px] w-full accent-[#6f9d45]"
+              onInput={(e) => { updateSetting(key, Number(e.currentTarget.value)); syncAudioSettings(); notify(); }}
+            />
+          </label>
+        ))}
+      </div>
+      <p className="mt-1 text-center text-[.68rem] font-bold leading-4 text-[#67513d]">{UT.setLowPowerHint}</p>
       <div data-action-speed-control="1" className="mt-2 rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1.5 text-center">
         <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
           <span>{UT.setActionSpeed}:</span>
@@ -89,7 +107,7 @@ export function SettingsPanel() {
         <button
           aria-label={UT.setReset}
           className="btn b press !px-2.5 !py-0.5 text-xs font-black"
-          onClick={() => { resetSettings(); UI.sound = CFG.sound; sfx.tap(); notify(); }}
+          onClick={() => { resetSettings(); syncAudioSettings(); UI.sound = CFG.sound; sfx.tap(); notify(); }}
         >
           <span>{UT.setReset}</span>
         </button>

@@ -105,7 +105,7 @@ function ShopLobby() {
           <div className="pointer-events-none absolute bottom-0 right-[2%] h-[88%] w-[9rem] max-w-[30%] overflow-hidden" data-shop-keeper={meta.keeper}>
             <div className="absolute bottom-[-.5rem] left-1/2 -translate-x-1/2"><Portrait id={meta.keeper} size={keeperSize} /></div>
           </div>
-          <div className="paper pointer-events-none absolute right-2 top-2 max-w-[55%] px-2.5 py-1 text-center shadow-lg">
+          <div data-shop-keeper-label="1" className="paper pointer-events-none absolute left-2 top-2 max-w-[45%] px-2.5 py-1 text-center shadow-lg">
             <div className="text-[.62rem] font-black text-[#8a613a]">{SHOP_UI[loc].seller}</div>
             <div className="break-words text-sm font-black leading-normal sm:text-base">{keeper.name}</div>
             <div className="hidden break-words text-[.68rem] font-bold leading-normal text-[#725035] sm:block">{keeper.job}</div>

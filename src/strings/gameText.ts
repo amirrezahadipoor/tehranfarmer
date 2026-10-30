@@ -223,6 +223,8 @@ export const GT_FA = {
   allQuestsClaimed: "همهٔ پاداش‌های آماده دریافت شد: +",
   levelUpPrefix: "تبریک! رسیدی به سطح ",
   autoSeedSwitched: "بذر قبلی تمام شد — بذر بعدی آمادهٔ کاشت: ",
+  gActionNotReady: "این کرت هنوز برای عمل بعدی آماده نیست",
+  saveRecoveredDay: "سیو اصلی خراب بود؛ نسخهٔ پشتیبان روز بازیابی شد: ",
   animalSoldToast: "دام فروخته شد: +",
   petFemaleToast: " — مادهٔ سرحال (در حال تولید محصول)",
   petMaleToast: " — نرِ گله (پشتیبان زادوولد)",

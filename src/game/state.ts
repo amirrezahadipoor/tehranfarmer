@@ -6,7 +6,7 @@ import { setLastError } from './errorLog';
 import {
   COLS, CROP, CROPS, GOODS, HOE_COST, MACHINES, MK_FERTADD,
   MK_FERTSAVE, MK_FERTSOIL, MK_HARVEST, MK_SEEDSAVE, ROWS, SOIL_BONUS, ghCovers, WORKER_MAX,
-  XP, isUnlocked,
+  XP, isUnlocked, fa,
   type AnimalKind, type BuildJob, type CropId, type MachineId, type PondS,
 } from './data';
 import { sfx } from './sound';
@@ -119,7 +119,7 @@ export const UI = {
   speed: 1,
   sound: CFG.sound,
   seedTray: false,
-  confirm: null as null | 'reset' | 'exit' | 'newgame',
+  confirm: null as null | 'reset' | 'exit' | 'newgame' | 'sleep',
   portrait: false,
   profile: 'small' as 'small' | 'tall' | 'tablet' | 'desktop' | 'portrait',
 };
@@ -140,7 +140,7 @@ export function useGame() {
 }
 
 function newPlot(): Plot { return { st: 0, crop: null, prog: 0, water: 0, fert: 0.7, last: null, dead: false, dry: 0, ripe: false, n: 0 }; }
-function fresh(): Save {
+export function fresh(): Save {
   const dem: Record<string, number> = {};
   GOODS.forEach((g) => (dem[g.id] = 1));
   const sdem: Record<string, number> = {};
@@ -157,6 +157,7 @@ function fresh(): Save {
       { id: 2, kind: 'chicken', ready: 0, hue: 1, sex: 'm', grown: 0 },
     ],
     trough: 0, workers: 0, workersHired: 0, dem, sdem, weather: 0, nextId: 3, earned: 0,
+    snapEarned: 0, snapGathered: 0,
     cityVisits: 0, machines: {}, auto: {}, ponds: [], hives: 0, honeyAcc: 0, builds: [],
     pens: { chicken: 1 }, gh: 0, silo: 0, nests: [],
     xp: 0, stats: {}, ach: {},
@@ -293,6 +294,11 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.affinity = S.affinity ?? {};
   S.giftedDay = S.giftedDay ?? {};
   S.morning = S.morning ?? null; S.earn30 = Array.isArray(S.earn30) ? S.earn30 : [];
+  // سیو جدید snapshot صفر دارد؛ برای سیو قدیمیِ فاقد آن، زمانِ لود مبناست تا درآمد lifetime یک روز گزارش نشود.
+  const loaded = d as Partial<Save>;
+  S.snapEarned = Number.isFinite(loaded.snapEarned) ? Math.max(0, Number(loaded.snapEarned)) : S.earned;
+  const loadedGather = (S.stats.harv ?? 0) + (S.stats.collect ?? 0) + (S.stats.honey ?? 0) + (S.stats.fish ?? 0);
+  S.snapGathered = Number.isFinite(loaded.snapGathered) ? Math.max(0, Number(loaded.snapGathered)) : loadedGather;
   syncPlayerOutfitPalette();
   // جنسیت پیش‌فرض قطعی از شناسه (نه RNG): بارگذاری، جریان تصادفی بازی را دست‌کاری نمی‌کند
   S.animals = (S.animals ?? []).map((a) => ({ ...a, sex: a.sex ?? (a.id % 2 === 0 ? 'm' : 'f'), grown: a.grown ?? 0 }));
@@ -315,9 +321,22 @@ export function loadGame(): boolean {
       return applyParsedSave(JSON.parse(raw));
     } catch { return false; }
   };
-  const ok = attempt(KEY) || attempt(BAK1) || attempt(BAK2) || attempt(BAK_LEGACY);
-  if (ok) { saveLocked = false; lastRotateAt = 0; resetAutoClock(); }
-  else if (hasSave()) saveLocked = true;
+  let recovered = false;
+  let ok = attempt(KEY);
+  if (!ok) {
+    ok = attempt(BAK1) || attempt(BAK2) || attempt(BAK_LEGACY);
+    recovered = ok;
+  }
+  if (ok) {
+    saveLocked = false;
+    lastRotateAt = 0;
+    resetAutoClock();
+    if (recovered) {
+      // main همان لحظه و بدون چرخش backup ترمیم می‌شود؛ reload دوم به نسخهٔ قدیمی‌تر برنمی‌گردد.
+      lastRotateAt = Date.now();
+      if (saveGame()) toast('save', GT.saveRecoveredDay + fa(S.day));
+    }
+  } else if (hasSave()) saveLocked = true;
   return ok;
 }
 

@@ -26,6 +26,8 @@ import { createWorkerVisuals } from './engineWorkerVisuals';
 import { checkSeamlessEdgePortal } from './core/frontier';
 import { isShopId, openShop } from './shops';
 import { stopPlantingQueueWithoutSeed } from './plantingQueue';
+import { tutOnPlotCompleted } from './tutorial';
+import { frameIsSlow, frameIsStable, lowerQualityCap, raiseQualityCap, type RenderQualityCap } from './renderQuality';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
 import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
 import { sceneSummary } from './a11y';
@@ -63,6 +65,11 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   // تنها ۱ بوم مرئی استاندارد (زیر سقف بودجهٔ Full-HD حافظهٔ GPU وب‌ویو، بدون باگ RGBX alpha:false و با صفر FBO مخفی)
   const ctx = canvas.getContext('2d')!;
   let dpr = 1, cw = 1, ch = 1, sc = 1, tx = 0, ty = 0;
+  let qualityCap: RenderQualityCap = CFG.lowPower ? 1 : 2;
+  let knownLowPower = CFG.lowPower;
+  let qualitySamples: Array<{ ms: number; active: boolean }> = [];
+  let qualityStableMs = 0, qualityCooldownUntil = 0, lastQualityAt = 0;
+  let qualityRaisedAt = 0, qualityUpscaleBlocked = false;
   const farmer = mkWalker(PAL_PLAYER, 398, 356, true);
   const workers: Walker[] = PAL_WORKERS.map((p, i) => mkWalker(p, 352 + i * 56, 358 + (i % 2) * 20, false));
   const builder = mkWalker(PAL_BUILDER, 1290, 232, false);
@@ -108,19 +115,22 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
 
   let hoverPlot = -1;
   const render = () => renderView({ dpr, cw, ch, sc, tx, ty, t, bph, trans, hoverPlot });
-  function resize() {
+  function resize(preserveCamera = false) {
     const cssW = Math.max(1, canvas.clientWidth || window.innerWidth || 1);
     const cssH = Math.max(1, canvas.clientHeight || window.innerHeight || 1);
     const pixelCapScale = Math.sqrt((1920 * 1080) / (cssW * cssH));
-    const nextDpr = Math.min(2, pixelCapScale, window.devicePixelRatio || 1);
+    const nextDpr = Math.min(qualityCap, pixelCapScale, window.devicePixelRatio || 1);
     const nextW = Math.max(1, Math.round(window.innerWidth || 1));
     const nextH = Math.max(1, Math.round(window.innerHeight || 1));
     const pxW = Math.max(1, Math.round(nextW * nextDpr)), pxH = Math.max(1, Math.round(nextH * nextDpr));
     const changed = canvas.width !== pxW || canvas.height !== pxH || cw !== nextW || ch !== nextH || dpr !== nextDpr;
     dpr = nextDpr; cw = nextW; ch = nextH;
+    canvas.dataset.renderDpr = dpr.toFixed(2);
+    canvas.dataset.qualityCap = String(qualityCap);
     canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
     if (canvas.width !== pxW || canvas.height !== pxH) { canvas.width = pxW; canvas.height = pxH; }
-    camX = farmer.x; syncViewport(1);
+    if (!preserveCamera) camX = farmer.x;
+    syncViewport(1);
     const prof = detectProfile(cw, ch);
     if (prof.portrait !== UI.portrait) { UI.portrait = prof.portrait; notify(); }
     if (UI.profile !== prof.id) { UI.profile = prof.id; notify(); }
@@ -157,13 +167,17 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       nocan: () => { toast('can', GT.g151); sfx.err(); },
       nofert: () => { toast('fert', GT.g152); sfx.err(); },
       full: () => { toast('bag', GT.gPackFull); sfx.err(); },
+      skip: () => { toast('info', GT.gActionNotReady); sfx.err(); },
     };
     map[r]?.();
   }
   function enqueuePlot(kind: string, i: number) {
+    const duplicate = farmer.tasks.some((q) => q.plot === i && q.kind === kind) || (farmer.cur?.plot === i && farmer.cur.kind === kind);
+    if (duplicate) return false;
+    const busyPlot = farmer.cur?.plot === i || farmer.tasks.some((q) => q.plot === i);
     const r = canAct(kind, i);
-    if (r) { if (r !== 'skip') reasonToast(r); return false; }
-    if (farmer.tasks.some((q) => q.plot === i && q.kind === kind) || (farmer.cur?.plot === i && farmer.cur.kind === kind)) return false;
+    // عمل بعدی روی همان کرت صف می‌شود و هنگام اجرا دوباره اعتبارسنجی خواهد شد.
+    if (r && !(r === 'skip' && busyPlot)) { if (r !== 'skip') reasonToast(r); return false; }
     if (farmer.tasks.length > 40) return false;
     farmer.tasks.push(plotTask(kind, i, true));
     sfx.tap();
@@ -206,9 +220,10 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         notify();
         return;
       }
-      if (r) { if (player && tk.kind === 'plant') stopPlantingQueueWithoutSeed(w, S.seeds, tk.seed ?? UI.seed); if (player && r !== 'skip') reasonToast(r); return; }
+      if (r) { if (player && tk.kind === 'plant') stopPlantingQueueWithoutSeed(w, S.seeds, tk.seed ?? UI.seed); if (player) reasonToast(r); return; }
       const hits = player ? performPlayerPlotSweep(i, tk.kind, canAct, doAct, rnd) : [{ plot: i, ...doAct(tk.kind, i, true, tk.seed) }];
       if (player) {
+        if (hits.some((h) => h.plot === i && (tk.kind !== 'harvest' || (h.qty ?? 0) > 0))) tutOnPlotCompleted(tk.kind, i);
         notePlayerAction(Math.max(1, hits.length));
         if (tk.kind === 'harvest' && hits.some((h) => (h.qty ?? 0) > 0)) {
           if (UI.scene === 'north' && !S.story.seen['estate-north-harvest']) playNode('estate-north-harvest');
@@ -429,9 +444,16 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     if (bgPaused) { raf = 0; return; }
     raf = requestAnimationFrame(frame);
     const stepDriven = Boolean((window as unknown as { __stepFrames?: unknown }).__stepFrames);
+    if (knownLowPower !== CFG.lowPower) {
+      knownLowPower = CFG.lowPower;
+      qualityCap = knownLowPower ? 1 : 2;
+      qualitySamples = []; qualityStableMs = 0;
+      resize(true);
+    }
     // گام‌بندی تطبیقی باتری: ۶۰ فریم در هر تعامل/حرکت/بارش/ذره، ۳۰ فریم نرم در سکون کامل، ۰ فریم در مودال/توقف
     const active = dragging || now - lastInputAt < 2500 || farmer.mode !== 'idle' || bph !== 'off' || !!trans || fx.length > 0 || S.weather >= 2 || cinema.active || fishCast.active || fishCast.armed;
-    if (!stepDriven && lastPaint > 0 && now - lastPaint < (active ? 15.2 : 31.5)) return;
+    const batteryIdle = CFG.lowPower && !active && S.workers === 0 && !farmer.cur && farmer.tasks.length === 0 && bph === 'off';
+    if (!stepDriven && lastPaint > 0 && now - lastPaint < (active ? 15.2 : batteryIdle ? 66 : 31.5)) return;
     lastPaint = now;
 
     const liveW = Math.max(1, Math.round(window.innerWidth || cw));
@@ -559,6 +581,37 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     syncViewport(dt);
     render();
     framesRendered++;
+
+    if (!stepDriven && !frozen) {
+      if (lastQualityAt > 0) {
+        const elapsed = now - lastQualityAt;
+        if (elapsed > 0 && elapsed < 250) {
+          qualitySamples.push({ ms: elapsed, active });
+          if (qualitySamples.length > 120) qualitySamples.shift();
+          qualityStableMs = frameIsStable(elapsed, active) ? qualityStableMs + elapsed : 0;
+          if (qualitySamples.length === 120) {
+            const avg = qualitySamples.reduce((sum, q) => sum + q.ms, 0) / qualitySamples.length;
+            const mostlyActive = qualitySamples.filter((q) => q.active).length >= 60;
+            if (frameIsSlow(avg, mostlyActive) && qualityCap > 1) {
+              if (qualityRaisedAt > 0 && now - qualityRaisedAt < 30000) qualityUpscaleBlocked = true;
+              qualityCap = lowerQualityCap(qualityCap);
+              qualitySamples = []; qualityStableMs = 0; qualityCooldownUntil = now + 10000;
+              resize(true);
+            }
+          }
+          if (!CFG.lowPower && !qualityUpscaleBlocked && qualityCap < 2 && qualitySamples.length >= 60 && qualityStableMs >= 5000 && now >= qualityCooldownUntil) {
+            qualityCap = raiseQualityCap(qualityCap);
+            qualityRaisedAt = now;
+            qualitySamples = []; qualityStableMs = 0; qualityCooldownUntil = now + 10000;
+            resize(true);
+          }
+        }
+      }
+      lastQualityAt = now;
+    } else {
+      lastQualityAt = now;
+      qualitySamples = []; qualityStableMs = 0;
+    }
   }
 
   // تعلیق کامل حلقهٔ رندر و صدای WebAudio هنگام خاموشی صفحه یا رفتن برنامه به پس‌زمینه (صرفه‌جویی حداکثری باتری گوشی)

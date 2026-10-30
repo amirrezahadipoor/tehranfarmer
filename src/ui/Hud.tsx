@@ -1,10 +1,11 @@
 import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
 import { hasSkill } from '../game/core/rpgSystems';
-import { tutOnSleep, tutToolBlocked, tutToolHi } from '../game/tutorial';
+import { tutToolBlocked, tutToolHi } from '../game/tutorial';
+import { requestSleep } from '../game/sleep';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, sleepToMorning, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
+import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
 import { MAIL_UI } from '../strings/mailText';
 import { questOf } from '../story/quests';
 import { Bar, Ic } from './parts';
@@ -96,7 +97,7 @@ export function Hud() {
             )}
           </div>
           <div className="pointer-events-auto flex flex-wrap items-start justify-end gap-1">
-            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} data-rest-anytime="1" className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={() => { tutOnSleep(); sleepToMorning(); sfx.tap(); }}>
+            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} data-rest-anytime="1" className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={requestSleep}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
             </button>
             <button aria-label={UT.u133} data-open-inventory="1" className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
