@@ -203,7 +203,7 @@ export function renderFrontierScene(
   farmer: Walker,
   workers: Walker[],
 ) {
-  ctx.drawImage(bg, -OX, -OY);
+  ctx.drawImage(bg, -OX, -OY, BW, BH);
   const motionT = isReducedMotion() ? 0 : t;
   if (scene === 'cave') {
     ctx.save();

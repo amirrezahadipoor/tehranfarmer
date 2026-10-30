@@ -4,6 +4,7 @@ import type { CharId } from '../story/types';
 
 export interface CinemaUiStrings {
   skip: string;
+  skipAll: string;
   fastForward: string;
   next: string;
   finish: string;
@@ -35,6 +36,7 @@ export interface CinemaUiStrings {
 export const CINEMA_UI: Record<'fa' | 'en', CinemaUiStrings> = {
   fa: {
     skip: 'رد کردن صحنه',
+    skipAll: 'رد کردن همهٔ صحنه‌ها',
     fineTitle: 'خلاصهٔ جریمهٔ قسط',
     fineEnergy: 'انرژی',
     fineEnergyVal: 'نصف شد',
@@ -67,6 +69,7 @@ export const CINEMA_UI: Record<'fa' | 'en', CinemaUiStrings> = {
   },
   en: {
     skip: 'Skip Scene',
+    skipAll: 'Skip All Scenes',
     fineTitle: 'Installment Penalty Summary',
     fineEnergy: 'Energy',
     fineEnergyVal: 'Halved',

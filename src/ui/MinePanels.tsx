@@ -1,9 +1,9 @@
 import { Ic, ModalShell } from './parts';
 import { FT } from '../strings/frontierText';
-import { S, UI, notify, useGame } from '../game/state';
+import { S, UI, farmLevel, notify, useGame } from '../game/state';
 import { fa, faPct } from '../game/data';
 import {
-  MINE_FLOOR_COUNT, activeMineNodes, mineFloorProgress, mineFloorTitle, openMineMap, travelMineFloor,
+  MINE_FLOOR_COUNT, activeMineNodes, canEnterMineFloor, mineFloorProgress, mineFloorRequiredLevel, mineFloorTitle, openMineMap, travelMineFloor,
 } from '../game/core/mining';
 
 const FLOOR_STYLES = [
@@ -47,7 +47,9 @@ export function MineMapModal() {
             const floor = i + 1;
             const style = FLOOR_STYLES[i];
             const progress = mineFloorProgress(floor);
-            const locked = floor > unlocked;
+            const needsProgress = floor > unlocked;
+            const requiredLevel = mineFloorRequiredLevel(floor);
+            const locked = needsProgress || !canEnterMineFloor(floor);
             const here = floor === current;
             const gems = [...new Set(activeMineNodes(floor).map((n) => n.good))].slice(0, 4);
             const best = Math.max(0, ...activeMineNodes(floor).map((n) => S.stats[`mineBest:${floor}:${n.idx}`] ?? 0));
@@ -60,7 +62,7 @@ export function MineMapModal() {
                 </div>
                 <h3 className="ft text-xl">{names[i]}</h3>
                 <div className="flex min-h-8 items-center gap-1">{gems.map((g) => <Ic key={g} n={g} s={1.75} />)}</div>
-                <p className="min-h-[4.5rem] text-[.72rem] font-bold leading-5 text-[#564537]">{locked ? FT.mineLockedFloor : lore[i]}</p>
+                <p className="min-h-[4.5rem] text-[.72rem] font-bold leading-5 text-[#564537]">{locked ? (needsProgress ? FT.mineLockedFloor : farmLevel() < requiredLevel ? FT.mineFloorLevelLock(requiredLevel) : FT.mineLockedFloor) : lore[i]}</p>
                 <div className="text-xs font-black">{FT.mineProgressLabel}: {fa(progress.cleared)}/{fa(progress.total)}</div>
                 <div className="h-2 overflow-hidden rounded-full bg-[#50342625]"><div className="h-full rounded-full bg-[#3e9b8d]" style={{ width: `${(progress.cleared / progress.total) * 100}%` }} /></div>
                 {best > 0 && <div className="text-[.68rem] font-black text-[#6b4a24]">{FT.mineBestAccuracy}: {faPct(best)}</div>}

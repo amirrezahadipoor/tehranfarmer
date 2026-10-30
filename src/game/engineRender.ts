@@ -3,7 +3,7 @@ import { ANIMALS, COLS, ROWS, ghCovers, isUnlocked, type AnimalKind, type CropId
 import { drawAnimal, drawFarmer, poseFarmer, type AnimalRig, type FarmerRig } from './rig';
 import { drawBackpack, drawBackpackFront } from './backpackArt';
 import { drawThirstLeft } from './thirstWarn';
-import { FIELD_X, FIELD_Y, HIVE_SLOTS, OX, OY, PLOT_DX, PLOT_DY, RIVER_SPOTS, BW, BH, getSceneSource } from './scenes';
+import { FIELD_X, FIELD_Y, HIVE_SLOTS, OX, OY, PLOT_DX, PLOT_DY, RIVER_SPOTS, BW, BH, BG_RESOLUTION, getSceneSource } from './scenes';
 import { S, UI, season, unreadMailCount } from './state';
 import { isReducedMotion } from './settings';
 import { faPct } from '../strings/fa';
@@ -190,7 +190,10 @@ export function createSceneRenderer(
       put(ctx, S.weather === 2 ? cloudD : S.weather === 0 ? cloudW : cloudG, c.x, c.y, c.s);
       ctx.restore();
     }
-    if (UI.scene === 'farm') renderFarm();
+    // پیش از Start فقط منظرهٔ ثابت لازم است؛ ریگ‌ها، کرت‌ها و پلاک‌های دینامیک
+    // با شروع واقعی بازی و پس از گرم‌شدن cacheها رندر می‌شوند.
+    if (!UI.started) blitVisibleBG();
+    else if (UI.scene === 'farm') renderFarm();
     else if (UI.scene === 'north') {
       renderEstateFieldScene(ctx, 'north', bgActive!, OX, OY, t, S.lv.land, S.gh, S.weather, S.northPlots, hoverPlot, farmer, sceneWorkers, sceneWorkers.length);
     } else if (UI.scene === 'valley') {
@@ -349,7 +352,11 @@ export function createSceneRenderer(
     const ex = Math.min(BW, Math.ceil((cw - activeTx) / activeSc) + OX + 4);
     const ey = Math.min(BH, Math.ceil((ch - activeTy) / activeSc) + OY + 4);
     const sw = ex - sx, sh = ey - sy;
-    if (sw > 0 && sh > 0) ctx.drawImage(bgActive!, sx, sy, sw, sh, sx - OX, sy - OY, sw, sh);
+    if (sw > 0 && sh > 0) ctx.drawImage(
+      bgActive!,
+      sx * BG_RESOLUTION, sy * BG_RESOLUTION, sw * BG_RESOLUTION, sh * BG_RESOLUTION,
+      sx - OX, sy - OY, sw, sh,
+    );
   }
   const viewMinX = () => -activeTx / activeSc - 96;
   const viewMaxX = () => (cw - activeTx) / activeSc + 96;

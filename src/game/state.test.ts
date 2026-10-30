@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { fresh, loadGame, S, UI } from './state';
+import { fresh, loadGame, S, saveGame, UI } from './state';
+import { SAVE_VERSION } from './core/saveMigrations';
 import { processMorningCompanionAndReport } from './core/rpgSystems';
 
 const KEY = 'mazrae-rangi-save-v1';
@@ -18,6 +19,8 @@ describe('save snapshots and backup recovery', () => {
   beforeEach(() => {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: new MemoryStorage() });
     Object.assign(S, fresh());
+    UI.scene = 'farm';
+    UI.modal = null;
     UI.toasts = [];
   });
 
@@ -56,5 +59,27 @@ describe('save snapshots and backup recovery', () => {
     expect(JSON.parse(localStorage.getItem(KEY)!).coins).toBe(123);
     expect(localStorage.getItem(KEY + '-bak1')).toBe(backup);
     expect(UI.toasts.length).toBeGreaterThan(0);
+  });
+
+  it('restores the saved scene without restoring transient modals', () => {
+    UI.scene = 'cave';
+    UI.modal = 'mining';
+    expect(saveGame()).toBe(true);
+    UI.scene = 'farm';
+    UI.modal = null;
+    expect(loadGame()).toBe(true);
+    expect(UI.scene).toBe('cave');
+    expect(UI.modal).toBeNull();
+    expect(S.scene).toBe('cave');
+  });
+
+  it('migrates a v10 save without a scene safely to the farm', () => {
+    const old = { ...fresh(), v: 10 } as Record<string, unknown>;
+    delete old.scene;
+    localStorage.setItem(KEY, JSON.stringify(old));
+    expect(loadGame()).toBe(true);
+    expect(S.v).toBe(SAVE_VERSION);
+    expect(S.scene).toBe('farm');
+    expect(UI.scene).toBe('farm');
   });
 });

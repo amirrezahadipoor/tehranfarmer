@@ -23,6 +23,7 @@ import {
   isTownFestivalActive, stepFrontierLayer, useFrontierLandmark,
 } from './core/frontier';
 import { activeMineNodes, isMineNodeHarvested, stepMineFloor } from './core/mining';
+import { resolveFrontierHit } from './core/frontierHits';
 
 const FX = FIELD_X, FY = FIELD_Y;
 export const SHOPS = [{ id: 'seed', cx: 150 }, { id: 'market', cx: 350 }, { id: 'work', cx: 550 }, { id: 'animal', cx: 750 }, { id: 'carp', cx: 950 }, { id: 'estate', cx: 1150 }] as const;
@@ -303,48 +304,47 @@ export function createSceneTapRouter(d: SceneInputDeps) {
     UI.info = null;
     const f = ensureFrontier();
     const layer = scene === 'cave' ? f.caveFloor : f.forestLayer;
-    // ناحیهٔ لمسی کل طاق خروج، نه فقط تابلوی پایین آن.
-    if (x >= 76 && x <= 220 && y >= 294 && y <= 680) {
+    const nodes = scene === 'cave' ? activeMineNodes() : activeFrontierNodes(scene);
+    const hit = resolveFrontierHit(scene, x, y, layer, nodes, (idx) =>
+      scene === 'cave' ? isMineNodeHarvested(idx) : isFrontierNodeHarvested(scene, idx));
+
+    if (hit?.kind === 'exit') {
       d.moveTo(d.farmer, 142, 604);
       d.farmer.tasks.push(d.mkTask('travel', 142, 604, { to: scene === 'cave' ? 'river' : 'apiary' }));
       sfx.tap();
       return;
     }
-    if (scene === 'forest' && Math.abs(x - 640) <= 86 && y >= 250 && y <= 425) {
+    if (hit?.kind === 'shrine') {
       d.moveTo(d.farmer, 640, 424);
-      if (useFrontierLandmark(scene)) d.pop(640, 336, 'star', 2);
+      if (useFrontierLandmark('forest')) d.pop(640, 336, 'star', 2);
       return;
     }
-    // آسانسور معدن با پیشرفت قطعی و گذرگاه جنگل با جمع‌آوری باز می‌شود.
-    if (layer < 3 && x >= 1072 && x <= 1224 && y >= 252 && y <= 574) {
-      if (scene === 'cave' ? stepMineFloor(1) : stepFrontierLayer(scene, 1)) {
+    if (hit?.kind === 'node') {
+      const spot = nodes.find((node) => node.idx === hit.idx);
+      if (!spot) return;
+      if (S.stamina < spot.stam) { d.reasonToast('tired'); return; }
+      d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
+      d.farmer.tasks.push(d.mkTask('mine', spot.x - 42, Math.max(450, spot.y + 10), {
+        node: spot.idx, face: 1,
+      }));
+      sfx.tap();
+      notify();
+      return;
+    }
+    if (hit?.kind === 'next' || hit?.kind === 'prev') {
+      const delta = hit.kind === 'next' ? 1 : -1;
+      if (scene === 'cave' ? stepMineFloor(delta) : stepFrontierLayer(scene, delta)) {
         d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
-        d.farmer.x = 216; d.farmer.y = 594; d.farmer.face = 1;
-      } else if (scene === 'cave') {
+        if (delta > 0) {
+          d.farmer.x = 216; d.farmer.y = 594; d.farmer.face = 1;
+        } else {
+          d.farmer.x = 1040; d.farmer.y = 560; d.farmer.face = -1;
+        }
+      } else if (scene === 'cave' && delta > 0) {
         toast('hammer', FT.stairsLocked);
         sfx.err();
       }
       return;
-    }
-    if (layer > 1 && x >= 916 && x <= 1044 && y >= 282 && y <= 574) {
-      if (scene === 'cave' ? stepMineFloor(-1) : stepFrontierLayer(scene, -1)) {
-        d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
-        d.farmer.x = 1040; d.farmer.y = 560; d.farmer.face = -1;
-      }
-      return;
-    }
-    for (const spot of scene === 'cave' ? activeMineNodes() : activeFrontierNodes(scene)) {
-      if (scene === 'cave' ? isMineNodeHarvested(spot.idx) : isFrontierNodeHarvested(scene, spot.idx)) continue;
-      if (Math.hypot(x - spot.x, y - spot.y) <= 66) {
-        if (S.stamina < spot.stam) { d.reasonToast('tired'); return; }
-        d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
-        d.farmer.tasks.push(d.mkTask('mine', spot.x - 42, Math.max(450, spot.y + 10), {
-          node: spot.idx, face: 1,
-        }));
-        sfx.tap();
-        notify();
-        return;
-      }
     }
     d.moveTo(d.farmer, Math.max(46, Math.min(1238, x)), Math.max(426, Math.min(668, y)));
     notify();

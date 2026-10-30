@@ -250,8 +250,8 @@ const MUSIC_FILES: Record<number, string> = {
   6: 'ch6.mp3',
   7: 'ch7.mp3',
 };
-// در production هر هفت آهنگ در بلوک‌های inert همان HTML‌اند. فقط آهنگ جاری
-// به data URI تبدیل و cache می‌شود؛ bootstrap دیگر هر هفت را با کد بازی باز نمی‌کند.
+// وب آهنگ جاری را از فایل محلی و Service Worker می‌خواند؛ native فقط آهنگ شروع را
+// در یک بلوک inert دارد. هیچ مسیر شروعی هر هفت آهنگ را داخل HTML جاسازی نمی‌کند.
 const packedMusicUrls = new Map<string, string>();
 const musicUrlFor = (chapter: number) => {
   const file = MUSIC_FILES[chapter] ?? MUSIC_FILES[1];
@@ -295,6 +295,7 @@ function updateMusicVolume() {
 export function syncAudioSettings() {
   if (ac && sfxBus) sfxOutput(ac);
   updateMusicVolume();
+  syncMusicPlayback();
 }
 
 // هر فصل یک آهنگ مکمل دارد؛ تعویض در پایان طبیعی قطعه، بدون timer و بدون مصرف

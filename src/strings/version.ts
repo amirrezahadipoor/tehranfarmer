@@ -19,6 +19,15 @@ export function formatVersion(v: string = RAW_APP_VERSION): string {
 export const APP_VERSION = RAW_APP_VERSION;
 export const CHANGELOG: { v: string; note: string }[] = [
   {
+    get v() { return formatVersion(APP_VERSION); },
+    get note() {
+      return locText(
+        'رفع برخورد گره‌ها، بازیابی صحنه، تعادل معدن و صید، صدای فوری و زبان سند؛ build سبک وب و آفلاین native',
+        'Frontier hit fixes, scene restore, mine/fishing balance, instant audio and document locale; lighter web and native offline builds',
+      );
+    },
+  },
+  {
     get v() { return locText('۱۰٫۱٫۲', '10.1.2'); },
     get note() {
       return locText(

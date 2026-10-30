@@ -5,7 +5,7 @@
  * واحد استفاده می‌کنند تا سیو، کوله، ماشین‌ها و اقتصاد از هم جدا نشوند.
  */
 import { GOOD, fa, type GoodId } from '../data';
-import { S, UI, addStat, addXp, notify, saveGame, toast } from '../state';
+import { S, UI, addStat, addXp, farmLevel, notify, saveGame, toast } from '../state';
 import { sfx } from '../sound';
 import { grantGoodWithMailOverflow } from './mailbox';
 import { ensureFrontier } from './frontier';
@@ -38,11 +38,14 @@ const CAVE_COORDS = [[305, 478], [468, 548], [642, 578], [808, 478], [945, 568],
 const FLOOR_GOODS: GoodId[][] = [
   // طبقهٔ شروع فقط دو گوهر ارزان دارد؛ amber از طبقهٔ دوم به بعد وارد اقتصاد می‌شود.
   ['quartz', 'quartz', 'turquoise', 'quartz', 'turquoise', 'turquoise'],
-  ['turquoise', 'amber', 'quartz', 'amethyst', 'garnet', 'opal'],
+  ['turquoise', 'amber', 'quartz', 'amethyst', 'quartz', 'turquoise'],
   ['amber', 'amethyst', 'garnet', 'opal', 'sapphire', 'ruby'],
 ];
 export const MINE_FLOOR_COUNT = 3;
 export const MINE_LIFT_REQUIREMENT = 2;
+const MINE_FLOOR_LEVELS = [1, 4, 6] as const;
+export const mineFloorRequiredLevel = (floor: number) => MINE_FLOOR_LEVELS[Math.max(0, Math.min(MINE_FLOOR_COUNT - 1, Math.round(floor) - 1))];
+export const canEnterMineFloor = (floor: number) => floor >= 1 && floor <= ensureFrontier().maxCaveFloor && farmLevel() >= mineFloorRequiredLevel(floor);
 
 /** چیدمان deterministic هر روز کمی می‌چرخد؛ نوع گوهر همیشه دیده می‌شود و رگهٔ سلطنتی ثابت می‌ماند. */
 export function activeMineNodes(floor = ensureFrontier().caveFloor): MineNodeSpot[] {
@@ -135,12 +138,12 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
   let good = spot.good;
   if (good === 'ruby' && perfect) good = 'diamond';
   const base = GOOD[good]?.base ?? 0;
-  // در طبقهٔ شروع، دقت بالا حداکثر یک کالای اضافه می‌دهد تا چند رگهٔ کوتاه
-  // سود کل چرخهٔ کشاورزی را کنار نگذارد. پاداش سوم از طبقهٔ دوم باز می‌شود.
-  const qty = 1 + (accuracy >= 0.72 && base <= 900 ? 1 : 0) + (perfect && base <= 215 && floor > 1 ? 1 : 0);
+  // دقت بالا بازی را سریع‌تر نمی‌کند؛ فقط استخراج بی‌نقص در طبقات عمیق‌تر
+  // و برای گوهرهای کم‌ارزش‌تر یک کالای پاداش اضافه می‌دهد.
+  const qty = 1 + (floor > 1 && perfect && base <= 650 ? 1 : 0);
   S.stamina = Math.max(0, S.stamina - spot.stam);
   f.nodesDone[mineNodeKey(floor, idx)] = true;
-  grantGoodWithMailOverflow(good, qty, 'engineer', 'mine-vein');
+  const stored = grantGoodWithMailOverflow(good, qty, 'engineer', 'mine-vein');
   addStat('mineNodes', 1);
   addStat('mineGems', qty);
   addStat('harv', qty); // سازگاری با دستاوردها و کوئست‌های کلی برداشت در نسخهٔ قبلی
@@ -154,10 +157,10 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
     f.stairsFound[`cave:${floor}`] = true;
     f.maxCaveFloor = Math.max(f.maxCaveFloor, Math.min(MINE_FLOOR_COUNT, floor + 1));
     // بازشدن آسانسور نباید خبر گوهرِ همان رگه را پنهان کند.
-    toast(good, `${FT.mineLoot(GOOD[good]?.fa ?? good, qty)} · ${FT.mineLiftOpenedShort}`);
+    toast(good, `${FT.mineLoot(GOOD[good]?.fa ?? good, qty, stored)} · ${FT.mineLiftOpenedShort}`);
     sfx.fanfare();
   } else {
-    toast(good, FT.mineLoot(GOOD[good]?.fa ?? good, qty));
+    toast(good, FT.mineLoot(GOOD[good]?.fa ?? good, qty, stored));
     if (perfect) sfx.fanfare(); else sfx.dig();
   }
   notePlayerAction(1);
@@ -182,6 +185,10 @@ export function stepMineFloor(delta: number) {
   const f = ensureFrontier();
   const next = Math.max(1, Math.min(MINE_FLOOR_COUNT, f.caveFloor + Math.sign(delta)));
   if (next === f.caveFloor) return false;
+  const requiredLevel = mineFloorRequiredLevel(next);
+  if (next > f.caveFloor && farmLevel() < requiredLevel) {
+    toast('lock', GT.g45 + fa(requiredLevel) + GT.g46); sfx.err(); return false;
+  }
   const p = mineFloorProgress(f.caveFloor);
   if (next > f.caveFloor && !p.liftOpen && p.cleared < MINE_LIFT_REQUIREMENT) {
     toast('cave', FT.stairsLocked); sfx.err(); return false;
@@ -199,7 +206,12 @@ export function stepMineFloor(delta: number) {
 export function travelMineFloor(floor: number) {
   const f = ensureFrontier();
   const next = Math.max(1, Math.min(MINE_FLOOR_COUNT, Math.round(floor)));
-  if (next > f.maxCaveFloor) return false;
+  if (!canEnterMineFloor(next)) {
+    if (next > f.maxCaveFloor) return false;
+    const requiredLevel = mineFloorRequiredLevel(next);
+    toast('lock', GT.g45 + fa(requiredLevel) + GT.g46); sfx.err();
+    return false;
+  }
   f.caveFloor = next;
   sfx.tap();
   saveGame(); notify();

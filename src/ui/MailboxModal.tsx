@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CROP, GOOD, fa } from '../game/data';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { S, UI, holdCount, notify } from '../game/state';
+import { S, UI, holdCount, notify, stamCap } from '../game/state';
 import {
   claimMailParcel, ensureMailState, fulfillMailDeal, mailItemLabel,
   markAllMailRead, markMailRead, syncMailboxState, togglePinMail,
@@ -63,6 +63,8 @@ export function MailboxModal() {
   // Opening the postbox must not silently unseal a letter. Only an explicit row
   // selection marks it read; changing tabs also cannot consume another unread letter.
   const active = filtered.find((m) => m.id === selectedId) ?? null;
+  const activeStaminaNeed = active?.parcel?.reduce((sum, g) => sum + (g.kind === 'stamina' ? g.qty : 0), 0) ?? 0;
+  const staminaClaimBlocked = activeStaminaNeed > Math.max(0, stamCap() - S.stamina);
 
   const tabs: Array<{ id: FilterTab; label: string; ic: string }> = [
     { id: 'all', label: MAIL_UI.tabAll, ic: 'mail' },
@@ -291,14 +293,21 @@ export function MailboxModal() {
                             <span>{MAIL_UI.parcelClaimed}</span>
                           </div>
                         ) : (
-                          <button
-                            data-mail-claim-parcel={active.id}
+                          <>
+                            {staminaClaimBlocked && (
+                              <div className="mb-1.5 rounded-lg bg-amber-100 px-2 py-1 text-[.7rem] font-black text-amber-900" data-mail-stamina-warning="1">
+                                {MAIL_UI.parcelStaminaRoomNeeded(activeStaminaNeed)}
+                              </div>
+                            )}
+                            <button
+                              data-mail-claim-parcel={active.id}
                             className="btn g press w-full justify-center !py-1.5 text-xs font-black"
                             onClick={() => { setSelectedId(active.id); claimMailParcel(active.id); }}
                           >
                             <Ic n="parcel" s={1.4} />
-                            <span>{MAIL_UI.claimParcelBtn}</span>
-                          </button>
+                              <span>{MAIL_UI.claimParcelBtn}</span>
+                            </button>
+                          </>
                         )}
                       </div>
                     )}

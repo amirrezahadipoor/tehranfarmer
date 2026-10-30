@@ -11,7 +11,6 @@ import { Ic, useDialogFocus } from './parts';
 import { advanceFishMotion, createFishMotionState, type FishBehavior } from '../game/fishMotion';
 
 interface FishProfile {
-  nameKey: 'fishSpeciesTrout' | 'fishSpeciesCarp' | 'fishSpeciesSalmon' | 'fishSpeciesPearl' | 'fishSpeciesSturgeon';
   speed: number;
   barH: number;
   bonusMult: number;
@@ -19,11 +18,11 @@ interface FishProfile {
 }
 
 const PROFILES: readonly FishProfile[] = [
-  { nameKey: 'fishSpeciesTrout', speed: 0.72, barH: 30, bonusMult: 1.0, behavior: 'sine' },
-  { nameKey: 'fishSpeciesCarp', speed: 0.9, barH: 28, bonusMult: 1.15, behavior: 'dart' },
-  { nameKey: 'fishSpeciesSalmon', speed: 1.15, barH: 25, bonusMult: 1.3, behavior: 'pause' },
-  { nameKey: 'fishSpeciesPearl', speed: 1.28, barH: 23, bonusMult: 1.5, behavior: 'surge' },
-  { nameKey: 'fishSpeciesSturgeon', speed: 1.48, barH: 21, bonusMult: 1.85, behavior: 'dive' },
+  { speed: 0.72, barH: 30, bonusMult: 1.0, behavior: 'sine' },
+  { speed: 0.9, barH: 28, bonusMult: 1.15, behavior: 'dart' },
+  { speed: 1.15, barH: 25, bonusMult: 1.3, behavior: 'pause' },
+  { speed: 1.28, barH: 23, bonusMult: 1.5, behavior: 'surge' },
+  { speed: 1.48, barH: 21, bonusMult: 1.85, behavior: 'dive' },
 ];
 
 export function FishingModal() {
@@ -40,6 +39,7 @@ export function FishingModal() {
   const [holding, setHolding] = useState(false);
   const [phase, setPhase] = useState<'ready' | 'playing' | 'result'>('ready');
   const [resultMsg, setResultMsg] = useState<string | null>(null);
+  const [resultSpecies, setResultSpecies] = useState<string | null>(null);
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stRef = useRef({
@@ -81,9 +81,11 @@ export function FishingModal() {
     const rawMult = prof.bonusMult * (perfect ? 1.8 : 1.25);
     const mult = hasRod ? rawMult : Math.min(rawMult, 0.9);
     const res = catchRegionalFish(mult);
-    const extraPerfect = hasRod && perfect && res.qty > 0 ? grantGoodWithMailOverflow(res.species.good, 1, 'rancher', 'fish') : 0;
+    setResultSpecies(res.species.id);
+    const extraPerfect = hasRod && perfect && res.qty > 0 ? 1 : 0;
+    if (extraPerfect) grantGoodWithMailOverflow(res.species.good, 1, 'rancher', 'fish');
     const totalQty = res.qty + extraPerfect;
-    let msg = `+${fa(Math.max(1, totalQty))} ${FT[prof.nameKey]}`;
+    let msg = `+${fa(Math.max(1, totalQty))} ${res.species.name}`;
     if (perfect) {
       bumpPlayerCombo('fish');
       addXp(18);
@@ -161,7 +163,7 @@ export function FishingModal() {
     stRef.current.ended = true;
     if (S.stamina < FISH_STAM) { sfx.err(); toast('bolt', GT.g35); UI.modal = null; notify(); return; }
     S.stamina = Math.max(0, S.stamina - FISH_STAM);
-    const res = catchRegionalFish(S.rod > 0 ? 1.1 : 0.85);
+    const res = catchRegionalFish(S.rod > 0 ? 1 : 0.75, S.rod > 0 ? 0.55 : 0.35);
     if (res.qty <= 0) { sfx.err(); toast('fish', GT.g155); }
     else { sfx.splash(); toast('fish', `+${fa(res.qty)}`); }
     checkSecretTriggers('fish');
@@ -230,7 +232,7 @@ export function FishingModal() {
         </div>
 
         <div data-fish-hint="1" className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
-          <div>{FT[prof.nameKey]}</div>
+          <div>{FT.fishMotionLabel(prof.behavior)}</div>
           <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{phase === 'ready' ? FT.fishReadyHint : FT.fishHoldHint}</div>
         </div>
 
@@ -286,7 +288,7 @@ export function FishingModal() {
         </div>
 
         {resultMsg ? (
-          <div role="status" aria-live="polite" className="rounded-xl bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
+          <div role="status" aria-live="polite" data-fish-result-species={resultSpecies ?? undefined} className="rounded-xl bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
             {resultMsg}
           </div>
         ) : (

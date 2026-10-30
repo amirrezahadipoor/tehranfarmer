@@ -6,6 +6,9 @@ export const OX = 420;
 export const OY = 200;
 export const BW = 2120;
 export const BH = 1120;
+// منظرهٔ ثابت در مختصات منطقی همان BW×BH است، اما raster آن با وضوح بهینه
+// نگه داشته می‌شود؛ لایه‌های متحرک/کرت‌ها در وضوح کامل بوم اصلی رسم می‌شوند.
+export const BG_RESOLUTION = 0.5;
 
 const GROUND = ['#9ad85f', '#82d04d', '#d3b957', '#e9f1f6'];
 const GROUND2 = ['#7fc74a', '#68b83c', '#b99b3c', '#cfdde8'];
@@ -14,8 +17,9 @@ const LEAF = [['#6fcf4f', '#8fe06a'], ['#3fa23c', '#59b84a'], ['#e8742a', '#f2b6
 
 export function newBG() {
   const cv = document.createElement('canvas');
-  cv.width = BW; cv.height = BH;
-  const c = (cv.getContext('2d', { willReadFrequently: true }) ?? cv.getContext('2d'))!;
+  cv.width = Math.round(BW * BG_RESOLUTION); cv.height = Math.round(BH * BG_RESOLUTION);
+  const c = cv.getContext('2d')!;
+  c.scale(BG_RESOLUTION, BG_RESOLUTION);
   c.translate(OX, OY);
   return { cv, c };
 }
@@ -205,7 +209,7 @@ export function farmBG(season: number): HTMLCanvasElement {
   signpost(c, 696, 232, 1, 'north');     // تابلوی دشت شمالی پایین‌تر از خوشهٔ فصل و ساعت و کاملاً بالای کرت‌ها.
   signpost(c, 1212, 464, 1, 'valley');   // تابلوی جادهٔ باغ‌درهٔ آفتاب (فاصلهٔ کامل با شهر و ستاره‌های مترسک!)
   signpost(c, 60, 628, -1, 'fish');      // تابلوی جادهٔ رودخانه (۱۰۰٪ بالای نوار ناوبری پایین و جدا از جمع‌کن!)
-  signpost(c, 316, 628, 1, 'hive');      // تابلوی جادهٔ زنبورستان (۱۰۰٪ بالای نوار ناوبری پایین و زیر دامداری!)
+  signpost(c, 316, 628, 1, 'hive');      // تابلوی جادهٔ زنبورستان (۱۰۰٪ بالای نوار ناوبری و زیر دامداری!)
   if (season !== 3) {
     const cols = ['#ff7aa8', '#ffd93b', '#fff', '#ff8b4a', '#b48aff'];
     for (let i = 0; i < 46; i++) {

@@ -59,17 +59,17 @@ const BOOT_ICON_NAMES = ['play', 'book', 'sound', 'mute', 'globe', 'save', 'coin
 async function decodeAllUiIcons(names: readonly string[] = UI_ICON_NAMES): Promise<void> {
   const unique = Array.from(new Set(names));
   // دسته‌های کوچک جلوی یک long task بزرگ در زمان پیش‌ساخت پس‌زمینه را می‌گیرند.
-  for (let offset = 0; offset < unique.length; offset += 12) {
-    const jobs = unique.slice(offset, offset + 12).map((name) => {
+  for (let offset = 0; offset < unique.length; offset += 6) {
+    const jobs = unique.slice(offset, offset + 6).map((name) => {
       const src = iconURL(name);
       if (typeof Image === 'undefined') return Promise.resolve();
       const img = new Image();
-      img.decoding = 'sync';
+      img.decoding = 'async';
       img.src = src;
       return typeof img.decode === 'function' ? img.decode().catch(() => {}) : Promise.resolve();
     });
     await withStepTimeout(Promise.all(jobs), 450, []);
-    if (offset + 12 < unique.length) await waitMs(0);
+    if (offset + 6 < unique.length) await waitMs(16);
   }
 }
 
@@ -84,12 +84,12 @@ function scheduleDeferredPrewarm(sn: number) {
   const work = async () => {
     for (const scene of ['town', 'river', 'apiary'] as const) {
       try { await prewarmScene(scene, sn); } catch { /* */ }
-      await waitMs(0);
+      await waitMs(24);
     }
     try {
       for (const c of CROPS.slice(3, 8)) {
         for (let st = 0; st < 4; st++) cropPart(c.id, st, false);
-        await waitMs(0);
+        await waitMs(16);
       }
       const bootIcons = new Set<string>(BOOT_ICON_NAMES);
       await decodeAllUiIcons(UI_ICON_NAMES.filter((name) => !bootIcons.has(name)));
@@ -103,7 +103,7 @@ function scheduleDeferredPrewarm(sn: number) {
     } else {
       void work();
     }
-  }, 700);
+  }, 1800);
 }
 
 export async function runGenuinePreload(onProgress: (p: BootProgress) => void): Promise<void> {

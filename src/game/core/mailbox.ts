@@ -157,6 +157,13 @@ export function claimMailParcel(id: string): boolean {
     toast('bag', MAIL_UI.bagFullToast);
     return false;
   }
+  const staminaNeeded = item.parcel.reduce((sum, g) => sum + (g.kind === 'stamina' ? g.qty : 0), 0);
+  const staminaRoom = Math.max(0, stamCap() - S.stamina);
+  if (staminaNeeded > staminaRoom) {
+    sfx.err();
+    toast('bolt', MAIL_UI.parcelStaminaRoomNeeded(staminaNeeded));
+    return false;
+  }
   for (const g of item.parcel) {
     if (g.kind === 'coin') {
       S.coins += g.qty;

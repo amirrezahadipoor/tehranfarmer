@@ -11,13 +11,11 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const NATIVE_BUILD = process.env.VITE_NATIVE_BUILD === '1';
 
 const MUSIC_FILES = ['peaceful-forest.mp3', 'ch2.mp3', 'ch3.mp3', 'ch4.mp3', 'ch5.mp3', 'ch6.mp3', 'ch7.mp3'] as const;
 
-/**
- * فقط آهنگ شروع داخل HTML است؛ بقیهٔ آهنگ‌ها فایل‌های محلی‌اند و Service Worker
- * آن‌ها را در idle برای اجرای کاملاً آفلاین کش می‌کند.
- */
+/** Native Capacitor keeps one inline starter track for file:// WebView startup. */
 function inlineMusicPack(files: readonly string[]): string {
   return files.map((file) => {
     const bytes = fs.readFileSync(path.resolve(__dirname, 'public/music', file));
@@ -25,7 +23,7 @@ function inlineMusicPack(files: readonly string[]): string {
   }).join('');
 }
 
-/** Self-extracting offline single-file JS packer using Web-standard DecompressionStream('deflate-raw') */
+/** Self-extracting offline single-file JS packer for the native WebView build. */
 function packInlineModule(): Plugin {
   return {
     name: "pack-inline-module",
@@ -53,15 +51,9 @@ function packInlineModule(): Plugin {
         }
       }
     },
-    // public/music عمداً در dist باقی می‌ماند؛ Capacitor آن را آفلاین همراه APK
-    // می‌گیرد و نسخهٔ وب نیز همان فایل‌ها را با Service Worker کش می‌کند.
   };
 }
 
-/**
- * آهنگ شروع در یک بلوک inert جاسازی می‌شود و بقیه فایل‌های محلی‌اند.
- * این guard از جاسازی مستقیم assetهای importشدهٔ بزرگ جلوگیری می‌کند.
- */
 function audioInlineGuard(): Plugin {
   return {
     name: 'audio-inline-guard',
@@ -74,25 +66,61 @@ function audioInlineGuard(): Plugin {
   };
 }
 
+function assetFiles(root: string, dir = root): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return assetFiles(root, full);
+    return [path.relative(root, full).split(path.sep).join('/')];
+  });
+}
+
+/** Inject hashed JS/CSS chunks into the web service-worker precache for offline code splitting. */
+function webOfflineManifest(): Plugin {
+  return {
+    name: 'web-offline-manifest',
+    closeBundle() {
+      const dist = path.resolve(__dirname, 'dist');
+      const swPath = path.join(dist, 'sw.js');
+      if (!fs.existsSync(swPath)) return;
+      const assetsRoot = path.join(dist, 'assets');
+      const assets = assetFiles(assetsRoot)
+        .filter((file) => /\.(?:js|css|svg|png|webp|woff2?)$/.test(file))
+        .map((file) => `./assets/${file}`)
+        .sort();
+      const marker = '/*__TF_BUILD_ASSETS__*/null';
+      let sw = fs.readFileSync(swPath, 'utf8');
+      if (!sw.includes(marker)) throw new Error('Service-worker build-assets marker is missing');
+      sw = sw.replace(marker, JSON.stringify(assets));
+      fs.writeFileSync(swPath, sw);
+    },
+  };
+}
+
 export default defineConfig({
+  base: './',
   server: { host: '0.0.0.0', allowedHosts: true, port: 5173 },
   preview: { host: '0.0.0.0', allowedHosts: true },
   build: {
     target: 'es2022',
     modulePreload: { polyfill: false },
-    assetsInlineLimit: 2000000,
+    assetsInlineLimit: NATIVE_BUILD ? 2000000 : 4096,
     chunkSizeWarningLimit: 2000,
   },
   esbuild: { legalComments: 'none', drop: ['debugger'] },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
-    // رفع N-6: پنجرهٔ توسعه‌دهنده/گالری کارگردان صحنه فقط در بیلد داخلی در دسترس است.
-    // بیلد پیش‌فرض (production) آن را به false تبدیل می‌کند تا کل ماژول از بسته حذف شود.
     __DEV_TOOLS__: JSON.stringify(
       process.env.VITE_DEV_TOOLS === '1' || process.env.VITE_E2E_ASSETS === '1',
     ),
   },
-  plugins: [react(), tailwindcss(), viteSingleFile({ removeViteModuleLoader: true }), packInlineModule(), audioInlineGuard()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    ...(NATIVE_BUILD
+      ? [viteSingleFile({ removeViteModuleLoader: true }), packInlineModule(), audioInlineGuard()]
+      : [webOfflineManifest()]),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

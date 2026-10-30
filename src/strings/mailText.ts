@@ -164,6 +164,11 @@ export const MAIL_UI = {
   get newMailToast() { return isEn() ? 'New sealed letter arrived in your postbox!' : 'نامهٔ مهروموم‌شدهٔ تازه‌ای به صندوق پست مزرعه رسید!'; },
   get dealDoneToast() { return isEn() ? 'Courier order shipped! Gold coins added.' : 'سفارش پستی ارسال شد و سکه‌ها به کیسه اضافه گشت!'; },
   get parcelToast() { return isEn() ? 'Enclosed parcel claimed!' : 'هدیهٔ پیوست نامه دریافت شد!'; },
+  parcelStaminaRoomNeeded(qty: number) {
+    return isEn()
+      ? `Spend some stamina first: this parcel needs room for ${qty} Stamina.`
+      : `ابتدا کمی نیرو مصرف کن؛ این بسته برای ${num(qty)} نیرو جا لازم دارد.`;
+  },
   get bagFullToast() { return isEn() ? 'Barn bag is full — free a few slots first!' : 'کیسهٔ انبار پر است؛ ابتدا کمی جا باز کن!'; },
   postmarkDay: (d: number, snName: string) => (isEn() ? `Day ${d} · ${snName}` : `روز ${fa(d)} · ${snName}`),
   stamUnit: (n: number) => (isEn() ? `+${n} Stamina` : `+${fa(n)} نیرو`),

@@ -3,7 +3,7 @@
 // character voice blips + mouth-flap, dramatic pauses, Skip with full consequences, and Next Objective shot.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { S, UI, notify, resetGame } from '../game/state';
-import { advanceNode, openPendingDebtVisit, pendingNode, skipActiveCutscene } from '../story/engine';
+import { advanceNode, clearSceneQueue, openPendingDebtVisit, pendingNode, skipActiveCutscene } from '../story/engine';
 import { nodeById } from '../story/story';
 import { compileSceneScript, objectiveKeyFor } from '../story/sceneScripts';
 import {
@@ -70,6 +70,7 @@ export function Cutscene() {
   const effectiveScript: SceneScript | null = script ?? (activePending ? compileSceneScript(activePending.id) : null);
   const rootId = effectiveScript?.id ?? activePending?.id ?? '';
   const beating = isBeatingNode(rootId);
+  const queuedScenes = S.story.queue?.length ?? 0;
 
   // Start or refresh live stage sequence when `S.story.pending` opens a new scene
   useEffect(() => {
@@ -396,6 +397,7 @@ export function Cutscene() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            data-lang-toggle="1"
             className="btn b press !min-h-[max(48px,2.15rem)] !min-w-[max(48px,3.2rem)] !px-2.5 !py-0.5 text-xs font-black"
             onClick={() => { updateSetting('locale', locale === 'fa' ? 'en' : 'fa'); sfx.tap(); notify(); }}
           >
@@ -417,10 +419,12 @@ export function Cutscene() {
             <button
               type="button"
               data-skip-beat={beating ? '1' : undefined}
+              data-cutscene-skip="1"
+              data-skip-all={queuedScenes > 0 ? '1' : undefined}
               className="btn p press !min-h-[max(48px,2.15rem)] !min-w-[max(48px,3.2rem)] !px-3 !py-0.5 text-xs font-black"
-              onClick={skipScene}
+              onClick={() => { if (queuedScenes > 0) clearSceneQueue(); skipScene(); }}
             >
-              <span>{ui.skip}</span>
+              <span>{queuedScenes > 0 ? ui.skipAll : ui.skip}</span>
             </button>
           )}
         </div>

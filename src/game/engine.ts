@@ -535,7 +535,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
           fishCast.active = false; fishCast.armed = false;
           placeActorsForScene(trans.to, trans.from, farmer);
           lastScene = trans.to; camX = farmer.x;
-          advance(PORTAL_TRAVEL_HOURS); notify();
+          advance(PORTAL_TRAVEL_HOURS); saveGame(); notify();
         }
         if (trans.t > 0.62) {
           const arrived = trans.to; trans = null;

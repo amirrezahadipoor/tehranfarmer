@@ -1,14 +1,15 @@
 // ===== پنل کامل تنظیمات صوتی، دیداری، گیم‌پلی، برون‌بری/درون‌بری سِیو و دسترسی‌پذیری (P9-01..P9-02) =====
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { S, UI, exportSaveJson, importSaveJson, listBackupSlots, notify, restoreBackupSlot, toast } from '../game/state';
 import { CFG, resetSettings, updateSetting } from '../game/settings';
 import { fa, faDec } from '../strings/fa';
-import { sfx, syncAudioSettings } from '../game/sound';
+import { sfx, snd, syncAudioSettings } from '../game/sound';
 import { GT } from '../strings/gameText';
 import { UT } from '../strings/uiText';
 import { CINEMA_UI } from '../strings/cinemaLocales';
 import { DEV_TOOLS } from '../strings/version';
 import { clearErrorLog, exportErrorLogJson, getErrorLog } from '../game/errorLog';
+import { prepareOfflineMusic } from '../game/offline';
 // رفع N-6: گالری کارگردان صحنه فقط در بیلد توسعه‌دهنده لود می‌شود.
 const openSceneDirector = DEV_TOOLS
   ? () => { void import('./SceneDebugMenu').then((m) => m.openSceneDirector()); }
@@ -16,6 +17,7 @@ const openSceneDirector = DEV_TOOLS
 
 export function SettingsPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [offlinePreparing, setOfflinePreparing] = useState(false);
 
   const toggle = (k: 'sound' | 'music' | 'haptics' | 'reduceMotion' | 'colorblind' | 'shortBeat' | 'lowPower', label: string) => {
     const on = CFG[k];
@@ -28,7 +30,8 @@ export function SettingsPanel() {
         onClick={() => {
           const next = !on;
           updateSetting(k, next);
-          if (k === 'sound') UI.sound = next;
+          if (k === 'sound') { UI.sound = next; snd.on = next; }
+          syncAudioSettings();
           sfx.tap();
           notify();
         }}
@@ -83,6 +86,26 @@ export function SettingsPanel() {
         ))}
       </div>
       <p className="mt-1 text-center text-[.68rem] font-bold leading-4 text-[#67513d]">{UT.setLowPowerHint}</p>
+      <div className="mt-2 rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1.5 text-center">
+        <button
+          type="button"
+          data-prepare-offline="1"
+          disabled={offlinePreparing}
+          className="btn b press !min-h-[48px] !px-3 !py-1 text-xs font-black"
+          onClick={async () => {
+            if (offlinePreparing) return;
+            setOfflinePreparing(true);
+            const ok = await prepareOfflineMusic();
+            setOfflinePreparing(false);
+            if (ok) { sfx.fanfare(); toast('save', UT.offlineReady); }
+            else { sfx.err(); toast('close', UT.offlineFailed); }
+            notify();
+          }}
+        >
+          <span>{offlinePreparing ? UT.preparingOffline : UT.prepareOffline}</span>
+        </button>
+        <p className="mt-1 text-[.68rem] font-bold leading-4 text-[#67513d]">{UT.offlineMusicHint}</p>
+      </div>
       <div data-action-speed-control="1" className="mt-2 rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1.5 text-center">
         <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
           <span>{UT.setActionSpeed}:</span>
@@ -107,7 +130,7 @@ export function SettingsPanel() {
         <button
           aria-label={UT.setReset}
           className="btn b press !px-2.5 !py-0.5 text-xs font-black"
-          onClick={() => { resetSettings(); syncAudioSettings(); UI.sound = CFG.sound; sfx.tap(); notify(); }}
+          onClick={() => { resetSettings(); UI.sound = CFG.sound; snd.on = CFG.sound; syncAudioSettings(); sfx.tap(); notify(); }}
         >
           <span>{UT.setReset}</span>
         </button>

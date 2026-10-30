@@ -52,7 +52,7 @@ export const ESTATE_LV_REQ = [4, 9, 14, 21] as const;
 /** Real, calibrated crop growth rate per farm (specialty microclimate boosts regional crops cleanly inside every 7-day season!) */
 /** Calibrated estate growth rate (when a dedicated regional seed is assigned to North/Valley, its microclimate boosts ripening into every 7-day season!) */
 export function estateGrowthRate(farm: FarmSceneId, landLv: number): number {
-  if (farm === 'farm') return 0.36;
+  if (farm === 'farm') return 1;
   if (farm === 'north') return landLv >= 2 ? 0.046 : 0.036;
   return landLv >= 4 ? 0.046 : 0.031;
 }

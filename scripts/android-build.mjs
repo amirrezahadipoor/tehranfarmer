@@ -36,7 +36,11 @@ console.log(`[1/4] ساخت وب (vite build) برای حالت ${mode}...`);
 execFileSync('npx', ['vite', 'build'], {
   stdio: 'inherit',
   cwd: rootDir,
-  env: withE2EAssets ? { ...env, VITE_E2E_ASSETS: '1' } : env,
+  env: withE2EAssets ? { ...env, VITE_E2E_ASSETS: '1', VITE_NATIVE_BUILD: '1', NATIVE_BUILD: '1' } : { ...env, VITE_NATIVE_BUILD: '1', NATIVE_BUILD: '1' },
+});
+
+execFileSync(process.execPath, ['scripts/verify-dist.mjs'], {
+  stdio: 'inherit', cwd: rootDir, env: { ...env, NATIVE_BUILD: '1', VITE_NATIVE_BUILD: '1' },
 });
 
 console.log('[2/4] همگام‌سازی دارایی‌ها با Capacitor Android (cap sync — اجباری)...');

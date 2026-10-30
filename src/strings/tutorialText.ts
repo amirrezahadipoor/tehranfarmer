@@ -19,6 +19,7 @@ export const TUTORIAL_COPY = {
     expand: 'باز کردن راهنمای روز اول',
     skip: 'رد کردن آموزش',
     progress: 'پیشرفت آموزش',
+    practiceNote: 'تسریع آموزشی: فقط گندم این راهنما فوری می‌رسد؛ در بازی عادی رشد زمان می‌برد.',
     targetPrefix: 'هدف: ',
     steps: [
       {
@@ -66,6 +67,7 @@ export const TUTORIAL_COPY = {
     expand: 'Open first-day guide',
     skip: 'Skip tutorial',
     progress: 'Tutorial progress',
+    practiceNote: 'Tutorial speed-up: only this practice crop ripens instantly; normal crops follow the regular growth cycle.',
     targetPrefix: 'Target: ',
     steps: [
       {

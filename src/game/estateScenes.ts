@@ -13,7 +13,7 @@ import {
 import { drawFarmer } from './rig';
 import { drawBackpack, drawBackpackFront } from './backpackArt';
 import { drawThirstLeft } from './thirstWarn';
-import { OX, dirtRoad, ground, mountains, newBG, paperGrain, signpost, tree, wellAt } from './scenes';
+import { BW, BH, OX, dirtRoad, ground, mountains, newBG, paperGrain, signpost, tree, wellAt } from './scenes';
 import { CFG } from './settings';
 import { ESTATE_UI } from '../strings/estateStoryText';
 import { WX } from '../strings/worldExpansionText';
@@ -148,7 +148,7 @@ export function renderEstateFieldScene(
   workers: Walker[],
   workerCount: number,
 ) {
-  ctx.drawImage(bg, -ox, -oy);
+  ctx.drawImage(bg, -ox, -oy, BW, BH);
   const spec = ESTATES[farm];
   const owned = isEstateOwned(farm, landLv);
 

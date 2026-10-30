@@ -10,7 +10,7 @@ import {
   effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
   isNight, OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, srcHave, stockPond, holdCount,
 } from '../game/state';
-import { sfx } from '../game/sound';
+import { sfx, snd, syncAudioSettings } from '../game/sound';
 import { Bar, Coin, Ic, Modal, Trend, useDialogFocus } from './parts';
 import { BuildingBadge, BuyBtn, close, grid, Lock, lv, UpCard, Wallet, buildingNow } from './shopKit';
 import { Carpenter, Estate } from './Shops2';
@@ -30,7 +30,8 @@ import { FestivalModal } from './FestivalModal';
 import { WorldAtlasModal } from './WorldAtlasModal';
 import { currentRegionalShock, hasMonocultureSaturation } from '../game/core/frontier';
 import { FT } from '../strings/frontierText';
-import { bestEstateForCrop, estateGrowthRate } from '../game/estates';
+import { bestEstateForCrop } from '../game/estates';
+import { seedDurationDays } from '../game/core/cropGrowth';
 import { offerContractBoard, signBoardContract } from '../story/socialVillagers';
 import { WX } from '../strings/worldExpansionText';
 import { tutOnSale } from '../game/tutorial';
@@ -45,11 +46,6 @@ import { ShopExperience } from './ShopExperience';
 import { nearestScrollDelta } from './scrollNearest';
 
 
-
-/** مدت پایهٔ رشد یک بذر به روزِ بازی، بدون کود و ماشین، روی مزرعهٔ اصلی — با همان فرمول effectivePlotDailyRate (قیمت ۰٫۹ روزِ قدیمی ۲٫۴ برابر کمتر بود) */
-export function seedDurationDays(c: { days: number }): number {
-  return Math.round((c.days / (DAY_RATE * estateGrowthRate('farm', 0) * (0.83 + 0.44 * 0))) * 10) / 10;
-}
 
 export function Modals() {
   return (
@@ -608,7 +604,7 @@ function Menu() {
           <Ic n="medal" s={4.5} /><span className="ft text-xl">{UT.u129}</span>
           <span className="text-xs font-black" dir="ltr">{fa(done)}/{fa(total)}</span>
         </button>
-        <button className="btn y press flex-col !p-3" onClick={() => { const next = !CFG.sound; updateSetting('sound', next); UI.sound = next; notify(); }}><Ic n={CFG.sound ? 'sound' : 'mute'} s={4.5} /><span className="ft text-xl">{UT.u136}</span></button>
+        <button className="btn y press flex-col !p-3" onClick={() => { const next = !CFG.sound; updateSetting('sound', next); UI.sound = next; snd.on = next; syncAudioSettings(); notify(); }}><Ic n={CFG.sound ? 'sound' : 'mute'} s={4.5} /><span className="ft text-xl">{UT.u136}</span></button>
         <button className={'btn press flex-col !p-3 ' + (CFG.shortBeat ? 'p' : 'y')} onClick={() => { setShortBeat(!CFG.shortBeat); notify(); }}>
           <Ic n="note" s={4.5} /><span className="ft text-xl">{UT.alwaysShort}</span>
           <span className="text-xs font-black">{CFG.shortBeat ? UT.shortOn : UT.shortOff}</span>

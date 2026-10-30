@@ -4,7 +4,7 @@ import { S, UI, hasSave, loadGame, notify, resetGame as resetGameFn, saveGame, u
 import { Hud } from './ui/Hud';
 import { TutorialOverlay } from './ui/TutorialOverlay';
 import { SceneA11y } from './ui/SceneA11y';
-import { Modals } from './ui/Modals';
+
 import { Ic, useDialogFocus } from './ui/parts';
 import { Cutscene, VisitGate } from './ui/Cutscene';
 declare const __DEV_TOOLS__: boolean;
@@ -13,6 +13,7 @@ declare const __DEV_TOOLS__: boolean;
 const SceneDebugMenu = __DEV_TOOLS__
   ? lazy(() => import('./ui/SceneDebugMenu').then((m) => ({ default: m.SceneDebugMenu })))
   : null;
+const GameModals = lazy(() => import('./ui/Modals').then((m) => ({ default: m.Modals })));
 import { clearSceneQueue, maybeStartPrologue, pendingNode, skipActiveCutscene } from './story/engine';
 import { cinema, endSceneStage } from './game/cinemaStage';
 import { fa } from './strings/fa';
@@ -23,9 +24,10 @@ import { installAndroidBackHandler } from './game/androidNav';
 import { BootLoader } from './ui/BootLoader';
 import { isBootAlreadyWarm, runGenuinePreload } from './game/preloader';
 import { CFG, updateSetting } from './game/settings';
-import { resumeAudioFromBackground, sfx, suspendAudioForBackground } from './game/sound';
+import { resumeAudioFromBackground, sfx, snd, suspendAudioForBackground, syncAudioSettings } from './game/sound';
 import { readSavedFarmMeta } from './game/saveSummary';
 import { journeyCopy } from './strings/journeyText';
+import { APP_VERSION, formatVersion } from './strings/version';
 
 function isNativeCapacitor(): boolean {
   return Boolean((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
@@ -243,6 +245,7 @@ function Start() {
         <div className="pointer-events-auto flex items-center gap-2">
           <button
             type="button"
+            data-lang-toggle="1"
             className="btn b press !min-h-[max(48px,2.35rem)] !min-w-[max(48px,4rem)] !px-3 !py-0.5 text-xs font-black"
             onClick={() => { updateSetting('locale', CFG.locale === 'en' ? 'fa' : 'en'); sfx.tap(); notify(); }}
           >
@@ -251,16 +254,16 @@ function Start() {
           <button
             type="button"
             className="btn press !min-h-[max(48px,2.35rem)] min-w-[max(48px,6.4rem)] !bg-[#fff4d8] !px-2.5 !py-0.5 text-xs font-black"
-            onClick={() => { UI.sound = !UI.sound; updateSetting('sound', UI.sound); sfx.tap(); notify(); }}
+            onClick={() => { UI.sound = !UI.sound; snd.on = UI.sound; updateSetting('sound', UI.sound); syncAudioSettings(); sfx.tap(); notify(); }}
           >
             <SpeakerIcon on={UI.sound} />
             <span>{UI.sound ? UT.startSoundOn : UT.startSoundOff}</span>
           </button>
         </div>
 
-        <div className="paper pointer-events-none flex items-center gap-1.5 !rounded-full px-3 py-1 text-xs font-black">
+        <div data-app-version={APP_VERSION} className="paper pointer-events-none flex items-center gap-1.5 !rounded-full px-3 py-1 text-xs font-black">
           <Ic n="star" s={1.4} />
-          <span>{UT.startOfflineBadge}{fa(10)}</span>
+          <span>{UT.startOfflineBadge}{formatVersion(APP_VERSION)}</span>
         </div>
       </div>
     </div>
@@ -275,7 +278,9 @@ export default function App() {
     navigator.webdriver === true &&
     typeof window !== 'undefined' &&
     !window.location?.search?.includes('boot=1');
-  const [bootReady, setBootReady] = useState(() => isBootAlreadyWarm() || autoFastBoot);
+  // حتی در automated run هم موتور تا پایان prewarm شروع نمی‌شود؛ رندر زودهنگامِ
+  // canvas هم‌زمان با مقداردهی مرورگر یک long task چندصدمیلی‌ثانیه‌ای می‌ساخت.
+  const [bootReady, setBootReady] = useState(() => isBootAlreadyWarm());
   const [bootFading, setBootFading] = useState(false);
   const [bootProg, setBootProg] = useState(() => ({ pct: 12, label: UT.bootStepSave }));
 
@@ -379,7 +384,11 @@ export default function App() {
         {UI.started && !inCinema && <Hud />}
         {UI.started && !inCinema && !portraitGateOpen && <TutorialOverlay />}
       </div>
-      <Modals />
+      {(UI.modal || UI.confirm) && (
+        <Suspense fallback={null}>
+          <GameModals />
+        </Suspense>
+      )}
       {UI.started && <VisitGate />}
       {UI.started && <Cutscene />}
       {SceneDebugMenu && (

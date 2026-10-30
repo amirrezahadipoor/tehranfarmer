@@ -170,6 +170,7 @@ export const FT = {
   get mineCurrentFloor() { return en() ? 'You are here' : 'اینجا هستی'; },
   get mineTravelFloor() { return en() ? 'Take lift to this level' : 'رفتن با آسانسور به این طبقه'; },
   get mineLockedFloor() { return en() ? 'Clear two veins on the previous level to unlock.' : 'با استخراج دو رگه در طبقهٔ قبل باز می‌شود.'; },
+  mineFloorLevelLock(level: number) { return en() ? `Reach farm level ${level} to enter safely.` : `برای ورود امن به سطح مزرعهٔ ${fa(level)} برس.`; },
   get mineProgressLabel() { return en() ? 'Veins cleared' : 'رگه‌های استخراج‌شده'; },
   get mineLifetimeLabel() { return en() ? 'Lifetime veins' : 'کل رگه‌ها'; },
   get minePerfectLabel() { return en() ? 'Flawless extractions' : 'استخراج‌های بی‌نقص'; },
@@ -182,7 +183,7 @@ export const FT = {
   get mineQuickHint() { return en() ? 'Skip timing: guaranteed base gem, no accuracy bonus.' : 'بدون زمان‌بندی: گوهر پایهٔ تضمینی، بدون جایزهٔ دقت.'; },
   get mineExtracting() { return en() ? 'Extracting…' : 'در حال استخراج…'; },
   get mineBonusReady() { return en() ? 'Accuracy bonus armed' : 'جایزهٔ دقت فعال شد'; },
-  get mineBonusHint() { return en() ? '72% average earns bonus ore' : 'میانگین ۷۲٪ گوهر اضافه می‌دهد'; },
+  get mineBonusHint() { return en() ? 'Flawless deeper-floor extraction earns bonus ore' : 'استخراج بی‌نقص در طبقات عمیق‌تر گوهر اضافه می‌دهد'; },
   mineFocusStreak(n: number) { return en() ? `Precision streak ×${n}` : `زنجیرهٔ دقیق ×${fa(n)}`; },
   mineStamCost(n: number) { return en() ? `-${n} Stamina` : `${fa(n)} نیرو`; },
   get minePerfectHit() { return en() ? 'Perfect fracture!' : 'شکست بی‌نقص!'; },
@@ -191,7 +192,17 @@ export const FT = {
   get mineStageLabel() { return en() ? 'Strike' : 'ضربه'; },
   get mineLiftOpened() { return en() ? 'Two veins cleared! The lift to the next level is now powered.' : 'دو رگه استخراج شد! آسانسور طبقهٔ بعد روشن شد.'; },
   get mineLiftOpenedShort() { return en() ? 'Lift powered' : 'آسانسور روشن شد'; },
-  mineLoot(name: string, qty: number) { return en() ? `+${qty} ${name} secured` : `${fa(qty)} ${name} به کوله رفت`; },
+  mineLoot(name: string, qty: number, stored = qty) {
+    const mailed = Math.max(0, qty - stored);
+    if (en()) {
+      if (stored <= 0) return `+${qty} ${name} sent to the mailbox`;
+      if (mailed > 0) return `+${stored} ${name} to the barn, +${mailed} to the mailbox`;
+      return `+${qty} ${name} stored in the barn`;
+    }
+    if (stored <= 0) return `${fa(qty)} ${name} به صندوق پست رفت`;
+    if (mailed > 0) return `${fa(stored)} ${name} به انبار و ${fa(mailed)} به صندوق پست رفت`;
+    return `${fa(qty)} ${name} به انبار رفت`;
+  },
   get mineBestAccuracy() { return en() ? 'Best precision' : 'بهترین دقت'; },
   get mineRoyalHint() { return en() ? 'Royal vein: flawless extraction reveals diamond' : 'رگهٔ سلطنتی: استخراج بی‌نقص الماس می‌دهد'; },
 
@@ -206,11 +217,17 @@ export const FT = {
   get fishPerfect() { return en() ? 'PERFECT ANGLING! Double Catch!' : 'صید بی‌نقص مهارتی! ۲ برابر محصول!'; },
   get fishChestGot() { return en() ? '+ Sunken Gem Chest!' : '+ صندوقچهٔ گوهر غرق‌شده!'; },
   get fishEscaped() { return en() ? 'The fish slipped off the hook!' : 'ماهی از قلاب گریخت! دوباره امتحان کن'; },
-  get fishSpeciesTrout() { return en() ? 'Silver River Trout' : 'قزل‌آلای نقره‌ای رودخانه'; },
-  get fishSpeciesCarp() { return en() ? 'Golden Reed Carp' : 'کپور طلایی تالاب'; },
-  get fishSpeciesSalmon() { return en() ? 'Caspian Salmon' : 'آزادماهی خزری'; },
-  get fishSpeciesPearl() { return en() ? 'Qanat Blind Pearl-Fish' : 'مرواریدماهی قنات کهن'; },
-  get fishSpeciesSturgeon() { return en() ? 'Royal Golden Sturgeon' : 'تاس‌ماهی طلایی شاهانه'; },
+  fishMotionLabel(behavior: string) {
+    const labels: Record<string, [string, string]> = {
+      sine: ['آرام و موج‌دار', 'Calm, flowing current'],
+      dart: ['جهش‌های کوتاه', 'Short darting current'],
+      pause: ['مکث و شناور', 'Pause-and-glide current'],
+      surge: ['هجوم ناگهانی', 'Surging current'],
+      dive: ['شیرجهٔ عمیق', 'Deep-diving current'],
+    };
+    const [faLabel, enLabel] = labels[behavior] ?? ['جریان متغیر', 'Changing current'];
+    return en() ? enLabel : faLabel;
+  },
 
   // Town Square Interactive Festivals
   get fairTitle() { return en() ? 'Seasonal Festival' : 'جشنوارهٔ فصل'; },

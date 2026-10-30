@@ -172,33 +172,46 @@ export const FISH_SPECIES: readonly FishSpeciesDef[] = [
   { id: 'storm-kingfish', good: 'roe', seasons: [0, 2, 3], minKg: 9.5, maxKg: 24.0, coinBonus: 220, get name() { return WX.fishSp7; } },
 ];
 
-export function catchRegionalFish(precisionBoost = 1): { species: FishSpeciesDef; kg: number; qty: number; sweet: boolean } {
+export function catchRegionalFish(precisionBoost = 1, cashFactor = 1): { species: FishSpeciesDef; kg: number; qty: number; sweet: boolean; coins: number } {
   const sn = season();
   const rain = S.weather === 2;
   const sweet = precisionBoost > 1.2;
-  const pool = FISH_SPECIES.filter((f) => f.seasons.includes(sn) && (f.id !== 'storm-kingfish' || rain || sweet));
+  const skilled = precisionBoost >= 1;
+  // Quick/unsuccessful casts stay a useful starter action, but cannot roll the
+  // rare roe table or the high-value regional species. A controlled cast keeps
+  // the full seasonal pool and its better expected quantity.
+  const pool = FISH_SPECIES.filter((f) => f.seasons.includes(sn)
+    && (f.id !== 'storm-kingfish' || rain || sweet)
+    && (skilled || (f.good === 'fish' && f.coinBonus <= 42)));
   const roll = Math.min(0.999, rnd() * (sweet ? 1.22 : 1));
   const idx = Math.min(pool.length - 1, Math.floor(roll * pool.length));
   const sp = pool[idx] ?? FISH_SPECIES[0];
   const eagleMult = hasSkill('nature-1') ? 1.2 : 1;
   const rawKg = (sp.minKg + rnd() * (sp.maxKg - sp.minKg)) * (sweet ? 1.25 : 1) * eagleMult;
   const kg = Math.round(rawKg * 10) / 10;
+  const baseQty = sp.good === 'roe' ? (sweet ? 2 : 1) : (sweet ? 3 : skilled ? 1 + Math.floor(rnd() * 2) : 1);
+  // The no-rod, no-skill convenience action is not a guaranteed stamina-to-coin
+  // converter. A won hold minigame and a rod-assisted quick cast still land.
+  if (!skilled && cashFactor < 1 && rnd() >= 0.5) {
+    return { species: sp, kg, qty: 0, sweet: false, coins: 0 };
+  }
   S.fishLog ??= {};
   if (kg > (S.fishLog[sp.id] ?? 0)) S.fishLog[sp.id] = kg;
-  const baseQty = sp.good === 'roe' ? (sweet ? 2 : 1) : (sweet ? 3 : 1 + Math.floor(rnd() * 2));
   // ماهیگیری دستی بازیکن: اول به کولهٔ پشتی؛ کوله پر شد مابقی به صندوق پست (بات/شبیه‌ساز: مستقیم انبار)
   const packGot = isSimBatch() ? 0 : addPack(sp.good, baseQty);
   const got = packGot + (packGot < baseQty ? grantGoodWithMailOverflow(sp.good, baseQty - packGot, 'rancher', 'fish') : 0);
   const awardedQty = Math.max(got, baseQty);
+  const safeCashFactor = Number.isFinite(cashFactor) ? Math.max(0, Math.min(1, cashFactor)) : 1;
+  const instantCoins = Math.round(sp.coinBonus * (sweet ? 0.9 : 0.35) * safeCashFactor);
   if (awardedQty > 0) {
-    S.coins += Math.round(sp.coinBonus * (sweet ? 1.5 : 0.6));
-    S.earned += Math.round(sp.coinBonus * (sweet ? 1.5 : 0.6));
+    S.coins += instantCoins;
+    S.earned += instantCoins;
     if (sp.good === 'roe') addStat('roeN', awardedQty);
     else addStat('fish', awardedQty);
     addXp(sweet ? 24 : 12);
     toast(sp.good, `${sweet ? WX.fishSweetHit : WX.fishGoodHit}${sp.name} (${faDec(kg)}${WX.fishWeightUnit})`);
   }
-  return { species: sp, kg, qty: awardedQty, sweet };
+  return { species: sp, kg, qty: awardedQty, sweet, coins: awardedQty > 0 ? instantCoins : 0 };
 }
 
 // ===== ۶. شخصی‌سازی ظاهر کشاورز، نام مزرعه و دکوراسیون زندهٔ حیاط + حیوانات خانگی =====

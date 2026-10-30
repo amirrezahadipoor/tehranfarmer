@@ -1,7 +1,7 @@
 {
   "name": "mazrae-rangi",
   "private": true,
-  "version": "10.1.2",
+  "version": "10.2.0",
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
@@ -16,7 +16,10 @@
     "test:e2e": "playwright test",
     "verify:dist": "node scripts/verify-dist.mjs",
     "android:debug": "node scripts/android-build.mjs debug",
-    "android:release": "node scripts/android-build.mjs release"
+    "android:release": "node scripts/android-build.mjs release",
+    "build:native": "node scripts/build-native.mjs",
+    "verify:dist:native": "NATIVE_BUILD=1 node scripts/verify-dist.mjs",
+    "test:e2e:prod": "npm run build && npm run verify:dist && playwright test --config=playwright.production.config.ts"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.2",

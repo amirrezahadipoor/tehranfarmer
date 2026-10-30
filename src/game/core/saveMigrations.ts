@@ -5,7 +5,7 @@ import { ANIMALS, COLS, CROP, GOOD, LAND_PRICES, LEVEL_CAP, ROWS, WORKER_MAX, xp
 import { NORTH_PLOTS_COUNT, VALLEY_PLOTS_COUNT } from '../estates';
 import { NOTES } from '../../story/debtData';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 /** نسخه‌ای که از آن به بعد طول آرایه‌های کرت‌ها دقیقاً باید مطابق سازه باشد (ناهمخوانی = خرابی، نه مهاجرت) */
 const STRICT_LAYOUT_FROM = 7;
 
@@ -134,7 +134,14 @@ function v9_to_v10(d: Raw) {
   }
 }
 
-const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9, v9_to_v10];
+/** نسخهٔ ۱۰ به ۱۱: صحنهٔ امنِ ادامه؛ سیوهای قدیمی از مزرعه شروع می‌شوند. */
+function v10_to_v11(d: Raw) {
+  d.v = 11;
+  const valid = ['farm', 'north', 'valley', 'town', 'river', 'apiary', 'cave', 'forest'];
+  if (typeof d.scene !== 'string' || !valid.includes(d.scene)) d.scene = 'farm';
+}
+
+const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9, v9_to_v10, v10_to_v11];
 
 /**
  * سِیو خام را به آخرین نسخه مهاجرت می‌دهد.
@@ -159,6 +166,7 @@ export function migrateSave(raw: unknown): Raw | null {
   d.coins = Math.max(0, num(d.coins, 700));
   d.day = Math.max(1, Math.floor(num(d.day, 1)));
   d.hour = Math.min(23.99, Math.max(0, num(d.hour, 7)));
+  if (!['farm', 'north', 'valley', 'town', 'river', 'apiary', 'cave', 'forest'].includes(String(d.scene))) d.scene = 'farm';
   d.stamina = Math.max(0, num(d.stamina, 100));
   d.xp = Math.max(0, num(d.xp, 0));
   d.earned = Math.max(0, num(d.earned, 0));

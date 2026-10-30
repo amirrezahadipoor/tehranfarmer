@@ -10,6 +10,8 @@ import { close, grid, Wallet } from './shopKit';
 import { GT } from '../strings/gameText';
 import { UT } from '../strings/uiText';
 import { inventoryJoke } from '../strings/inventoryText';
+import { seedDurationDays } from '../game/core/cropGrowth';
+import { faDec } from '../strings/fa';
 
 function Cell({ itemKey, ic, q, name, selected, onSelect }: {
   itemKey: string; ic: string; q: number; name: string; selected: boolean; onSelect: (key: string) => void;
@@ -45,7 +47,7 @@ function ItemDetails({ selection }: { selection: string | null }) {
       <div className="paper flex flex-wrap items-center gap-x-3 gap-y-1 px-2.5 py-1.5 text-xs font-bold" data-inventory-details="seed">
         <Ic n={'seed:' + crop.id} s={2} />
         <span className="font-black">{UT.seedBagPrefix}{crop.fa} × {fa(S.seeds[crop.id])}</span>
-        <span>{UT.invGrowthDays}: {fa(crop.days)}</span>
+        <span>{UT.invGrowthDays}: {faDec(seedDurationDays(crop))}</span>
         <span>{UT.invSeasons}: {crop.seasons.map((s) => SEASONS[s]).join(' · ')}</span>
         <span className="flex items-center gap-1"><Coin v={crop.seed} s={1} />{GT.g59}</span>
         <span className="w-full opacity-75">{inventoryJoke('seed')}</span>

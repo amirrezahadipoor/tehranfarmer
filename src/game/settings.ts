@@ -45,15 +45,21 @@ export function applySettingsToDom() {
     root.setAttribute?.('data-font-scale', String(CFG.fontScale));
     root.setAttribute?.('data-reduce-motion', CFG.reduceMotion ? '1' : '0');
     root.setAttribute?.('data-colorblind', CFG.colorblind ? '1' : '0');
+    root.setAttribute?.('lang', CFG.locale);
+    root.setAttribute?.('dir', CFG.locale === 'en' ? 'ltr' : 'rtl');
+    document.title = CFG.locale === 'en'
+      ? 'Colorful Farm | Hand-drawn farming game'
+      : 'مزرعه رنگی | بازی کشاورزی نقاشی‌شده';
   } catch (e) { setLastError(`settings-dom-failed:${String((e as Error)?.message ?? e)}`, 'ui'); }
 }
 
 export function loadSettings(): UserSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return CFG;
+    if (!raw) { applySettingsToDom(); return CFG; }
     const parsed = JSON.parse(raw) as Partial<UserSettings>;
     Object.assign(CFG, DEFAULTS, parsed);
+    if (CFG.locale !== 'fa' && CFG.locale !== 'en') CFG.locale = 'fa';
     if (![1, 1.5, 2].includes(CFG.actionSpeed)) CFG.actionSpeed = 1;
     CFG.musicVolume = Number.isFinite(Number(CFG.musicVolume)) ? Math.max(0, Math.min(100, Number(CFG.musicVolume))) : 100;
     CFG.sfxVolume = Number.isFinite(Number(CFG.sfxVolume)) ? Math.max(0, Math.min(100, Number(CFG.sfxVolume))) : 100;

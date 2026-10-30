@@ -1,6 +1,8 @@
-const CACHE_NAME = 'mazrae-rangi-offline-v17';
+const CACHE_NAME = 'mazrae-rangi-offline-v18';
+const BUILD_ASSETS = /*__TF_BUILD_ASSETS__*/null;
 const CORE_ASSETS = [
   './', './index.html', './manifest.webmanifest', './icon.svg',
+  ...(BUILD_ASSETS ?? []),
 ];
 
 self.addEventListener('install', (event) => {
@@ -17,17 +19,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// آهنگ‌های غیرجاری پس از شروع، در idle و بدون افزایش وزن HTML کش می‌شوند.
+// Full music caching is explicit (Settings > Prepare offline) so first-use 4G
+// does not download several megabytes in the background. Playback still caches
+// the current track on demand through the fetch handler below.
 self.addEventListener('message', (event) => {
   if (event.data?.type !== 'CACHE_MUSIC' || !Array.isArray(event.data.urls)) return;
   const urls = event.data.urls.filter((url) => typeof url === 'string' && url.includes('music/'));
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => Promise.allSettled(
+  const work = caches.open(CACHE_NAME).then((cache) => Promise.allSettled(
     urls.map(async (url) => {
       const request = new Request(new URL(url, self.registration.scope).href);
       if (await cache.match(request)) return;
       await cache.add(request);
     }),
-  )));
+  ));
+  event.waitUntil(work.then((results) => {
+    const ok = results.every((result) => result.status === 'fulfilled');
+    event.ports?.[0]?.postMessage({ ok });
+  }));
 });
 
 self.addEventListener('fetch', (event) => {

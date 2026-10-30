@@ -58,7 +58,7 @@ export const GOODS: { id: GoodId; fa: string; base: number }[] = [
   { id: 'milk', fa: GT.g87, base: 40 },
   { id: 'wool', fa: GT.g88, base: 60 },
   { id: 'cheese', fa: GT.g89, base: 85 },
-  { id: 'fish', fa: GT.g90, base: 55 },
+  { id: 'fish', fa: GT.g90, base: 20 },
   { id: 'roe', fa: GT.g91, base: 160 },
   { id: 'honey', fa: GT.g92, base: 120 },
   { id: 'fingerling', fa: GT.g93, base: 30 },
@@ -66,8 +66,8 @@ export const GOODS: { id: GoodId; fa: string; base: number }[] = [
   { id: 'herb', get fa() { return FT.goodHerb; }, base: 48 },
   { id: 'mushroom', get fa() { return FT.goodMushroom; }, base: 95 },
   { id: 'truffle', get fa() { return FT.goodTruffle; }, base: 290 },
-  { id: 'quartz', get fa() { return FT.goodQuartz; }, base: 80 },
-  { id: 'turquoise', get fa() { return FT.goodTurquoise; }, base: 215 },
+  { id: 'quartz', get fa() { return FT.goodQuartz; }, base: 50 },
+  { id: 'turquoise', get fa() { return FT.goodTurquoise; }, base: 100 },
   { id: 'amber', get fa() { return FT.goodAmber; }, base: 460 },
   { id: 'amethyst', get fa() { return FT.goodAmethyst; }, base: 650 },
   { id: 'garnet', get fa() { return FT.goodGarnet; }, base: 900 },
@@ -230,7 +230,7 @@ export const SOIL_LV = [10, 13, 16, 20, 25];
 export const SOIL_BONUS = 0.072; // +۷٫۲٪ محصول به‌ازای هر مرحله (سقف ۵ مرحله = +۳۶٪ مثل قبل)
 
 // ===== ماهیگیری و پرورش ماهی =====
-export const FISH_STAM = 4;
+export const FISH_STAM = 6;
 export const ROD_PRICE = 1400;
 export const ROD_LV = 3;
 export const POND_MAX = 5;

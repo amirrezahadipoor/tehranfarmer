@@ -153,6 +153,9 @@ export function TutorialOverlay() {
             </button>
           </div>
           <p className="mt-[6px] text-[13px] font-bold leading-[1.55] text-[#503426]" aria-live="polite" aria-atomic="true">{hint}</p>
+          {(step === 2 || step === 3) && (
+            <p data-tutorial-practice="1" className="mt-1 text-[11px] font-bold leading-4 text-emerald-800">{copy.practiceNote}</p>
+          )}
           <div className="mt-[6px] flex items-center gap-[8px]">
             <div
               className="flex flex-1 gap-1"
