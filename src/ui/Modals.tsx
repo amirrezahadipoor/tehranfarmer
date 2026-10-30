@@ -8,7 +8,7 @@ import {
 import {
   S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract,
   effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
-  isNight, OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, srcHave, stockPond, holdCount,
+  OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, srcHave, stockPond, holdCount,
 } from '../game/state';
 import { sfx, snd, syncAudioSettings } from '../game/sound';
 import { Bar, Coin, Ic, Modal, Trend, useDialogFocus } from './parts';
@@ -74,7 +74,7 @@ export function Modals() {
       {UI.modal === 'atlas' && <WorldAtlasModal />}
       {UI.modal === 'almanac' && <AlmanacModal />}
       {UI.modal === 'mail' && <MailboxModal />}
-      {UI.confirm === 'sleep' && <Confirm icon="moon" msg={sleepConfirmMessage()} onYes={performSleep} />}
+      {UI.confirm === 'sleep' && <Confirm icon="moon" msg={sleepConfirmMessage()} onYes={() => performSleep()} />}
       {UI.confirm === 'reset' && <Confirm icon="trash" msg={UT.confirmResetMsg} onYes={() => { UI.confirm = null; UI.modal = null; resetGame(); window.location.reload(); }} />}
       {UI.confirm === 'newgame' && <Confirm icon="trash" msg={UT.confirmNewGameMsg} onYes={() => { UI.confirm = null; UI.modal = null; resetGame(); UI.started = true; maybeStartPrologue(); sfx.fanfare(); notify(); }} />}
       {UI.confirm === 'exit' && <Confirm icon="house" msg={UT.exitPrompt} onYes={() => { UI.confirm = null; notify(); exitNativeApp(); }} />}
@@ -600,6 +600,9 @@ function Menu() {
       <div className="flex flex-wrap items-center justify-center gap-4 py-4">
         <button className="btn g press flex-col !p-3" onClick={close}><Ic n="play" s={4.5} cls="invert-0" /><span className="ft text-xl">{UT.u3}</span></button>
         <button className="btn b press flex-col !p-3" onClick={() => { saveGame(); sfx.buy(); }}><Ic n="save" s={4.5} /><span className="ft text-xl">{UT.u135}</span></button>
+      </div>
+      <SettingsPanel />
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-4 py-2">
         <button className="btn y press flex-col !p-3" onClick={() => { UI.modal = 'achieve'; notify(); }}>
           <Ic n="medal" s={4.5} /><span className="ft text-xl">{UT.u129}</span>
           <span className="text-xs font-black" dir="ltr">{fa(done)}/{fa(total)}</span>
@@ -609,9 +612,9 @@ function Menu() {
           <Ic n="note" s={4.5} /><span className="ft text-xl">{UT.alwaysShort}</span>
           <span className="text-xs font-black">{CFG.shortBeat ? UT.shortOn : UT.shortOff}</span>
         </button>
-        <button className="btn b press flex-col !p-3" onClick={requestSleep}>
-          <Ic n="moon" s={4.5} /><span className="ft text-xl">{isNight() ? UT.u33 : UT.restAnytime}</span>
-          <span className="text-xs font-black">{isNight() ? UT.u137 : UT.restSub}</span>
+        <button className="btn b press flex-col !p-3" onClick={() => requestSleep('quick')}>
+          <Ic n="moon" s={4.5} /><span className="ft text-xl">{UT.restAnytime}</span>
+          <span className="text-xs font-black">{UT.restSub}</span>
         </button>
         <button className="btn p press flex-col !p-3" onClick={() => { UI.modal = 'ledger'; notify(); }}><Ic n="ledger" s={4.5} /><span className="ft text-xl">{UT.u36}</span></button>
         <button className="btn g press flex-col !p-3" onClick={() => { UI.modal = 'home'; notify(); }}><Ic n="house" s={4.5} /><span className="ft text-xl">{WX.homeBtn}</span></button>
@@ -619,7 +622,6 @@ function Menu() {
         <button className="btn y press flex-col !p-3" onClick={() => { UI.modal = 'museum'; notify(); }}><Ic n="trophy" s={4.5} /><span className="ft text-xl">{UT.museumShort}</span></button>
         <button className="btn r press flex-col !p-3" onClick={() => { UI.modal = null; UI.confirm = 'reset'; notify(); }}><Ic n="trash" s={4.5} /><span className="ft text-xl">{UT.u25}</span></button>
       </div>
-      <SettingsPanel />
       <div className="paper mx-auto mt-2 max-w-md p-3 text-center">
         <div className="ft text-lg">{UT.u139}{formatVersion(APP_VERSION)}</div>
         <div className="mt-1 space-y-0.5 text-[.7rem] font-bold opacity-70">

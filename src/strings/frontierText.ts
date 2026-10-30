@@ -208,7 +208,10 @@ export const FT = {
 
   // Skill Fishing Minigame UI
   get fishModalTitle() { return en() ? 'River Tension Reel — Skill Angling' : 'مینی‌گیم مهارتی کشش قلاب رودخانه'; },
-  get fishReadyHint() { return en() ? 'Ready? The clock starts only on your first hold. Closing now costs nothing.' : 'آماده‌ای؟ زمان فقط با اولین نگه‌داشتن شروع می‌شود؛ بستن قبل از شروع هزینه ندارد.'; },
+  get fishReadyHint() { return en() ? 'Keep the fish inside the green frame. Hold touch, mouse, Space or Up Arrow to lift it; the clock starts on your first hold.' : 'ماهی را داخل کادر سبز نگه دار؛ با نگه‌داشتن لمس، کلیک، Space یا کلید بالا کادر را بالا ببر. زمان با اولین نگه‌داشتن شروع می‌شود.'; },
+  get fishPracticeLabel() { return en() ? 'Practice fish: slow movement and a larger green frame' : 'ماهی تمرینی: حرکت آرام و کادر سبز بزرگ‌تر'; },
+  get fishFirstFailFree() { return en() ? 'Your first missed attempt costs no stamina.' : 'اولین تلاش ناموفق نیرو مصرف نکرد.'; },
+  get fishResultClose() { return en() ? 'Continue' : 'ادامه'; },
   get fishStartBtn() { return en() ? 'HOLD TO START' : 'برای شروع نگه دار'; },
   get fishHoldHint() { return en() ? 'Hold touch, mouse, Space or Up Arrow to lift the green bar — keep the swimming fish inside!' : 'لمس، کلیک یا نگه‌داشتن Space / کلید بالا شناور سبز را بالا می‌برد؛ ماهی را داخل کادر نگه دار!'; },
   get fishCatchProgress() { return en() ? 'Catch progress' : 'پیشرفت صید'; },

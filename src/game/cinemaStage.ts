@@ -507,7 +507,7 @@ export function isActorStagedInScene(id: RealActorId): boolean {
 function activeSetPiece(): { kind: SceneScript['setPiece'] extends infer T ? T extends { kind: infer K } ? K : never : never; x: number; y: number } | undefined {
   const sp = cinema.script?.setPiece;
   const curId = cinema.script?.beats[cinema.beatIdx]?.nodeId ?? cinema.script?.id ?? '';
-  if (curId === 'p4' || curId === 'p5' || curId === 'p6' || curId === 'p7' || curId === 'ch6-outro') {
+  if (curId === 'p4' || curId === 'p5' || curId === 'p7' || curId === 'ch6-outro') {
     return { kind: 'deed-table', x: 912, y: 658 };
   }
   if (curId === 'finale' || curId === 'secret-true-epilogue') {

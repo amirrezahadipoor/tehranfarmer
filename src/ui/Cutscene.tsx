@@ -165,7 +165,8 @@ export function Cutscene() {
   useEffect(() => {
     if (!beat || summary || closing || holding) return;
     if (typed >= full.length) return;
-    if (isReducedMotion()) { setTyped(full.length); return; }
+    // پرولوگ کوتاه بلافاصله خوانا است؛ تایپ تدریجی برای صحنه‌های سینمایی بعدی حفظ می‌شود.
+    if (rootId === 'p1' || isReducedMotion()) { setTyped(full.length); return; }
     const stepChars = rootId.startsWith('visit-') && Boolean(S.story.seen[rootId]) ? 4 : 2;
     timer.current = window.setTimeout(() => {
       timer.current = null;
@@ -379,6 +380,7 @@ export function Cutscene() {
       onPointerDown={onStagePointerDown}
       onClick={onStageClick}
       data-scene-id={effectiveScript.id} data-beat-node={beat?.nodeId} data-shop-dialogue={UI.modal === 'shop' ? '1' : undefined}
+      data-instant-text={rootId === 'p1' ? '1' : undefined}
     >
       {beating && <BeatStage variant={beatVariantOf(rootId, beatings)} />}
 

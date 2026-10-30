@@ -4,7 +4,7 @@ import { cmd } from '../game/engine';
 import { S, UI, claimAllReadyQuests, deliverContract, holdCount, notify, readyQuestCount } from '../game/state';
 import { claim, ensureQuests, isClaimed, questDone, questLabelOf, questProgress, type QuestGoal } from '../story/dailyQuests';
 import { chapterChecklist, questOf, questProgress as storyQuestProgress, type ChapterAction } from '../story/quests';
-import { SECRETS, discoveredSecretCount } from '../story/secrets';
+import { SECRETS, discoveredSecretCount, isSecretListed, revealSecretHint, secretHintLevel } from '../story/secrets';
 import { offerContractBoard, signBoardContract } from '../story/socialVillagers';
 import { talkToSharkhar, talkToTownNpc } from '../story/engine';
 import { sfx } from '../game/sound';
@@ -126,6 +126,8 @@ export function Quests() {
   const mainQ = !S.story.postgame ? questOf(S.story.chapter) : null;
   const checks = mainQ ? chapterChecklist(mainQ.chapter) : [];
   const foundSecrets = discoveredSecretCount();
+  const listedSecrets = SECRETS.filter((sec) => isSecretListed(sec.id));
+  const laterSecretCount = SECRETS.length - listedSecrets.length;
   const loc = CFG.locale === 'en' ? 'en' : 'fa';
   const J = journeyCopy();
   const eu = ESTATE_UI[loc];
@@ -315,11 +317,14 @@ export function Quests() {
           </span>
         </div>
         <div className="grid gap-1.5 sm:grid-cols-2">
-          {SECRETS.map((sec) => {
+          {listedSecrets.map((sec) => {
             const unlocked = !!S.secrets?.[sec.id];
+            const hintLevel = secretHintLevel(sec.id);
+            const stages = sec.clueStagesFa;
             return (
               <div
                 key={sec.id}
+                data-secret-id={sec.id}
                 className={'rounded-xl border p-2 text-xs ' + (unlocked ? 'border-[#6ec251] bg-[#eefbe6]' : 'border-black/10 bg-white/50 opacity-85')}
               >
                 <div className="flex items-center justify-between gap-1 font-black">
@@ -329,13 +334,33 @@ export function Quests() {
                   </span>
                   {unlocked && <span className="rounded bg-[#5dc246] px-1.5 py-0.5 text-[.62rem] text-white">{UT.secretFoundBadge}</span>}
                 </div>
-                <div className="mt-1 text-[.7rem] font-bold leading-relaxed opacity-85">
-                  {unlocked ? sec.rewardTextFa : sec.clueFa}
-                </div>
+                {unlocked ? (
+                  <div className="mt-1 text-[.7rem] font-bold leading-relaxed opacity-85">{sec.rewardTextFa}</div>
+                ) : (
+                  <div className="mt-1" data-secret-hints="1" data-secret-hint-level={hintLevel}>
+                    <div className="space-y-1 text-[.7rem] font-bold leading-relaxed opacity-85">
+                      {stages.slice(0, hintLevel).map((hint, index) => <p key={index}>{hint}</p>)}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-1.5">
+                      <span className="text-[.65rem] font-black opacity-65" dir="ltr">{UT.secretHintLabel} {fa(hintLevel)}/{fa(stages.length)}</span>
+                      {hintLevel < stages.length && (
+                        <button
+                          type="button"
+                          data-secret-hint={sec.id}
+                          className="btn b press !min-h-[48px] !px-2.5 !py-1 text-[.68rem] font-black"
+                          onClick={() => revealSecretHint(sec.id)}
+                        >
+                          {hintLevel === stages.length - 1 ? UT.secretFullHint : UT.secretMoreHint}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
+        {laterSecretCount > 0 && <div className="rounded-lg bg-[#f7edd2] p-2 text-center text-[.7rem] font-bold leading-5 text-[#67513d]" data-secret-later="1">{UT.secretLater}</div>}
       </div>
 
       <div className="paper mx-auto mt-2 max-w-md p-2.5 text-center text-xs font-bold opacity-80">{UT.u147}</div>

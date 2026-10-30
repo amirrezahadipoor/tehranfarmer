@@ -10,7 +10,8 @@ import { S, UI, millAtNorthWindmill, drinkValleySpring, notify, toast } from './
 import { handleFarmAnimalTap } from './farmVisuals';
 import type { AR, Task, Walker } from './engineRender';
 import { sfx } from './sound';
-import { talkToSharkhar } from '../story/engine';
+import { talkToSharkhar, talkToTownNpc } from '../story/engine';
+import { TOWN_ACTORS } from '../story/townNpc';
 import { checkSecretTriggers } from '../story/secrets';
 import { npcOverheadLayout } from './npcLabels';
 import { tutTapOk } from './tutorial';
@@ -127,6 +128,19 @@ export function createSceneTapRouter(d: SceneInputDeps) {
   function townTap(x: number, y: number) {
     UI.info = null;
     if (x <= 104 && y >= 435 && y <= 655) { d.moveTo(d.farmer, 108, 594); d.farmer.tasks.push(d.mkTask('travel', 108, 594, { to: 'farm' })); return; }
+    // بدن و نشان هر چهار NPC متحرک، همان مسیر گفتگوی کوئست/نامه را دارند.
+    for (let i = 0; i < TOWN_ACTORS.length; i++) {
+      const npc = d.npcs[i];
+      if (!npc) continue;
+      const actor = TOWN_ACTORS[i];
+      const badge = npcOverheadLayout(actor.who, npc.x, npc.y, 0.8);
+      const onBody = Math.abs(x - npc.x) < 52 && y >= npc.y - 190 && y <= npc.y + 20;
+      const onBadge = badge && Math.abs(x - npc.x) < 32 && Math.abs(y - badge.questBangCenterY) < 30;
+      if (onBody || onBadge) {
+        d.clearTrans(); d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
+        talkToTownNpc(i); sfx.tap(); notify(); return;
+      }
+    }
     // نشان واقعی بالای سر جهانگیر از ناحیهٔ سقف/بدنٔ مغازه جداست؛ درب نجاری آزاد می‌ماند.
     const jahangirBadge = npcOverheadLayout('jahangir', d.jahangir.x, d.jahangir.y, 0.8);
     if (jahangirBadge && Math.abs(x - d.jahangir.x) < 30 && Math.abs(y - jahangirBadge.questBangCenterY) < 30) {
@@ -372,6 +386,12 @@ export function createSceneTapRouter(d: SceneInputDeps) {
       const ar = d.animals.get(Number(animal[1]));
       if (!ar) return false;
       return tap(ar.x, ar.y - ar.rig.h * ar.sc * 0.5);
+    }
+    const npc = /^npc:(grandma|sara|engineer|rancher)$/.exec(id);
+    if (npc && UI.scene === 'town') {
+      const idx = TOWN_ACTORS.findIndex((actor) => actor.who === npc[1]);
+      const walker = d.npcs[idx];
+      return idx >= 0 && walker ? tap(walker.x, walker.y - 80) : false;
     }
     if (id.startsWith('shop:') && UI.scene === 'town') {
       const shop = SHOPS.find((s) => s.id === id.slice(5));

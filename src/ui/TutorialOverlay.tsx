@@ -29,7 +29,9 @@ function canvasTarget(step: number): TargetRect | null {
     ? { x: FIELD_X, y: FIELD_Y, w: PLOT_DX, h: PLOT_DY }
     : step === 4 && UI.scene === 'town'
       ? { x: 292, y: 210, w: 116, h: 238 }
-      : null;
+      : step === 6 && UI.scene === 'farm'
+        ? { x: 80, y: 60, w: 235, h: 202 }
+        : null;
   const viewport = cmd.inspectEngine()?.viewport;
   const canvas = document.getElementById('game-canvas');
   if (!logical || !viewport || !canvas) return null;
@@ -47,8 +49,8 @@ function findTarget(step: number): TargetRect | null {
     ? ['[data-nav="town"]', '[data-mobile-atlas="1"]']
     : step === 5
       ? ['[data-open-ledger="1"]']
-      : step === 6
-        ? ['[data-rest-anytime="1"]']
+      : step === 6 && UI.scene !== 'farm'
+        ? ['[data-nav="farm"]', '[data-mobile-atlas="1"]']
         : [];
   const dom = selectors.length ? elementTarget(selectors) : null;
   const raw = dom ?? canvasTarget(step);

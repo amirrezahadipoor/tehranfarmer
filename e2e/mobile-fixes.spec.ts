@@ -32,6 +32,7 @@ test('mobile choice, fishing, seed filter, DPR and scene targets stay usable', a
 
   await test.step('prologue choices do not overflow', async () => {
     await reachPrologueChoice(page);
+    await expect(page.locator('[data-tap="cutscene"]')).toHaveAttribute('data-instant-text', '1');
     const choices = page.locator('[data-scene-choice]');
     await expect(choices).toHaveCount(2);
     for (const choice of await choices.all()) {
@@ -64,6 +65,21 @@ test('mobile choice, fishing, seed filter, DPR and scene targets stay usable', a
       expect(rect!.y + rect!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
       expect(rect!.height).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  await test.step('settings are grouped and do not overflow narrow screens', async () => {
+    await dev(page, 'farm', 'menu');
+    const panel = page.locator('[data-settings-panel="1"]');
+    await expect(panel).toBeVisible();
+    await expect(panel.locator('[data-settings-group]')).toHaveCount(4);
+    await expect(panel.locator('[data-settings-group="audio"]')).toHaveAttribute('open', '');
+    const metrics = await panel.evaluate((el) => ({ client: el.clientWidth, scroll: el.scrollWidth }));
+    expect(metrics.scroll).toBeLessThanOrEqual(metrics.client + 1);
+    await panel.locator('[data-settings-group="display"] summary').tap();
+    await expect(panel.locator('[data-settings-group="display"]')).toHaveAttribute('open', '');
+    await expect(panel.locator('[data-action-speed-control="1"]')).toBeVisible();
+    const bodyOverflow = await page.evaluate(() => document.body.scrollWidth - window.innerWidth);
+    expect(bodyOverflow).toBeLessThanOrEqual(0);
   });
 
   await test.step('available seeds are the default and all seeds remain reachable', async () => {

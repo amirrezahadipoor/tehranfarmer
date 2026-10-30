@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ACHS, ACH_OUTFIT_REWARDS, GOOD, SEASONS, fa } from '../game/data';
 import {
   DECOR_ITEMS, OUTFIT_THEMES, SKILL_DEFS, S, UI, buyCourtyardDecor, farmLevel, hasDecor, hasSkill,
-  isNight, isOutfitUnlocked, notify, setHomesteadNames, setPlayerOutfit, skillPointsAvailable,
+  isOutfitUnlocked, notify, setHomesteadNames, setPlayerOutfit, skillPointsAvailable,
   toggleMorningCard, toggleCompactStory, unlockSkill, type SkillBranch,
 } from '../game/state';
 import { VILLAGER_PROFILES, canGiftVillagerToday, findBestGiftInBag, giftVillager, villagerHearts } from '../story/socialVillagers';
@@ -40,10 +40,10 @@ export function FarmhouseModal() {
           type="button"
           className={'btn b press w-full !py-1.5 text-sm font-black ' + (S.tut?.active && S.tut.step === 6 ? 'ring-4 ring-amber-300' : '')}
           data-home-sleep="1"
-          onClick={requestSleep}
+          onClick={() => requestSleep('home')}
         >
           <Ic n="moon" s={1.6} />
-          <span>{isNight() ? UT.u33 : UT.restAnytime}</span>
+          <span className="flex flex-col leading-tight"><span>{UT.homeSleep}</span><span className="text-[.68rem] opacity-80">{UT.homeSleepSub}</span></span>
         </button>
       )}
     >

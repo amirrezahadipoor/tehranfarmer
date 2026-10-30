@@ -8,14 +8,8 @@ import { FT } from '../strings/frontierText';
 import { UT } from '../strings/uiText';
 import { GT } from '../strings/gameText';
 import { Ic, useDialogFocus } from './parts';
-import { advanceFishMotion, createFishMotionState, type FishBehavior } from '../game/fishMotion';
-
-interface FishProfile {
-  speed: number;
-  barH: number;
-  bonusMult: number;
-  behavior: FishBehavior;
-}
+import { advanceFishMotion, createFishMotionState } from '../game/fishMotion';
+import { PRACTICE_FISH_PROFILE, fishingStaminaCost, isPracticeFishing, type FishProfile } from '../game/fishingRules';
 
 const PROFILES: readonly FishProfile[] = [
   { speed: 0.72, barH: 30, bonusMult: 1.0, behavior: 'sine' },
@@ -30,8 +24,10 @@ export function FishingModal() {
   // آمارِ کسری یا نامعتبر (سیوهای قدیمی) نباید ایندکس را خارج از محدوده ببرد و مودال را از کار بیندازد
   const rawIdx = S.day + Math.floor(S.hour) + (S.stats.fish ?? 0);
   const idx = Number.isFinite(rawIdx) ? Math.abs(Math.floor(rawIdx)) % PROFILES.length : 0;
-  const prof = PROFILES[idx];
-  const [barY, setBarY] = useState(52);
+  const practice = isPracticeFishing(S.stats);
+  const prof = practice ? PRACTICE_FISH_PROFILE : PROFILES[idx];
+  const initialBarY = practice ? 36 : 52;
+  const [barY, setBarY] = useState(initialBarY);
   const [fishY, setFishY] = useState(48);
   const [chestY] = useState(() => 22 + ((S.day * 17) % 52));
   const [progress, setProgress] = useState(34);
@@ -41,19 +37,24 @@ export function FishingModal() {
   const [resultMsg, setResultMsg] = useState<string | null>(null);
   const [resultSpecies, setResultSpecies] = useState<string | null>(null);
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stRef = useRef({
-    ...createFishMotionState(), barY: 52, vel: 0,
+    ...createFishMotionState(), barY: initialBarY, vel: 0,
     progress: 34, chestProg: 0, missed: 0, holding: false, ended: false,
   });
   stRef.current.holding = holding;
 
-  const scheduleAutoClose = (ms: number) => {
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = setTimeout(() => {
-      closeTimerRef.current = null;
-      if (UI.modal === 'fishing') { UI.modal = null; notify(); }
-    }, ms);
+  const chargeAttempt = (landed: boolean): boolean => {
+    const attempt = (S.stats.fishCasts ?? 0) + 1;
+    S.stats.fishCasts = attempt;
+    const cost = fishingStaminaCost(attempt, landed, FISH_STAM);
+    S.stamina = Math.max(0, S.stamina - cost);
+    return cost === 0;
+  };
+
+  const closeResult = () => {
+    stRef.current.ended = true;
+    UI.modal = null;
+    notify();
   };
 
   const settleCatch = (won: boolean, perfect: boolean, gotChest: boolean) => {
@@ -64,16 +65,15 @@ export function FishingModal() {
       sfx.err();
       toast('bolt', GT.g35);
       setResultMsg(GT.g35);
-      scheduleAutoClose(650);
       notify();
       return;
     }
-    S.stamina = Math.max(0, S.stamina - FISH_STAM);
+    const freeFirstFailure = chargeAttempt(won);
     if (!won) {
+      const msg = freeFirstFailure ? `${FT.fishEscaped} · ${FT.fishFirstFailFree}` : FT.fishEscaped;
       sfx.err();
-      toast('fish', FT.fishEscaped);
-      setResultMsg(FT.fishEscaped);
-      scheduleAutoClose(650);
+      toast('fish', msg);
+      setResultMsg(msg);
       notify();
       return;
     }
@@ -103,7 +103,6 @@ export function FishingModal() {
     checkSecretTriggers('fish');
     toast('fish', msg);
     setResultMsg(msg);
-    scheduleAutoClose(850);
     notify();
   };
 
@@ -126,10 +125,10 @@ export function FishingModal() {
       advanceFishMotion(s, prof.behavior, prof.speed, now, dt);
 
       const inside = s.fishY >= s.barY - 3 && s.fishY <= s.barY + prof.barH + 3;
-      if (inside) s.progress = Math.min(100, s.progress + dt * 29);
+      if (inside) s.progress = Math.min(100, s.progress + dt * (practice ? 36 : 29));
       else {
         s.missed += dt;
-        s.progress = Math.max(0, s.progress - dt * 16.5);
+        s.progress = Math.max(0, s.progress - dt * (practice ? 8 : 16.5));
       }
 
       const onChest = chestY >= s.barY - 2 && chestY <= s.barY + prof.barH + 2;
@@ -152,27 +151,40 @@ export function FishingModal() {
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [phase]);
-
-  useEffect(() => () => {
-    if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
-  }, []);
+  }, [phase, practice, prof]);
 
   const quickCast = () => {
     if (stRef.current.ended) return;
     stRef.current.ended = true;
-    if (S.stamina < FISH_STAM) { sfx.err(); toast('bolt', GT.g35); UI.modal = null; notify(); return; }
-    S.stamina = Math.max(0, S.stamina - FISH_STAM);
+    setPhase('result');
+    if (S.stamina < FISH_STAM) {
+      sfx.err(); toast('bolt', GT.g35); setResultMsg(GT.g35); notify(); return;
+    }
     const res = catchRegionalFish(S.rod > 0 ? 1 : 0.75, S.rod > 0 ? 0.55 : 0.35);
-    if (res.qty <= 0) { sfx.err(); toast('fish', GT.g155); }
-    else { sfx.splash(); toast('fish', `+${fa(res.qty)}`); }
+    const landed = res.qty > 0;
+    const freeFirstFailure = chargeAttempt(landed);
+    const msg = landed
+      ? `+${fa(res.qty)} ${res.species.name}`
+      : `${GT.g155}${freeFirstFailure ? ` · ${FT.fishFirstFailFree}` : ''}`;
+    if (landed) { setResultSpecies(res.species.id); sfx.splash(); }
+    else sfx.err();
+    toast('fish', msg);
+    setResultMsg(msg);
     checkSecretTriggers('fish');
-    UI.modal = null;
     notify();
   };
 
   const beginHolding = () => {
     if (stRef.current.ended) return;
+    if (phase === 'ready' && S.stamina < FISH_STAM) {
+      stRef.current.ended = true;
+      setPhase('result');
+      setResultMsg(GT.g35);
+      sfx.err();
+      toast('bolt', GT.g35);
+      notify();
+      return;
+    }
     if (phase === 'ready') setPhase('playing');
     setHolding(true);
     sfx.water();
@@ -199,6 +211,7 @@ export function FishingModal() {
       data-fishing-minigame="1"
       data-fish-phase={phase}
       data-fish-behavior={prof.behavior}
+      data-fish-practice={practice ? '1' : undefined}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-2 select-none"
       onPointerUp={() => setHolding(false)}
       onPointerCancel={() => setHolding(false)}
@@ -220,19 +233,14 @@ export function FishingModal() {
             type="button"
             aria-label={UT.closeBtn}
             className="btn r press !p-1"
-            onClick={() => {
-              stRef.current.ended = true;
-              if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
-              UI.modal = null;
-              notify();
-            }}
+            onClick={closeResult}
           >
             <Ic n="close" s={2} />
           </button>
         </div>
 
         <div data-fish-hint="1" className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
-          <div>{FT.fishMotionLabel(prof.behavior)}</div>
+          <div>{practice ? FT.fishPracticeLabel : FT.fishMotionLabel(prof.behavior)}</div>
           <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{phase === 'ready' ? FT.fishReadyHint : FT.fishHoldHint}</div>
         </div>
 
@@ -288,8 +296,13 @@ export function FishingModal() {
         </div>
 
         {resultMsg ? (
-          <div role="status" aria-live="polite" data-fish-result-species={resultSpecies ?? undefined} className="rounded-xl bg-emerald-100 p-2 text-center text-sm font-black text-emerald-950">
-            {resultMsg}
+          <div className="flex flex-col gap-2" data-fish-result="1">
+            <div role="status" aria-live="polite" data-fish-result-species={resultSpecies ?? undefined} className="rounded-xl bg-emerald-100 p-2 text-center text-sm font-black leading-6 text-emerald-950">
+              {resultMsg}
+            </div>
+            <button type="button" data-fish-result-close="1" className="btn g press !min-h-[48px] !px-4 !py-1.5 text-sm font-black" onClick={closeResult}>
+              <Ic n="check" s={1.5} /><span>{FT.fishResultClose}</span>
+            </button>
           </div>
         ) : (
           <div data-fish-actions="1" className="flex flex-wrap gap-2">

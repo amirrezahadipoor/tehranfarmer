@@ -110,12 +110,6 @@ const BEAT_OVERRIDES: Record<string, BeatOverride[]> = {
       cue: 'boop',
     },
   ],
-  p6: [
-    { pose: 'explain', prop: 'scroll', cam: { x: 920, y: 626, zoom: 1.48 } },
-    { pose: 'point', prop: 'club', cam: { x: 932, y: 626, zoom: 1.54 } },
-    { pose: 'talk', emote: '?', cam: { x: 884, y: 626, zoom: 1.56 } },
-    { prePause: 0.4, pose: 'laugh', prop: 'teacup', react: { actor: 'player', emote: 'sweat' }, cam: { x: 920, y: 626, zoom: 1.5 } },
-  ],
   p7: [
     {
       react: { actor: 'jahangir', pose: 'stamp', squash: true },
@@ -347,7 +341,7 @@ export function areaFor(id: string): SceneArea {
   }
   if (
     id.startsWith('town-') || id.startsWith('shop-intro-') || id === 'area-intro-town'
-    || id === 'p4' || id === 'p5' || id === 'p6' || id === 'p7'
+    || id === 'p4' || id === 'p5' || id === 'p7'
     || id === 'ch6-outro' || id === 'finale'
     || id === 'secret-silk-merchant' || id === 'secret-true-epilogue'
   ) return 'town';
@@ -364,7 +358,7 @@ function setPieceFor(id: string, area: SceneArea): { kind: StagePropKind; x: num
   if (id === 'p1' || id === 'p2' || id === 'p3' || id === 'ch1-outro' || id === 'shop-intro-animal' || id.startsWith('npc-q-rancher-') || id === 'visit-rest') {
     return { kind: 'runaway-rooster', x: area === 'town' ? 750 : cx, y: gy };
   }
-  if (id === 'p4' || id === 'p5' || id === 'p6' || id === 'p7' || id.startsWith('note-open') || id === 'ch6-outro') {
+  if (id === 'p4' || id === 'p5' || id === 'p7' || id.startsWith('note-open') || id === 'ch6-outro') {
     return { kind: 'deed-table', x: area === 'farm' ? 356 : cx, y: area === 'farm' ? 364 : gy };
   }
   if (id === 'ch2-outro' || id === 'ch3-outro' || id === 'visit-due-missed-2' || id === 'secret-scarecrow-duel') {

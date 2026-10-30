@@ -14,6 +14,7 @@ import { FT } from '../strings/frontierText';
 import { UT } from '../strings/uiText';
 import { fa } from '../strings/fa';
 import { SCENE_A11Y_TEXT } from '../strings/sceneA11yText';
+import { TOWN_ACTORS } from '../story/townNpc';
 import type { Plot } from './state';
 
 export interface SceneA11yTarget {
@@ -121,6 +122,7 @@ export function sceneA11yTargets(): SceneA11yTarget[] {
     for (const shop of SHOPS) out.push(action(`shop:${shop.id}`, t.open(t.shopNames[shop.id])));
     const loc = en() ? 'en' : 'fa';
     out.push(action('sharkhar', t.talkTo(NPC_ROLES[loc].jahangir.name)));
+    for (const actor of TOWN_ACTORS) out.push(action(`npc:${actor.who}`, t.talkTo(NPC_ROLES[loc][actor.who].name)));
     if (isTownFestivalActive()) {
       out.push(action('fair:judge', t.fairJudge));
       out.push(action('fair:cauldron', t.fairCauldron));

@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fresh, S, UI } from './state';
-import { performSleep, requestSleep, sleepConfirmMessage } from './sleep';
+import { fresh, S, stamCap, UI } from './state';
+import { performSleep, requestSleep, sleepConfirmMessage, sleepStaminaAfter } from './sleep';
 
 const SAVE_KEY = 'mazrae-rangi-save-v1';
 
 function readPersisted() {
   const raw = localStorage.getItem(SAVE_KEY);
   expect(raw).toBeTruthy();
-  return JSON.parse(raw!) as { day: number; hour: number };
+  return JSON.parse(raw!) as { day: number; hour: number; stamina: number };
 }
 
 describe('sleep entry policy', () => {
@@ -47,5 +47,28 @@ describe('sleep entry policy', () => {
     expect(S.day).toBe(2);
     expect(S.hour).toBe(6);
     expect(readPersisted()).toMatchObject({ day: 2, hour: 6 });
+  });
+
+  it('gives home sleep full stamina while quick rest recovers only 75% of missing stamina', () => {
+    expect(sleepStaminaAfter(20, 100, 100, 'quick')).toBe(80);
+    expect(sleepStaminaAfter(20, 100, 100, 'home')).toBe(100);
+
+    S.hour = 18;
+    S.stamina = 20;
+    requestSleep('quick');
+    const quickExpected = sleepStaminaAfter(20, stamCap(), stamCap(), 'quick');
+    expect(S.stamina).toBe(quickExpected);
+    expect(readPersisted()).toMatchObject({ day: 2, hour: 6, stamina: quickExpected });
+  });
+
+  it('preserves the home origin through confirmation and persists the full recovery', () => {
+    S.hour = 12;
+    S.stamina = 20;
+    requestSleep('home');
+    expect(UI.confirm).toBe('sleep');
+    expect(sleepConfirmMessage()).toContain('نیروی کامل');
+    performSleep();
+    expect(S.stamina).toBe(stamCap());
+    expect(readPersisted()).toMatchObject({ day: 2, hour: 6, stamina: stamCap() });
   });
 });

@@ -76,8 +76,9 @@ export interface Save {
   contract: MarketContract | null; tut?: { step: number; active: boolean; done: boolean }; // راهنمای تعاملی و غیرمسدودکنندهٔ روز اول
   /** آیا تندیس/موزهٔ پایان‌بازی دیده شده */
   museumVisited: boolean;
-  /** رازهای پنهان کشف‌شده */
+  /** رازهای پنهان کشف‌شده و شمار سرنخ‌هایی که بازیکن خودش خواسته است */
   secrets?: Record<string, boolean>;
+  secretHints?: Record<string, number>;
   /** تخصیص بذر هدف مستقل هر مزرعه، نقش کارگران، مهارت‌ها، شخصی‌سازی و دوستی اهالی */
   farmSeeds?: Partial<Record<FarmSceneId, CropId | 'auto'>>;
   crewRole?: 'balanced' | 'crops' | 'ranch';
@@ -169,7 +170,7 @@ export function fresh(): Save {
     wellLv: 0,
     contract: null, tut: { step: 0, active: false, done: false },
     museumVisited: false,
-    secrets: {},
+    secrets: {}, secretHints: {},
   };
 }
 export let S: Save = fresh();
@@ -291,6 +292,7 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.contract = S.contract ?? null; S.tut = S.tut ?? { step: 4, active: false, done: true }; // سیوهای کهنه آموزش نمی‌بینند
   S.museumVisited = S.museumVisited ?? false;
   S.secrets = S.secrets ?? {};
+  S.secretHints = S.secretHints ?? {};
   S.farmSeeds = S.farmSeeds ?? {};
   S.crewRole = S.crewRole ?? 'balanced';
   S.skills = S.skills ?? {};

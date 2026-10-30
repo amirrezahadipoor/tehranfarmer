@@ -1,5 +1,5 @@
 // ===== ۸ رویداد و صحنهٔ مخفی عمیق مزرعه با شرایط روشن، طبیعی و پاداش‌های واقعی (دوزبانه FA/EN) =====
-import { S, UI, addXp, farmLevel, grantGoodWithMailOverflow, honeyCap, season, stamCap, toast } from '../game/state';
+import { S, UI, addXp, farmLevel, grantGoodWithMailOverflow, honeyCap, notify, saveGame, season, stamCap, toast } from '../game/state';
 import { isFarmScene } from '../game/estates';
 import { CFG } from '../game/settings';
 import { addStanding } from '../game/core/debt';
@@ -11,6 +11,7 @@ export interface SecretDef {
   icon: string;
   titleFa: string;
   clueFa: string;
+  clueStagesFa: readonly string[];
   rewardTextFa: string;
 }
 
@@ -108,13 +109,74 @@ const RAW_SECRETS: RawSecret[] = [
   },
 ];
 
+const STAGED_HINTS: Record<string, { fa: readonly [string, string]; en: readonly [string, string] }> = {
+  'secret-midnight-well': {
+    fa: ['چاه قدیمی در شب‌های صاف، رمزی برای کشاورز کنجکاو دارد.', 'چاه را ارتقا بده و نزدیک نیمه‌شب دوباره به آن سر بزن.'],
+    en: ['The old well keeps a secret for a curious farmer on clear nights.', 'Upgrade the well and return to it near midnight.'],
+  },
+  'secret-golden-kingfish': {
+    fa: ['رودخانه در باران، افسانه‌ای برای ماهیگیر باتجربه پنهان کرده است.', 'پس از صیدهای فراوان، سپیده‌دم یا غروب بارانی را امتحان کن.'],
+    en: ['The rainy river hides a legend for an experienced angler.', 'After many catches, try a rainy dawn or dusk.'],
+  },
+  'secret-queen-bee-bloom': {
+    fa: ['زنبورستان در فصل‌های گل‌دهی به کندوهای پرشمار و عسل فراوان پاداش می‌دهد.', 'در بهار یا تابستان با کندوهای بیشتر و سابقهٔ برداشت عسل برگرد.'],
+    en: ['The apiary rewards abundant hives and honey during blooming seasons.', 'Return in Spring or Summer with more hives and a history of honey harvests.'],
+  },
+  'secret-scarecrow-duel': {
+    fa: ['مترسک قوی‌تر، پیش از پایان داستان ماجرایی در مزرعه می‌سازد.', 'مترسک ضدشرخر را به آخرین سطح برسان و در مزرعه قدم بزن.'],
+    en: ['A stronger scarecrow creates a farm adventure before the story ends.', 'Fully upgrade the Guard Scarecrow, then walk around the farm.'],
+  },
+  'secret-yalda-lanterns': {
+    fa: ['شب‌های سرد زمستان با میوه‌های شیرین مزرعه گرم می‌شوند.', 'بعد از غروب زمستان، انار یا هندوانه در انبار داشته باش.'],
+    en: ['Cold Winter nights grow warm with sweet farm fruit.', 'After dusk in Winter, keep Pomegranate or Watermelon in the barn.'],
+  },
+  'secret-grandpa-tree': {
+    fa: ['درخت پیر پشت خانه ریشه در خاطرهٔ همهٔ زمین‌های خانواده دارد.', 'وقتی زمین‌های بیشتری آزاد و خاکشان حاصلخیزتر شد، به درخت پیر برگرد.'],
+    en: ['The old tree behind the house is rooted in every family field.', 'Return after freeing more land and enriching its soil.'],
+  },
+  'secret-silk-merchant': {
+    fa: ['بازار به بازرگانی که به قراردادهایش وفادار است اعتماد پیدا می‌کند.', 'چند قرارداد تحویل بده و عسل و یک محصول لوکس را در انبار نگه دار.'],
+    en: ['The Market learns to trust a farmer who honors contracts.', 'Complete several contracts and keep Honey plus a luxury crop in storage.'],
+  },
+  'secret-true-epilogue': {
+    fa: ['موزهٔ میراث برای مزرعه‌داری که فراتر از تسویهٔ سندها رفته، جای تازه‌ای دارد.', 'سطح مزرعه و شمار رازهای کشف‌شده‌ات را افزایش بده.'],
+    en: ['The Heritage Museum holds something for a farmer who goes beyond clearing deeds.', 'Raise your farm level and discover more valley secrets.'],
+  },
+};
+
 export const SECRETS: SecretDef[] = RAW_SECRETS.map((r) => ({
   id: r.id,
   icon: r.icon,
   get titleFa() { return CFG.locale === 'en' ? r.titleEn : r.titleFa; },
   get clueFa() { return CFG.locale === 'en' ? r.clueEn : r.clueFa; },
+  get clueStagesFa() {
+    const hints = STAGED_HINTS[r.id];
+    return CFG.locale === 'en' ? [...hints.en, r.clueEn] : [...hints.fa, r.clueFa];
+  },
   get rewardTextFa() { return CFG.locale === 'en' ? r.rewardEn : r.rewardFa; },
 }));
+
+/** شرایط پایان‌بازی و بخش‌های خیلی دور تا نزدیک‌شدن بازیکن به آن‌ها در طومار لو نمی‌رود. */
+export function isSecretListed(id: string): boolean {
+  if (id === 'secret-true-epilogue') return S.story.postgame;
+  if (id === 'secret-grandpa-tree') return S.lv.land >= 2 || S.story.chapter >= 4;
+  if (id === 'secret-silk-merchant') return (S.stats.contracts ?? 0) >= 1 || S.story.chapter >= 3;
+  return true;
+}
+
+export function secretHintLevel(id: string): number {
+  const value = S.secretHints?.[id] ?? 1;
+  return Math.max(1, Math.min(3, Math.floor(value)));
+}
+
+export function revealSecretHint(id: string): number {
+  const next = Math.min(3, secretHintLevel(id) + 1);
+  S.secretHints ??= {};
+  S.secretHints[id] = next;
+  saveGame();
+  notify();
+  return next;
+}
 
 export const SECRET_NODES: StoryNode[] = [
   {

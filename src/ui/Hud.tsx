@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
 import { hasSkill } from '../game/core/rpgSystems';
@@ -25,6 +26,18 @@ import { WorldNavBar } from './WorldNavBar';
 const WEATHER = ['sun', 'cloud', 'rain', 'snow'];
 
 export function Hud() {
+  const topBarRef = useRef<HTMLDivElement>(null);
+  const [hudBottom, setHudBottom] = useState(112);
+  useLayoutEffect(() => {
+    const el = topBarRef.current;
+    if (!el) return;
+    const update = () => setHudBottom(Math.ceil(el.getBoundingClientRect().bottom + 8));
+    update();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    observer?.observe(el);
+    window.addEventListener('resize', update);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', update); };
+  }, []);
   const sn = season();
   const farmId = isFarmScene(UI.scene) ? UI.scene : null;
   const farm = !!farmId;
@@ -38,6 +51,8 @@ export function Hud() {
     <>
       {/* نوار یکپارچهٔ بالای صفحه: چیدمان انعطاف‌پذیر، کم‌ارتفاع (آزاد بودن کامل سقف خانه و مزرعه) و صفر برخورد در هر عرض صفحه */}
       <div
+        ref={topBarRef}
+        data-hud-topbar="1"
         className="pointer-events-none fixed z-20 flex items-start justify-between gap-1.5"
         style={{
           left: 'calc(var(--safe-left) + .5rem)',
@@ -97,7 +112,7 @@ export function Hud() {
             )}
           </div>
           <div className="pointer-events-auto flex flex-wrap items-start justify-end gap-1">
-            <button aria-label={isNight() ? UT.u33 : UT.restAnytime} data-rest-anytime="1" className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={isNight() ? UT.u33 : UT.restAnytime} onClick={requestSleep}>
+            <button aria-label={UT.restAnytime} data-rest-anytime="1" className="btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={UT.restSub} onClick={() => requestSleep('quick')}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
             </button>
             <button aria-label={UT.u133} data-open-inventory="1" className="btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
@@ -245,6 +260,7 @@ export function Hud() {
       )}
       {farm && UI.seedTray && UI.tool === 'plant' && <SeedTray />}
       {farm && UI.info && <Info />}
+      <div data-hud-notifications="1" className="pointer-events-none fixed inset-x-0 z-30 flex flex-col items-center gap-1" style={{ top: hudBottom }}>
       {S.morning && !S.morning.shown && S.hour >= 5.5 && S.hour < 19 && (S.custom?.morningCard ?? true) && !UI.modal && (() => {
         const almostRipe = ownedFarms().reduce((acc, f) => acc + plotsForFarm(f).filter((p) => p.st === 2 && !p.dead && !p.ripe && p.prog >= 0.7).length, 0);
         const spReady = skillPointsAvailable() > 0;
@@ -268,8 +284,7 @@ export function Hud() {
         return (
           <div
             data-morning-report="1"
-            className="paper popin pointer-events-none fixed left-1/2 z-30 flex w-[min(92vw,26rem)] -translate-x-1/2 items-center justify-between gap-2 px-3 py-1.5 text-xs font-extrabold shadow-lg"
-            style={{ top: 'calc(var(--safe-top) + 4.45rem)' }}
+            className="paper popin flex w-[min(92vw,26rem)] items-center justify-between gap-2 px-3 py-1.5 text-xs font-extrabold shadow-lg"
           >
             <div className="min-w-0 flex-1">
               <div className="ft text-sm text-[#5a3518]">{WX.morningTitle}{fa(S.morning.day)}</div>
@@ -312,6 +327,7 @@ export function Hud() {
         );
       })()}
       <Toasts />
+      </div>
     </>
   );
 }
@@ -546,15 +562,11 @@ function Info() {
 }
 
 function Toasts() {
-  const morningOpen = Boolean(S.morning && !S.morning.shown && S.hour >= 5.5 && S.hour < 19 && (S.custom?.morningCard ?? true) && !UI.modal);
   return (
-    <div
-      className="pointer-events-none fixed left-1/2 z-30 flex max-w-[min(88vw,25rem)] -translate-x-1/2 flex-col items-center gap-1"
-      style={{ top: morningOpen ? 'calc(var(--safe-top) + 10.6rem)' : 'calc(var(--safe-top) + 6.4rem)' }}
-    >
+    <div data-toast-stack="1" className="pointer-events-none flex w-[min(92vw,25rem)] flex-col items-center gap-1" aria-live="polite">
       {UI.toasts.filter((t) => !t.locale || t.locale === CFG.locale).map((t) => (
-        <div key={t.id} className="paper toast flex items-center gap-2 px-3 py-1 text-sm font-extrabold">
-          <Ic n={t.icon} s={2} /><span>{t.text}</span>
+        <div key={t.id} className="paper toast flex max-w-full items-center gap-2 px-3 py-1 text-sm font-extrabold">
+          <Ic n={t.icon} s={2} /><span className="min-w-0 break-words leading-snug">{t.text}</span>
         </div>
       ))}
     </div>

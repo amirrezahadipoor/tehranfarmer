@@ -52,8 +52,8 @@ export const TUTORIAL_COPY = {
         hint: 'کارت «بدهی فصل» بالای صفحه را باز کن؛ مبلغ و سررسید قسط آنجاست.', target: 'دفتر سند',
       },
       {
-        icon: 'moon', title: 'به فردا برو',
-        hint: 'دکمهٔ ماه بالای صفحه را بزن تا فردا با نیروی کامل شروع شود.', target: 'دکمهٔ ماه',
+        icon: 'house', title: 'در خانه بخواب',
+        hint: 'به مزرعه برگرد، روی خانه بزن و «خواب در خانه» را انتخاب کن تا فردا با نیروی کامل شروع شود.', target: 'خانهٔ مزرعه',
       },
     ] satisfies TutorialStepText[],
   },
@@ -100,8 +100,8 @@ export const TUTORIAL_COPY = {
         hint: 'Open the Current Deed card at the top to see the installment and due date.', target: 'Deed ledger',
       },
       {
-        icon: 'moon', title: 'Rest for tomorrow',
-        hint: 'Tap the moon button at the top to start tomorrow with full stamina.', target: 'Moon button',
+        icon: 'house', title: 'Sleep at home',
+        hint: 'Return to the farm, tap the house and choose Sleep at Home to start tomorrow with full stamina.', target: 'Farmhouse',
       },
     ] satisfies TutorialStepText[],
   },
@@ -113,6 +113,6 @@ export const TUTORIAL_UT_EN = {
   tutSellHint: 'Travel to Town and sell one harvested crop at the Market.',
   tutLedger: 'Open the deed ledger',
   tutLedgerHint: 'Select the Current Deed card at the top to open the ledger.',
-  tutSleep: 'Rest until tomorrow',
-  tutSleepHint: 'Use the moon button at the top to begin tomorrow with full stamina.',
+  tutSleep: 'Sleep at home',
+  tutSleepHint: 'Open the farmhouse and choose Sleep at Home to begin tomorrow with full stamina.',
 } as const;

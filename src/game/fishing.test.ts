@@ -3,6 +3,7 @@ import { FISH_STAM } from './data';
 import { setSeed } from './rng';
 import { fresh, S, UI } from './state';
 import { catchRegionalFish } from './core/rpgSystems';
+import { PRACTICE_FISH_PROFILE, fishingStaminaCost, isPracticeFishing } from './fishingRules';
 
 describe('fishing reward balance', () => {
   beforeEach(() => {
@@ -72,5 +73,19 @@ describe('fishing reward balance', () => {
 
   it('uses the rebalanced stamina cost', () => {
     expect(FISH_STAM).toBe(6);
+  });
+
+  it('starts with a slow, large-window practice fish until the first catch', () => {
+    expect(isPracticeFishing({})).toBe(true);
+    expect(isPracticeFishing({ fish: 1 })).toBe(false);
+    expect(isPracticeFishing({ roeN: 1 })).toBe(false);
+    expect(PRACTICE_FISH_PROFILE.speed).toBeLessThan(0.5);
+    expect(PRACTICE_FISH_PROFILE.barH).toBeGreaterThanOrEqual(38);
+  });
+
+  it('waives stamina only for the first failed attempt, never for later failures or a catch', () => {
+    expect(fishingStaminaCost(1, false, FISH_STAM)).toBe(0);
+    expect(fishingStaminaCost(2, false, FISH_STAM)).toBe(FISH_STAM);
+    expect(fishingStaminaCost(1, true, FISH_STAM)).toBe(FISH_STAM);
   });
 });

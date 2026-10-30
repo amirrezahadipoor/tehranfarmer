@@ -54,12 +54,18 @@ async function activateSceneTarget(page: Page, id: string) {
   await target.press('Enter');
 }
 
-async function readSave(page: Page): Promise<{ day: number; scene: string; coins: number; v: number }> {
+async function readSave(page: Page): Promise<{ day: number; scene: string; coins: number; stamina: number; v: number; stats?: Record<string, number> }> {
   return page.evaluate((key) => {
     const raw = localStorage.getItem(key);
     if (!raw) throw new Error('Expected a production save');
-    return JSON.parse(raw) as { day: number; scene: string; coins: number; v: number };
+    return JSON.parse(raw) as { day: number; scene: string; coins: number; stamina: number; v: number; stats?: Record<string, number> };
   }, SAVE_KEY);
+}
+
+async function closeFishingResult(page: Page) {
+  await expect(page.locator('[data-fish-result-close="1"]')).toBeVisible();
+  await page.locator('[data-fish-result-close="1"]').tap();
+  await expect(page.locator('[data-fishing-minigame="1"]')).toHaveCount(0);
 }
 
 test('production real journey: start, tutorial skip, fishing, market sale and sleep', async ({ page }) => {
@@ -76,7 +82,7 @@ test('production real journey: start, tutorial skip, fishing, market sale and sl
     await page.locator('[data-open-fishing]').tap();
     await expect(page.locator('[data-fishing-minigame="1"]')).toBeVisible();
     await page.locator('[data-fish-quick="1"]').tap();
-    await expect(page.locator('[data-fishing-minigame="1"]')).toHaveCount(0);
+    await closeFishingResult(page);
 
     await travel(page, 'town');
     await activateSceneTarget(page, 'shop:market');
@@ -117,19 +123,10 @@ test('production skilled fishing uses one species for the result and persistent 
   page.on('pageerror', (error) => errors.push(error.message));
   await startFresh(page);
   await travel(page, 'river');
-  // Use real quick casts to reach the calmer pause profile; no save or RNG injection.
-  // This keeps the skilled-path assertion about species, not about a lucky escape.
-  let behavior = '';
-  for (let attempt = 0; attempt < 12; attempt++) {
-    await page.locator('[data-open-fishing]').tap();
-    await expect(page.locator('[data-fishing-minigame="1"]')).toBeVisible();
-    behavior = await page.locator('[data-fishing-minigame="1"]').getAttribute('data-fish-behavior') ?? '';
-    if (behavior === 'pause') break;
-    await page.locator('[data-fish-quick="1"]').tap();
-    await expect(page.locator('[data-fishing-minigame="1"]')).toHaveCount(0);
-    await page.waitForTimeout(160);
-  }
-  expect(behavior).toBe('pause');
+  await page.locator('[data-open-fishing]').tap();
+  await expect(page.locator('[data-fishing-minigame="1"]')).toBeVisible();
+  await expect(page.locator('[data-fishing-minigame="1"]')).toHaveAttribute('data-fish-behavior', 'sine');
+  await expect(page.locator('[data-fishing-minigame="1"]')).toHaveAttribute('data-fish-practice', '1');
 
   const hold = await page.locator('[data-fish-hold="1"]').boundingBox();
   expect(hold).not.toBeNull();
@@ -142,6 +139,7 @@ test('production skilled fishing uses one species for the result and persistent 
     holding = true;
   };
   const stop = async () => {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 8, y: 8 }] });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     holding = false;
   };
@@ -196,6 +194,57 @@ test('production skilled fishing uses one species for the result and persistent 
     return save.fishLog?.[id] ?? 0;
   }, { key: SAVE_KEY, id: speciesId! });
   expect(loggedKg).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
+test('production first fishing is guided and keeps its result until a tap', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await startFresh(page);
+  await travel(page, 'river');
+  const before = await readSave(page);
+
+  await page.locator('[data-open-fishing="1"]').tap();
+  const game = page.locator('[data-fishing-minigame="1"]');
+  await expect(game).toBeVisible();
+  await expect(game).toHaveAttribute('data-fish-practice', '1');
+  await expect(page.locator('[data-fish-hint="1"]')).toContainText('ماهی را داخل کادر سبز نگه دار');
+  await page.locator('[data-fish-hold="1"]').tap();
+  const result = page.locator('[data-fish-result="1"]');
+  await expect(result).toBeVisible({ timeout: 15_000 });
+  const resultText = await result.textContent() ?? '';
+  const firstFailure = resultText.includes('اولین تلاش ناموفق نیرو مصرف نکرد');
+  if (!firstFailure) expect(resultText).toContain('+');
+  const hudBottom = await page.locator('[data-hud-topbar="1"]').evaluate((el) => el.getBoundingClientRect().bottom);
+  const toastTop = await page.locator('.toast').first().evaluate((el) => el.getBoundingClientRect().top);
+  expect(toastTop).toBeGreaterThanOrEqual(hudBottom);
+  await page.waitForTimeout(2_700);
+  await expect(result).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  const after = await readSave(page);
+  if (firstFailure) expect(after.stamina).toBeGreaterThanOrEqual(before.stamina);
+  else expect(after.stamina).toBeLessThan(before.stamina);
+  expect(after.stamina).toBeLessThan(before.stamina + 2);
+  expect(after.stats?.fishCasts).toBe(1);
+
+  await closeFishingResult(page);
+  expect(errors).toEqual([]);
+});
+
+test('production semantic controls activate all four walking town NPCs', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await startFresh(page);
+  await travel(page, 'town');
+
+  for (const who of ['grandma', 'sara', 'engineer', 'rancher']) {
+    await activateSceneTarget(page, `npc:${who}`);
+    const scene = page.locator('[data-tap="cutscene"]');
+    await expect(scene).toBeVisible();
+    await expect(scene).toHaveAttribute('data-beat-node', new RegExp(`^(town-${who}-|npc-q-${who}-)`));
+    await dismissCutscenes(page);
+    await expect(page.locator('canvas')).toHaveAttribute('aria-label', /شهر/);
+  }
   expect(errors).toEqual([]);
 });
 

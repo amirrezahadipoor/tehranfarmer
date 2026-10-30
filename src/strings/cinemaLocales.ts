@@ -137,32 +137,20 @@ export const EN_LINES: Record<string, string[]> = {
   ...EN_SEASONAL_NPC_LINES,
   p1: [
     'We made it—Grandpa’s home at last!',
-    'Welcome back, son! I have waited so long for you—come here and let me hug you!',
   ],
   p2: [
-    'Hello, Grandma! Where should I start?',
-    'I am Grandma Nosrat, your grandfather’s next-door neighbor. Welcome, son—eat some fresh bread first and catch your breath.',
+    'Welcome back, son! I am Nosrat, your grandfather’s old neighbor; this fresh bread is for you.',
   ],
   p3: [
-    'Before I forget: a heavy old debt still sits on this farm’s deed.',
-    'Jahangir knows everything—go to his office to sort out the installments. I will bake fresh bread for you!',
+    'The farm deed still carries debt; Jahangir will show you the installment details in the town ledger.',
   ],
   p4: [
-    'Six million coins of debt, six separate deeds registered against this farm—and you must not sell the land.',
+    'Six separate deeds cover this farm; pay one installment every 28 days and each cleared deed opens the next chapter.',
   ],
   p5: [
-    'You pay one small installment every 28 days; keep up and the deed clears and you can relax.',
-    'Six million coins?! All I have right now is this old hoe and tiny savings!',
-    'Easy now—nobody pays all at once. I am fair; even this soft foam club is named "Gentle," strictly for friendly reminders!',
-  ],
-  p6: [
-    'The debt is split into six separate deeds; settle one each chapter. The ledger always stays at the top of your screen.',
-    'Behave and your credit rises; fall behind and I will visit your farm myself with "Gentle"!',
-    'What happens if I come up short at month end?',
-    'One harmless boop from "Gentle," part of your pocket cash credited toward the debt, plus a small late fee!',
+    'Relax—you do not pay it all at once. My foam club “Gentle” is only a reminder; the real numbers live in the deed ledger!',
   ],
   p7: [
-    'Deed One: fifteen thousand coins, with no added interest.',
     'Pick up the hoe and start with the plots—you will bring this farm back to life with your own hands!',
   ],
   'ch1-outro': [
