@@ -1,5 +1,6 @@
 // ===== موتور داستان و فراخوانی یکپارچهٔ صحنه‌های سینمایی (بدون هیچ قفل‌نرم در بازپخش یا رد کردن!) =====
-import { S, UI, addXp, farmLevel, notify, saveGame, season, stamCap, addGood, type Modal } from '../game/state';
+import { S, UI, addXp, farmLevel, notify, saveGame, season, stamCap, addGood } from '../game/state';
+import { SHOP_META, isShopId, type ShopId } from '../game/shops';
 import { CFG } from '../game/settings';
 import { nodeById } from './story';
 import type { StoryNode, StoryCtx } from './types';
@@ -77,7 +78,9 @@ export function triggerCutscene(
     }
   }
   S.story.pending = id;
-  UI.modal = null;
+  // در گفت‌وگوی داخل مغازه، داخل‌نما و پرترهٔ فروشنده پشت همان حباب گفت‌وگو می‌مانند؛ در بقیهٔ صحنه‌ها مودال بسته می‌شود.
+  const keepShopInterior = UI.modal === 'shop' && UI.afterModal === 'shop';
+  if (!keepShopInterior) UI.modal = null;
   if (UI.started && !UI.directorReplay) saveGame();
   notify();
   return node;
@@ -253,16 +256,32 @@ export function talkToTownNpc(idx: number): StoryNode | null {
   return triggerCutscene(`town-${actor.who}-${variant}`, { forceReplay: true });
 }
 
+/** گفت‌وگوی فروشنده از داخل همان مغازه؛ کوئست/دوستی چهار اهالی قبلی کاملاً حفظ می‌شود. */
+export function talkToShopkeeper(shop: ShopId): StoryNode | null {
+  const intro = `shop-intro-${shop}`;
+  if (!S.story.seen[intro]) return triggerCutscene(intro, { forceReplay: true, explicitAction: true });
+  const keeper = SHOP_META[shop].keeper;
+  if (keeper === 'carpenter' || keeper === 'estateAgent') {
+    const variant = (season() + S.day) % 3;
+    return triggerCutscene(`town-${keeper}-${variant}`, { forceReplay: true });
+  }
+  const idx = TOWN_ACTORS.findIndex((actor) => actor.who === keeper);
+  return idx >= 0 ? talkToTownNpc(idx) : null;
+}
+
 export function triggerAreaIntro(area: Exclude<SceneKey, 'farm'>): boolean {
   if (!S.story || S.story.pending || UI.scene !== area) return false;
   return triggerCutscene(`area-intro-${area}`, { explicitAction: true }) !== null;
 }
 
 export function triggerShopIntro(shopId: string): boolean {
-  if (!['seed', 'market', 'work', 'animal', 'carp', 'estate'].includes(shopId)) return false;
-  if (S.story?.pending) return false;
+  if (!isShopId(shopId)) return false;
+  if (S.story?.pending || S.story.seen[`shop-intro-${shopId}`]) return false;
+  UI.activeShop = shopId;
+  UI.shopPanel = 'lobby';
+  UI.afterModal = 'shop';
   const started = triggerCutscene(`shop-intro-${shopId}`, { explicitAction: true }) !== null;
-  if (started) UI.afterModal = shopId as Modal;
+  if (!started) UI.afterModal = null;
   return started;
 }
 

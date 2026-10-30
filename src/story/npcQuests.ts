@@ -8,7 +8,7 @@ import { fa } from '../strings/fa';
 import { sfx } from '../game/sound';
 import type { CharId, StoryNode } from './types';
 
-export type QuestNpcId = Exclude<CharId, 'narrator' | 'player'>;
+export type QuestNpcId = Exclude<CharId, 'narrator' | 'player' | 'carpenter' | 'estateAgent'>;
 
 export interface NpcQuestSpec {
   id: string;

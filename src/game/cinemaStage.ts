@@ -53,7 +53,7 @@ interface PoolParticle {
 }
 
 const POOL_SIZE = 48;
-const ACTORS: RealActorId[] = ['player', 'grandma', 'sara', 'engineer', 'rancher', 'jahangir'];
+const ACTORS: RealActorId[] = ['player', 'grandma', 'sara', 'engineer', 'rancher', 'jahangir', 'carpenter', 'estateAgent'];
 
 const pool: PoolParticle[] = Array.from({ length: POOL_SIZE }, () => ({
   active: false, kind: 'star', x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, life: 0, max: 1, scale: 1,
@@ -71,6 +71,8 @@ const slots: Record<RealActorId, ActorStageState> = {
   engineer: mkSlot(),
   rancher: mkSlot(),
   jahangir: mkSlot(),
+  carpenter: mkSlot(),
+  estateAgent: mkSlot(),
 };
 
 let savedSnapshot: Partial<Record<RealActorId, ActorSaved>> | null = null;
@@ -121,6 +123,9 @@ function walkerOf(id: RealActorId): Walker | null {
     case 'sara': return world.npcs[1] ?? null;
     case 'engineer': return world.npcs[2] ?? null;
     case 'rancher': return world.npcs[3] ?? null;
+    // فروشندهٔ نجاری و کارشناس املاک فقط روی صحنهٔ داخلی SVG دیده می‌شوند؛ هیچ بدن اضافه‌ای در خیابان ساخته نمی‌شود.
+    case 'carpenter':
+    case 'estateAgent': return null;
   }
 }
 

@@ -10,8 +10,9 @@ import { S, UI, millAtNorthWindmill, drinkValleySpring, notify, toast } from './
 import { handleFarmAnimalTap } from './farmVisuals';
 import type { AR, Task, Walker } from './engineRender';
 import { sfx } from './sound';
-import { talkToSharkhar, talkToTownNpc } from '../story/engine';
+import { talkToSharkhar } from '../story/engine';
 import { checkSecretTriggers } from '../story/secrets';
+import { npcOverheadLayout } from './npcLabels';
 import { tutOnPlotAction, tutTapOk } from './tutorial';
 import { fishCast } from './worldVisuals';
 import { GT } from '../strings/gameText';
@@ -125,15 +126,14 @@ export function createSceneTapRouter(d: SceneInputDeps) {
   function townTap(x: number, y: number) {
     UI.info = null;
     if (x <= 104 && y >= 435 && y <= 655) { d.moveTo(d.farmer, 108, 594); d.farmer.tasks.push(d.mkTask('travel', 108, 594, { to: 'farm' })); return; }
+    // نشان واقعی بالای سر جهانگیر از ناحیهٔ سقف/بدنٔ مغازه جداست؛ درب نجاری آزاد می‌ماند.
+    const jahangirBadge = npcOverheadLayout('jahangir', d.jahangir.x, d.jahangir.y, 0.8);
+    if (jahangirBadge && Math.abs(x - d.jahangir.x) < 30 && Math.abs(y - jahangirBadge.questBangCenterY) < 30) {
+      d.clearTrans(); d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
+      talkToSharkhar(); sfx.tap(); return;
+    }
     for (const s of SHOPS) {
       if (Math.abs(x - s.cx) < 58 && y > 210 && y < 448) { d.moveTo(d.farmer, s.cx, 488); d.farmer.tasks.push(d.mkTask('open', s.cx, 488, { to: s.id })); return; }
-    }
-    for (let i = 0; i < d.npcs.length; i++) {
-      const n = d.npcs[i];
-      if (Math.abs(x - n.x) < 54 && y >= n.y - 216 && y <= n.y + 18) {
-        d.clearTrans(); d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
-        talkToTownNpc(i); sfx.tap(); return;
-      }
     }
     if (x < 1030 && Math.abs(x - d.jahangir.x) < 54 && y >= d.jahangir.y - 216 && y <= d.jahangir.y + 18) {
       d.clearTrans(); d.farmer.tasks = []; d.farmer.cur = null; d.farmer.mode = 'idle';
@@ -376,10 +376,6 @@ export function createSceneTapRouter(d: SceneInputDeps) {
     if (id.startsWith('shop:') && UI.scene === 'town') {
       const shop = SHOPS.find((s) => s.id === id.slice(5));
       return shop ? tap(shop.cx, 320) : false;
-    }
-    if (id.startsWith('npc:') && UI.scene === 'town') {
-      const npc = d.npcs[Number(id.slice(4))];
-      return npc ? tap(npc.x, npc.y - 80) : false;
     }
     if (id.startsWith('fair:') && UI.scene === 'town') {
       const x = id === 'fair:judge' ? 308 : id === 'fair:cauldron' ? 504 : id === 'fair:archery' ? 702 : 0;

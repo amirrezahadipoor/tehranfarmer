@@ -2,7 +2,7 @@
 import type { CharId, StoryNode } from './types';
 
 export interface TownActorSpec {
-  who: Exclude<CharId, 'narrator' | 'player' | 'jahangir'>;
+  who: 'grandma' | 'sara' | 'engineer' | 'rancher';
   speed: number;
   morning: [number, number];
   noon: [number, number];
@@ -16,7 +16,7 @@ export const TOWN_ACTORS: TownActorSpec[] = [
   { who: 'rancher', speed: 63, morning: [792, 630], noon: [804, 634], evening: [788, 632] },
 ];
 
-const mk = (id: string, who: TownActorSpec['who'], text: string, reply?: string): StoryNode => ({
+const mk = (id: string, who: Exclude<CharId, 'narrator' | 'player' | 'jahangir'>, text: string, reply?: string): StoryNode => ({
   id,
   lines: reply ? [{ who, text }, { who: 'player', text: reply }] : [{ who, text }],
   next: null,
@@ -38,6 +38,13 @@ export const TOWN_NPC_NODES: StoryNode[] = [
   mk('town-rancher-0', 'rancher', 'آخور را برای گوسفند و بز و گاو همیشه پر نگه دار پسر؛ مرغ و اردک روی بستر کاه آزاد می‌چرخند.'),
   mk('town-rancher-1', 'rancher', 'حصار سطح سه که بسازی، کیفیت شیر و پشم دام‌هایت یک سر و گردن بالاتر می‌رود.', 'حتماً ارتقاش می‌دهم.'),
   mk('town-rancher-2', 'rancher', 'یک نر و یک ماده در حصار کافی است تا گله‌ات خودش زادوولد کند.'),
+
+  mk('town-carpenter-0', 'carpenter', 'هر تیر و تخته را دوبار اندازه می‌گیرم و یک‌بار می‌برم؛ سفارش مزرعهٔ تو هم دقیق از آب درمی‌آید.', 'پس نقشهٔ ارتقای انبار را به دست شما می‌سپارم استاد.'),
+  mk('town-carpenter-1', 'carpenter', 'برای گلخانه، تیرهای ترموود و درزگیر استفاده کن؛ برف و باران نباید محصولت را رنج بدهد.'),
+  mk('town-carpenter-2', 'carpenter', 'حصار خوب فقط ظرفیت را زیاد نمی‌کند؛ تهویه و سایه هم سلامت دام را بیشتر می‌کند.', 'این نکته را در ساخت حصار بعدی حتماً حساب می‌کنم.'),
+  mk('town-estateAgent-0', 'estateAgent', 'هر سند را با مساحت، محدوده و مبلغ نهایی روی یک برگه می‌بینی؛ هیچ هزینهٔ پنهانی وجود ندارد.', 'همین شفافیت برای خرید زمین خیلی ارزش دارد.'),
+  mk('town-estateAgent-1', 'estateAgent', 'دشت شمالی برای چرخهٔ گندم و ذرت عالی است؛ باغ‌دره هم ظرفیت بیشتری برای تولید مداوم دارد.'),
+  mk('town-estateAgent-2', 'estateAgent', 'قرارداد کارگرها را قبل از امضا بخوان؛ دستمزد روزانه و نقش هر نفر در دفتر ثبت شده است.', 'حتماً اول نقش و دستمزد را بررسی می‌کنم.'),
 ];
 
 /** مقصد فعلی شخصیت شهر بر اساس ساعت روز */

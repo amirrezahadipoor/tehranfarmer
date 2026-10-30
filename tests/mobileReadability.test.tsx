@@ -36,16 +36,12 @@ describe('Android readability regressions', () => {
     expect(mobile.questBangCenterY).toBeLessThan(mobile.plateTopY);
   });
 
-  it('separates crowded mobile town plates without shrinking their text', () => {
+  it('keeps Jahangir’s only outdoor nameplate readable inside the mobile viewport', () => {
     installDom(800, 360);
-    const roles = ['grandma', 'sara', 'engineer', 'rancher', 'jahangir'] as const;
-    const placed = placeNpcOverheadRow(roles.map((who, i) => ({ who, x: 420 + i * 24, footY: 620, actorScale: 0.75 })));
-    for (let i = 1; i < placed.length; i++) {
-      const prev = placed[i - 1], cur = placed[i];
-      expect(cur.cx - cur.width / 2).toBeGreaterThanOrEqual(prev.cx + prev.width / 2);
-    }
+    const placed = placeNpcOverheadRow([{ who: 'jahangir', x: 992, footY: 620, actorScale: 0.8 }]);
+    expect(placed).toHaveLength(1); // فروشنده‌ها دیگر پلاک خیابانی ندارند
     expect(placed[0].cx - placed[0].width / 2).toBeGreaterThanOrEqual(0);
-    expect(placed.at(-1)!.cx + placed.at(-1)!.width / 2).toBeLessThanOrEqual(1280);
+    expect(placed[0].cx + placed[0].width / 2).toBeLessThanOrEqual(1280);
   });
 
   it('uses two roomy artisan columns only in portrait', () => {

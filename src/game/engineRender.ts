@@ -294,9 +294,7 @@ export function createSceneRenderer(
     }
     // برچسب نام + شغل و علامت تعجب زرد اهالی در شهر بالای تاریکی شب تا در شب هم ۱۰۰٪ درخشان و خوانا بمانند
     if (UI.scene === 'town' && !cinema.active) {
-      const npcIds2 = ['grandma', 'sara', 'engineer', 'rancher'] as const, npcScales2 = [0.71, 0.74, 0.79, 0.81];
-      drawNpcOverheadGroup(ctx, [{ who: 'jahangir', x: jahangir.x, footY: jahangir.y, actorScale: 0.8 },
-        ...npcs.map((n, ni) => ({ who: npcIds2[ni % 4], x: n.x, footY: n.y, actorScale: npcScales2[ni % 4] }))], t);
+      drawNpcOverheadGroup(ctx, [{ who: 'jahangir', x: jahangir.x, footY: jahangir.y, actorScale: 0.8 }], t);
     }
     // افکت‌ها و پلاک‌های نام شخصیت‌ها در کات‌سین بالای نور شب
     drawCinemaForegroundUI(ctx);
@@ -576,7 +574,8 @@ export function createSceneRenderer(
     const npcScales = [0.71, 0.74, 0.78, 0.79];
     npcs.forEach((n, ni) => {
       const role = npcIds[ni % 4];
-      if (cinema.active && !isActorStagedInScene(role)) return;
+      // فروشنده‌ها در حالت عادی داخل مغازه‌اند؛ بدن خیابانی فقط برای صحنهٔ سینماییِ صریح موقت می‌شود.
+      if (!cinema.active || !isActorStagedInScene(role)) return;
       list.push({ y: n.y, f: () => drawFarmer(ctx, n.rig, n.x, n.y, n.face, npcScales[ni % 4]) });
     });
     list.sort((a, b) => a.y - b.y);

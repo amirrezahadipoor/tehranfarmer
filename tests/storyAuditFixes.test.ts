@@ -65,7 +65,8 @@ describe('قفل دائمی فیکس‌های ۵ حلقهٔ ممیزی AAA (دا
     expect(triggerShopIntro('seed')).toBe(true);
     expect(UI.modal).toBeNull();
     skipActiveCutscene();
-    expect(UI.modal).toBe('seed');
+    expect(UI.modal).toBe('shop');
+    expect(UI.activeShop).toBe('seed');
   });
 
   it('صداقت ریاضی «فروش همه»، بستهٔ ۵تایی بذر، حفاظت بچه‌ماهی و حفاظت انبار پر برقرار است', () => {

@@ -181,8 +181,8 @@ function auditTriggersAndMechanics() {
   skipActiveCutscene();
   const triggered = triggerShopIntro('seed');
   const queuedModal = (UI as unknown as { afterModal?: string | null }).afterModal ?? UI.modal;
-  if (triggered && queuedModal !== 'seed') {
-    report('SHOP-MODAL-SWALLOWED', 'story/engine.ts:triggerShopIntro', `در اولین کلیک روی مغازه، کات‌سین معرفی اجرا می‌شود اما پنجرهٔ مغازه (seed) پس از پایان صحنه باز نمی‌شود!`);
+  if (triggered && (queuedModal !== 'shop' || UI.activeShop !== 'seed')) {
+    report('SHOP-MODAL-SWALLOWED', 'story/engine.ts:triggerShopIntro', `در اولین کلیک روی مغازه، کات‌سین معرفی اجرا می‌شود اما داخل‌فروشگاه بذر (shop/seed) پس از پایان صحنه باز نمی‌شود!`);
   }
 
   for (const [sn, daySample] of [[0, 2], [1, 9], [2, 16], [3, 23]] as const) {

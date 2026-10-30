@@ -40,6 +40,7 @@ import { APP_VERSION, CHANGELOG, formatVersion } from '../strings/version';
 import { UT } from '../strings/uiText';
 import { exitNativeApp } from '../game/androidNav';
 import { maybeStartPrologue } from '../story/engine';
+import { ShopExperience } from './ShopExperience';
 
 
 
@@ -51,6 +52,7 @@ export function seedDurationDays(c: { days: number }): number {
 export function Modals() {
   return (
     <>
+      {UI.modal === 'shop' && <ShopExperience catalog={<ActiveShopCatalog />} />}
       {UI.modal === 'seed' && <SeedShop />}
       {UI.modal === 'market' && <Market />}
       {UI.modal === 'work' && <Workshop />}
@@ -79,6 +81,17 @@ export function Modals() {
       {UI.confirm === 'exit' && <Confirm icon="house" msg={UT.exitPrompt} onYes={() => { UI.confirm = null; notify(); exitNativeApp(); }} />}
     </>
   );
+}
+
+function ActiveShopCatalog() {
+  switch (UI.activeShop) {
+    case 'seed': return <SeedShop />;
+    case 'market': return <Market />;
+    case 'work': return <Workshop />;
+    case 'animal': return <AnimalShop />;
+    case 'carp': return <Carpenter />;
+    case 'estate': return <Estate />;
+  }
 }
 
 function Confirm({ icon, msg, onYes }: { icon: string; msg?: string; onYes: () => void }) {

@@ -20,7 +20,6 @@ import { CHAR_NAMES, CINEMA_UI, EN_LINES, OBJECTIVES } from '../strings/cinemaLo
 import { SCENE_CHOICES, applyDialogueChoice, canGiftVillagerToday, findBestGiftInBag, giftVillager, type SocialNpcId } from '../story/socialVillagers';
 import { WX } from '../strings/worldExpansionText';
 import type { SceneScript } from '../story/cinemaTypes';
-
 const CPS = 42;
 
 export const isBeatingNode = (id: string) => id.startsWith('visit-due-missed');
@@ -378,7 +377,7 @@ export function Cutscene() {
       style={{ touchAction: 'manipulation' }}
       onPointerDown={onStagePointerDown}
       onClick={onStageClick}
-      data-scene-id={effectiveScript.id} data-beat-node={beat?.nodeId}
+      data-scene-id={effectiveScript.id} data-beat-node={beat?.nodeId} data-shop-dialogue={UI.modal === 'shop' ? '1' : undefined}
     >
       {beating && <BeatStage variant={beatVariantOf(rootId, beatings)} />}
 
@@ -433,11 +432,12 @@ export function Cutscene() {
         const vh = typeof window !== 'undefined' ? window.innerHeight : 720;
         const compact = vh <= 430;
         const halfW = boxSize.w * 0.5;
-        const bx = Math.max(halfW + 10, Math.min(vw - halfW - 10, anchor.x));
+        const shopDialogue = UI.modal === 'shop' && UI.afterModal === 'shop';
+        const bx = shopDialogue ? vw / 2 : Math.max(halfW + 10, Math.min(vw - halfW - 10, anchor.x));
         const safeTop = Math.max(46, barH.top + 4);
         const safeBot = Math.max(44, barH.bot + 4);
-        const by = Math.min(vh - safeBot, Math.max(safeTop + boxSize.h, anchor.y));
-        const tailDx = Math.max(-(halfW - 22), Math.min(halfW - 22, anchor.x - bx));
+        const by = shopDialogue ? vh - safeBot : Math.min(vh - safeBot, Math.max(safeTop + boxSize.h, anchor.y));
+        const tailDx = shopDialogue ? 0 : Math.max(-(halfW - 22), Math.min(halfW - 22, anchor.x - bx));
         return isNarrator ? (
           <div
             style={{ top: `${Math.max(safeTop + 4, Math.round(vh * 0.12))}px`, backgroundColor: '#241914' }}

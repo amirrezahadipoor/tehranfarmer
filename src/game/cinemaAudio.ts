@@ -11,6 +11,8 @@ const VOICE_SPEC: Record<CharId, { base: number; wave: OscillatorType; spread: n
   engineer: { base: 292, wave: 'square', spread: 30, vol: 0.022 },
   sara: { base: 382, wave: 'triangle', spread: 48, vol: 0.038 },
   rancher: { base: 184, wave: 'triangle', spread: 26, vol: 0.04 },
+  carpenter: { base: 172, wave: 'triangle', spread: 22, vol: 0.036 },
+  estateAgent: { base: 356, wave: 'sine', spread: 34, vol: 0.034 },
 };
 
 let lastBlipAt = 0;

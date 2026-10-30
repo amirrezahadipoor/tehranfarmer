@@ -67,14 +67,17 @@ await page.evaluate(() => {
 });
 await page.waitForTimeout(220);
 
-// مسیر الف: رد کردن صحنه در بذرفروشی -> باز شدن خودکار «بذر و کود»
+// مسیر الف: رد کردن صحنه در بذرفروشی -> داخل‌نما، سپس انتخاب صریح «خرید»
 await page.mouse.click(150, 380);
 await expect(page.locator('[data-scene-id="shop-intro-seed"]')).toBeVisible({ timeout: 30_000 });
 await skipScene(page);
+await expect(page.locator('[data-shop-interior="seed"]')).toBeVisible({ timeout: 20_000 });
+await page.locator('[data-shop-buy="seed"]').click();
 await expect(page.getByRole('dialog', { name: 'بذر و کود' })).toBeVisible({ timeout: 20_000 });
-await page.getByRole('button', { name: 'بستن پنجره' }).click();
+await page.getByRole('button', { name: 'بستن پنجره' }).click(); // بازگشت به داخل‌نما
+await page.locator('[data-shop-exit="1"]').click();
 
-// مسیر ب: پیش‌روی طبیعی ضرب‌به‌ضرب تا پایان در بازار -> باز شدن خودکار «بازار» بدون کلیک مجدد!
+// مسیر ب: پیش‌روی طبیعی ضرب‌به‌ضرب تا پایان در بازار -> داخل‌نما و انتخاب خرید، بدون کلیک مجدد روی ساختمان
 await page.mouse.click(350, 380);
 await expect(page.locator('[data-scene-id="shop-intro-market"]')).toBeVisible({ timeout: 30_000 });
 // ضرب ۱: تکمیل تایپ + ادامه
@@ -83,8 +86,11 @@ await page.locator('[data-scene-id="shop-intro-market"] button:has-text("ادا�
 // ضرب ۲ (آخر): تکمیل تایپ + پایان
 await page.locator('[data-scene-id="shop-intro-market"] button:has-text("پایان")').click();
 await page.locator('[data-scene-id="shop-intro-market"] button:has-text("پایان")').click();
+await expect(page.locator('[data-shop-interior="market"]')).toBeVisible({ timeout: 20_000 });
+await page.locator('[data-shop-buy="market"]').click();
 await expect(page.getByRole('dialog', { name: 'بازار' })).toBeVisible({ timeout: 20_000 });
 await page.getByRole('button', { name: 'بستن پنجره' }).click();
+await page.locator('[data-shop-exit="1"]').click();
 
 
 // ۴. ممیزی ظاهر، مقیاس فونت، عدم سرریز افقی و سفر سریع موبایل در حالت عمودی (360×740) و افقی موبایل (800×360)

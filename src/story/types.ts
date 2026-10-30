@@ -1,5 +1,5 @@
 // ===== تایپ‌های داستان (بدون منطق — فقط ساختار) =====
-export type CharId = 'narrator' | 'player' | 'jahangir' | 'engineer' | 'grandma' | 'sara' | 'rancher';
+export type CharId = 'narrator' | 'player' | 'jahangir' | 'engineer' | 'grandma' | 'sara' | 'rancher' | 'carpenter' | 'estateAgent';
 
 export interface Line { who: CharId; text: string }
 

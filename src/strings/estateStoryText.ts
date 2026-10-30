@@ -6,17 +6,21 @@ export type NpcRoleActor = Exclude<CharId, 'narrator' | 'player'>;
 
 export const NPC_ROLES: Record<'fa' | 'en', Record<NpcRoleActor, { name: string; job: string }>> = {
   fa: {
-    grandma: { name: 'مادربزرگ نصرت', job: 'بزرگ دهکده' },
+    grandma: { name: 'مادربزرگ نصرت', job: 'بذرفروش و بزرگ دهکده' },
     sara: { name: 'سارا', job: 'غرفه‌دار بازار' },
-    engineer: { name: 'مهندس کاوه', job: 'مهندس آب و کارگاه' },
-    rancher: { name: 'عمو مراد', job: 'استاد دامدار' },
+    engineer: { name: 'مهندس کاوه', job: 'فروشندهٔ ماشین‌آلات' },
+    rancher: { name: 'عمو مراد', job: 'فروشندهٔ دام و دامپزشک' },
+    carpenter: { name: 'استاد همایون', job: 'نجار و سازندهٔ مزرعه' },
+    estateAgent: { name: 'بانو رویا', job: 'کارشناس اسناد و املاک' },
     jahangir: { name: 'آقا جهانگیر', job: 'طلبکار و صاحب املاک' },
   },
   en: {
-    grandma: { name: 'Grandma Nosrat', job: 'Village Elder' },
+    grandma: { name: 'Grandma Nosrat', job: 'Seed Merchant & Village Elder' },
     sara: { name: 'Sara', job: 'Market Merchant' },
-    engineer: { name: 'Eng. Kaveh', job: 'Water & Workshop Eng.' },
-    rancher: { name: 'Uncle Morad', job: 'Master Rancher' },
+    engineer: { name: 'Eng. Kaveh', job: 'Machine Shopkeeper' },
+    rancher: { name: 'Uncle Morad', job: 'Livestock Merchant & Vet' },
+    carpenter: { name: 'Master Homayoun', job: 'Carpenter & Farm Builder' },
+    estateAgent: { name: 'Ms. Roya', job: 'Deeds & Estate Specialist' },
     jahangir: { name: 'Agha Jahangir', job: 'Creditor & Estate Broker' },
   },
 };

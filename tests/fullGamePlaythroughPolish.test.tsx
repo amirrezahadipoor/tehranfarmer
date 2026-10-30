@@ -96,7 +96,7 @@ describe('Full End-to-End Playthrough Polish, AoE Hand-Care Parity, Villager Hit
     expect(S.valleyPlots[0].ripe).toBe(true);
   });
 
-  it('۳. لمس بالای سر اهالی شهر (پلاک نام و علامت تعجب زرد کوئست در y = n.y - 180) همیشه گفت‌وگو را باز می‌کند نه مغازه یا خروج!', () => {
+  it('۳. جهانگیرِ باقی‌مانده در میدان با لمس پلاک بالای سرش گفت‌وگو را باز می‌کند؛ فروشنده‌ها هدف خیابانی ندارند', () => {
     UI.scene = 'town';
     S.story.prologueSeen = true;
     const farmer = { x: 420, y: 600, face: 1, rig: makeFarmer(PAL_PLAYER), ph: 0, mode: 'idle' as const, kind: '', p: 0, tasks: [], cur: null, hitDone: false, speed: 240, player: true, wait: 0 };
@@ -123,10 +123,10 @@ describe('Full End-to-End Playthrough Polish, AoE Hand-Care Parity, Villager Hit
       finishRiverCast: () => {},
     });
 
-    // Tap directly on Grandma's overhead golden ! badge (y = 594 - 180 = 414, right across Seed Shop y=250..470!)
-    router.dispatchTap(npcs[0].x, npcs[0].y - 180, { clientX: 200, clientY: 160 });
-    expect(farmer.tasks.length).toBe(0); // Did NOT walk into Seed Shop or exit Town!
-    expect(Boolean(S.story.pending)).toBe(true); // Opened Grandma's live quest/dialogue!
+    // جهانگیر عمداً بیرون می‌ماند؛ پلاک او نباید به مغازه یا خروج شهر برخورد کند.
+    router.dispatchTap(jahangir.x, jahangir.y - 180, { clientX: 200, clientY: 160 });
+    expect(farmer.tasks.length).toBe(0);
+    expect(Boolean(S.story.pending)).toBe(true);
   });
 
   it('۴. ابزار دست (نگاه) کرت رسیده را یک‌ضرب برداشت می‌کند، کمبو انرژی می‌دهد و ماهی‌گیری تا رسیدن به لب آب صبر می‌کند', () => {

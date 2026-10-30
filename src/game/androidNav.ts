@@ -36,7 +36,9 @@ export function handleHardwareBack(): BackOutcome {
     return 'confirm-closed';
   }
   if (UI.modal !== null) {
-    UI.modal = null;
+    if (UI.modal === 'shop' && UI.shopPanel === 'buy') UI.shopPanel = 'lobby';
+    else UI.modal = null;
+    UI.afterModal = null;
     sfx.tap();
     notify();
     return 'modal-closed';

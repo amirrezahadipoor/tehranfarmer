@@ -135,7 +135,7 @@ test.describe('Mobile Touch Recovery, Live Carpenter 2-Leg Stride & Zero-Drain B
     expect(batteryCheck.resumedBgFlag).toBe('0');
   });
 
-  test('tapping overhead golden quest badge in Town opens villager quest cleanly without exiting Town, and River offers one-tap Carpenter CTA', async ({ page }) => {
+  test('indoor seed shopkeeper opens Grandma’s quest cleanly and River offers one-tap Carpenter CTA', async ({ page }) => {
     await page.setViewportSize({ width: 800, height: 360 });
     await page.goto('/?fresh=1');
     await page.locator('button').first().click();
@@ -160,7 +160,7 @@ test.describe('Mobile Touch Recovery, Live Carpenter 2-Leg Stride & Zero-Drain B
     });
     expect(shortBubbleW).toBeLessThan(260);
 
-    // Skip prologue, jump to Town, and tap directly on Grandma Nosrat's overhead golden ! badge (screen x=142, y=212)
+    // Skip prologue, jump to Town, then enter the seed shop and talk to its indoor merchant.
     const skip = page.locator('[data-tap="cutscene"] button').nth(1);
     if (await skip.isVisible().catch(() => false)) await skip.click();
     await page.evaluate(() => {
@@ -174,12 +174,17 @@ test.describe('Mobile Touch Recovery, Live Carpenter 2-Leg Stride & Zero-Drain B
     }, { x: lx, y: ly });
 
     await page.waitForTimeout(300);
-    const bangPt = await screenPt(228, 448);
-    await page.mouse.click(bangPt.x, bangPt.y);
-    await page.waitForTimeout(250);
+    const shopPt = await screenPt(150, 320);
+    await page.mouse.click(shopPt.x, shopPt.y);
+    await expect(page.locator('[data-scene-id="shop-intro-seed"]')).toBeVisible({ timeout: 15_000 });
+    await page.locator('[data-scene-id="shop-intro-seed"] button:has-text("رد کردن صحنه")').click();
+    await expect(page.locator('[data-shop-interior="seed"]')).toBeVisible();
+    await page.locator('[data-shop-talk="seed"]').click();
     await expect(page.locator('[data-tap="cutscene"]')).toBeVisible();
     const openedQuestId = await page.locator('[data-tap="cutscene"]').getAttribute('data-scene-id');
     expect(openedQuestId).toBe('npc-q-grandma-1-start');
+    await page.locator('button:has-text("رد کردن صحنه")').click();
+    await page.locator('[data-shop-exit="1"]').click();
 
     // Jump to River with no fishing rod, tap water, verify one-tap Carpenter CTA button appears without HUD crash
     await page.evaluate(() => {

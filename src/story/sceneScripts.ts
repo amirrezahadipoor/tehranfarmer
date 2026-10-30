@@ -282,12 +282,12 @@ const BEAT_OVERRIDES: Record<string, BeatOverride[]> = {
 };
 
 const SHOP_META: Record<string, { cx: number; modal: NonNullable<SceneScript['afterOpenModal']> }> = {
-  'shop-intro-seed': { cx: 150, modal: 'seed' },
-  'shop-intro-market': { cx: 350, modal: 'market' },
-  'shop-intro-work': { cx: 550, modal: 'work' },
-  'shop-intro-animal': { cx: 750, modal: 'animal' },
-  'shop-intro-carp': { cx: 950, modal: 'carp' },
-  'shop-intro-estate': { cx: 1150, modal: 'estate' },
+  'shop-intro-seed': { cx: 150, modal: 'shop' },
+  'shop-intro-market': { cx: 350, modal: 'shop' },
+  'shop-intro-work': { cx: 550, modal: 'shop' },
+  'shop-intro-animal': { cx: 750, modal: 'shop' },
+  'shop-intro-carp': { cx: 950, modal: 'shop' },
+  'shop-intro-estate': { cx: 1150, modal: 'shop' },
 };
 
 function defaultPropFor(who: Actor): string {

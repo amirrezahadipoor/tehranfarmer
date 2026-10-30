@@ -10,7 +10,7 @@ import { NPC_ROLES } from '../strings/estateStoryText';
 import { sfx } from '../game/sound';
 import type { CharId, StoryNode } from './types';
 
-export type SocialNpcId = Exclude<CharId, 'narrator' | 'player'>;
+export type SocialNpcId = Exclude<CharId, 'narrator' | 'player' | 'carpenter' | 'estateAgent'>;
 export const SOCIAL_NPC_IDS: readonly SocialNpcId[] = ['grandma', 'sara', 'rancher', 'engineer', 'jahangir'];
 export const isVillagerId = (id: string): id is SocialNpcId => (SOCIAL_NPC_IDS as readonly string[]).includes(id);
 

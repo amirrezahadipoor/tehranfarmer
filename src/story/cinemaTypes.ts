@@ -106,5 +106,5 @@ export interface SceneScript {
   closingShot: CameraKeyframe;
   beats: BeatStep[];
   proceduralNotes: string[];
-  afterOpenModal?: 'seed' | 'market' | 'work' | 'animal' | 'carp' | 'estate' | null;
+  afterOpenModal?: 'shop' | 'seed' | 'market' | 'work' | 'animal' | 'carp' | 'estate' | null;
 }

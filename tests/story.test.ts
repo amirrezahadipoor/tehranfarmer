@@ -10,7 +10,7 @@ import { runStoryBot } from '../scripts/bot';
 import type { CharId, Effect } from '../src/story/types';
 import { EN_LINES } from '../src/strings/cinemaLocales';
 
-const CHARS: CharId[] = ['narrator', 'player', 'jahangir', 'engineer', 'grandma', 'sara', 'rancher'];
+const CHARS: CharId[] = ['narrator', 'player', 'jahangir', 'engineer', 'grandma', 'sara', 'rancher', 'carpenter', 'estateAgent'];
 const EFFECTS: Effect['k'][] = ['chapter', 'flag', 'coins', 'item', 'xp', 'note', 'end', 'heal'];
 
 beforeEach(() => { localStorage.clear(); resetGame(); UI.started = true; });

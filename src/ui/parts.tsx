@@ -1,7 +1,9 @@
-import { memo, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, memo, useContext, useEffect, useRef, type ReactNode } from 'react';
 import { iconURL } from '../game/art';
 import { fa, faPct } from '../game/data';
 import { UT } from '../strings/uiText';
+
+export const ModalVisitContext = createContext<{ onClose: () => void; banner?: ReactNode } | null>(null);
 
 export const Ic = memo(function Ic({ n, s = 3, cls = '' }: { n: string; s?: number; cls?: string }) {
   return (
@@ -108,6 +110,8 @@ export function Modal({ title, icon, onClose, children, coins, actions }: {
   actions?: ReactNode;
 }) {
   const dialogRef = useDialogFocus<HTMLDivElement>();
+  const visit = useContext(ModalVisitContext);
+  const requestClose = visit?.onClose ?? onClose;
   return (
     <div
       ref={dialogRef}
@@ -122,7 +126,7 @@ export function Modal({ title, icon, onClose, children, coins, actions }: {
         paddingTop: 'max(0.5rem, var(--safe-top))',
         paddingBottom: 'max(0.5rem, var(--safe-bottom))',
       }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && requestClose()}
     >
       <div
         className="paper popin flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-1rem)] w-[min(94vw,46rem)] max-w-[calc(100vw-var(--safe-left)-var(--safe-right)-1rem)] flex-col p-2 sm:p-2.5"
@@ -134,10 +138,10 @@ export function Modal({ title, icon, onClose, children, coins, actions }: {
           </div>
           <div className="hidden flex-1 sm:block" />
           {coins && <div className="shrink-0">{coins}</div>}
-          <button aria-label={UT.closeBtn} className="btn r press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={onClose}><Ic n="close" s={2.2} /></button>
+          <button aria-label={UT.closeBtn} className="btn r press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={requestClose}><Ic n="close" s={2.2} /></button>
         </div>
         {actions && <div className="mb-1.5 shrink-0" data-modal-actions="1">{actions}</div>}
-        <div className="scroll min-h-0 flex-1 pr-1" tabIndex={0} role="region" aria-label={`${title} — ${UT.modalContent}`} data-modal-scroll="1">{children}</div>
+        <div className="scroll min-h-0 flex-1 pr-1" tabIndex={0} role="region" aria-label={`${title} — ${UT.modalContent}`} data-modal-scroll="1">{visit?.banner}{children}</div>
       </div>
     </div>
   );

@@ -132,7 +132,7 @@ export function npcOverheadLayout(
   return {
     name: info.name,
     role: info.job,
-    hasQuest: npcHasQuestMarker(who),
+    hasQuest: who === 'carpenter' || who === 'estateAgent' ? false : npcHasQuestMarker(who),
     plateTopY,
     plateBottomY,
     questBangCenterY: plateTopY - 22 + Math.sin(t * 5.2) * 3.5,

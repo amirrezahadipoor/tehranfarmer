@@ -6,7 +6,6 @@ import { CFG } from './settings';
 import { ESTATES, isEstateOwned, isFarmScene, type FarmSceneId } from './estates';
 import { RIVER_SPOTS, type SceneKey } from './scenes';
 import { SHOPS } from './engineInput';
-import { TOWN_ACTORS } from '../story/townNpc';
 import { NPC_ROLES } from '../strings/estateStoryText';
 import { activeFrontierNodes, ensureFrontier, isFrontierNodeHarvested, isTownFestivalActive } from './core/frontier';
 import { activeMineNodes, isMineNodeHarvested } from './core/mining';
@@ -121,7 +120,6 @@ export function sceneA11yTargets(): SceneA11yTarget[] {
   } else if (UI.scene === 'town') {
     for (const shop of SHOPS) out.push(action(`shop:${shop.id}`, t.open(t.shopNames[shop.id])));
     const loc = en() ? 'en' : 'fa';
-    TOWN_ACTORS.forEach((actor, i) => out.push(action(`npc:${i}`, t.talkTo(NPC_ROLES[loc][actor.who].name))));
     out.push(action('sharkhar', t.talkTo(NPC_ROLES[loc].jahangir.name)));
     if (isTownFestivalActive()) {
       out.push(action('fair:judge', t.fairJudge));

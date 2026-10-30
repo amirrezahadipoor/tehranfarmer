@@ -2,7 +2,7 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 const MODAL_IDS = [
-  'seed', 'market', 'work', 'carp', 'estate', 'animal', 'inv', 'menu',
+  'shop', 'seed', 'market', 'work', 'carp', 'estate', 'animal', 'inv', 'menu',
   'auto', 'pond', 'hive', 'achieve', 'ledger', 'quests', 'museum', 'home',
   'almanac', 'mail', 'festival', 'atlas', 'fishing', 'mining', 'mineMap',
 ] as const;
@@ -25,7 +25,7 @@ async function runAxe(page: import('@playwright/test').Page): Promise<Violation[
 test.describe('Real-user accessibility, tutorial and portrait regression gates', () => {
   test.use({ bypassCSP: true, hasTouch: true });
 
-  test('all 23 dialogs pass WCAG A/AA automated checks and keep keyboard focus contained', async ({ page }) => {
+  test('all 24 dialogs pass WCAG A/AA automated checks and keep keyboard focus contained', async ({ page }) => {
     test.setTimeout(150_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -196,7 +196,7 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await expect(hold).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('canvas and semantic scene mirror support keyboard-only plot and NPC interaction', async ({ page }) => {
+  test('canvas and semantic scene mirror support keyboard-only plot and indoor shopkeeper interaction', async ({ page }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
@@ -230,12 +230,19 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
       (window as unknown as { __gameApi?: { setEnv: (p: { scene: 'town'; postgame: boolean }) => void } }).__gameApi?.setEnv({ scene: 'town', postgame: true });
     });
     await page.waitForTimeout(800);
-    const npc = page.locator('[data-a11y-target="npc:0"]');
-    await npc.focus();
+    const shop = page.locator('[data-a11y-target="shop:seed"]');
+    await shop.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[data-shop-interior="seed"]')).toBeVisible();
+    const intro = page.locator('[data-scene-id="shop-intro-seed"]');
+    if (await intro.isVisible()) await intro.locator('button:has-text("رد کردن صحنه")').click();
+    const talk = page.locator('[data-shop-talk="seed"]');
+    await talk.focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('[data-tap="cutscene"]')).toBeVisible();
     const npcSkip = page.locator('button:has-text("رد کردن صحنه")');
     if (await npcSkip.count()) await npcSkip.click();
+    await page.locator('[data-shop-exit="1"]').click();
 
     await page.evaluate(() => {
       (window as unknown as { __gameApi?: { setEnv: (p: { scene: 'farm'; postgame: boolean }) => void } }).__gameApi?.setEnv({ scene: 'farm', postgame: true });
@@ -287,9 +294,11 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     await expect(marketSkip).toBeVisible({ timeout: 5000 });
     await marketSkip.click();
     await expect(page.locator('[data-tap="cutscene"]')).toHaveCount(0);
+    await page.locator('[data-shop-buy="market"]').click();
     await expect(page.locator('[data-sell-one="wheat"]')).toBeVisible({ timeout: 15_000 });
     await page.locator('[data-sell-one="wheat"]').click();
-    await page.getByRole('button', { name: 'بستن پنجره' }).click();
+    await page.locator('[data-shop-back-lobby="1"]').click();
+    await page.locator('[data-shop-exit="1"]').click();
     await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '5');
 
     await page.locator('[data-open-ledger="1"]').click();
@@ -357,8 +366,10 @@ test.describe('Real-user accessibility, tutorial and portrait regression gates',
     const marketSkip = page.locator('button:has-text("رد کردن صحنه")');
     await expect(marketSkip).toBeVisible({ timeout: 5000 });
     await marketSkip.click();
+    await page.locator('[data-shop-buy="market"]').click();
     await page.locator('[data-sell-one="wheat"]').click();
-    await page.getByRole('button', { name: 'بستن پنجره' }).click();
+    await page.locator('[data-shop-back-lobby="1"]').click();
+    await page.locator('[data-shop-exit="1"]').click();
     await expect(page.locator('[data-tutorial="1"]')).toHaveAttribute('data-tutorial-step', '5');
     await page.locator('[data-open-ledger="1"]').click();
     await page.getByRole('button', { name: 'بستن پنجره' }).click();

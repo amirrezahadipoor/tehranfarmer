@@ -29,6 +29,7 @@ import {
 } from './estates';
 import type { SceneKey } from './scenes';
 import { ensureFrontier, type FrontierState } from './core/frontier';
+import type { ShopId } from './shops';
 
 import { GT } from '../strings/gameText';
 
@@ -98,7 +99,7 @@ export interface Save {
   savedAt?: number;
 }
 export type Tool = 'hand' | 'till' | 'plant' | 'water' | 'harvest' | 'fert';
-export type Modal = null | 'seed' | 'market' | 'work' | 'animal' | 'inv' | 'menu' | 'auto' | 'pond' | 'hive' | 'achieve' | 'carp' | 'estate' | 'ledger' | 'quests' | 'museum' | 'home' | 'almanac' | 'mail' | 'fishing' | 'festival' | 'atlas' | 'mining' | 'mineMap';
+export type Modal = null | 'shop' | 'seed' | 'market' | 'work' | 'animal' | 'inv' | 'menu' | 'auto' | 'pond' | 'hive' | 'achieve' | 'carp' | 'estate' | 'ledger' | 'quests' | 'museum' | 'home' | 'almanac' | 'mail' | 'fishing' | 'festival' | 'atlas' | 'mining' | 'mineMap';
 export interface Toast { id: number; icon: string; text: string; locale?: 'fa' | 'en' }
 
 export const UI = {
@@ -106,8 +107,7 @@ export const UI = {
   scene: 'farm' as SceneKey,
   tool: 'hand' as Tool,
   seed: 'wheat' as CropId,
-  modal: null as Modal,
-  afterModal: null as Modal,
+  modal: null as Modal, afterModal: null as Modal, activeShop: 'seed' as ShopId, shopPanel: 'lobby' as 'lobby' | 'buy',
   fairTab: 'judge' as 'judge' | 'cauldron' | 'archery' | 'prizes',
   afterTalkNpc: null as null | number | 'sharkhar',
   directorReplay: false,
@@ -382,7 +382,7 @@ export function resetGame() {
   saveLocked = false;
   lastRotateAt = 0;
   resetAutoClock();
-  UI.afterModal = null;
+  UI.afterModal = null; UI.activeShop = 'seed'; UI.shopPanel = 'lobby';
   UI.afterTalkNpc = null;
   UI.directorReplay = false;
   UI.fairTab = 'judge';

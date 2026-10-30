@@ -24,6 +24,7 @@ import { FEED_TROUGH, STRAW_NEST, collectAllStrawEggs, hasGrazingLivestock } fro
 import { workerPostFarm } from './core/workers';
 import { createWorkerVisuals } from './engineWorkerVisuals';
 import { checkSeamlessEdgePortal } from './core/frontier';
+import { isShopId, openShop } from './shops';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
 import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
 import { sceneSummary } from './a11y';
@@ -263,8 +264,15 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         break;
       }
       case 'open':
-        if (tk.to === 'market' && checkSecretTriggers('market-open')) { UI.info = null; sfx.tap(); break; }
-        if (tk.to && triggerShopIntro(tk.to)) { UI.info = null; sfx.tap(); break; }
+        if (tk.to && isShopId(tk.to)) {
+          // داخل‌نما پیش از معرفی اولین فروشنده هم باز است؛ هیچ گفت‌وگویی به خیابان پرت نمی‌شود.
+          openShop(tk.to);
+          if (tk.to === 'market' && checkSecretTriggers('market-open')) {
+            // رویداد مخفی هم نباید ورود به مغازه را بلعیده کند؛ بعد از صحنه به همان داخل‌نما برمی‌گردیم.
+            UI.afterModal = 'shop';
+          } else triggerShopIntro(tk.to);
+          UI.info = null; sfx.tap(); break;
+        }
         UI.modal = tk.to as typeof UI.modal; UI.info = null; sfx.tap(); break;
       case 'travel': startTrans(tk.to as SceneKey); break;
     }
@@ -390,7 +398,6 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   interface StuckState { lx: number; ly: number; t: number; fixes: number }
   const farmerStuck: StuckState = { lx: farmer.x, ly: farmer.y, t: 0, fixes: 0 };
   const workerStuck: StuckState[] = workers.map((w) => ({ lx: w.x, ly: w.y, t: 0, fixes: 0 }));
-  const npcStuck: StuckState[] = npcs.map((n) => ({ lx: n.x, ly: n.y, t: 0, fixes: 0 }));
   let builderLastX = builder.x, builderStuckT = 0;
 
   function guardWalker(w: Walker, st: StuckState, dt: number) {
@@ -492,18 +499,6 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         }
       });
       for (const a of animals.values()) updateAnimal(a, dt);
-      if (UI.scene === 'town') npcs.forEach((n, ni) => {
-        updateWalker(n, dt);
-        guardWalker(n, npcStuck[ni], dt);
-        if (!n.cur && !n.tasks.length) {
-          n.wait -= dt;
-          if (n.wait <= 0) {
-            const [tx2, ty2] = npcTargetAt(ni, S.hour);
-            n.wait = 2.5 + rnd() * 3.5;
-            n.tasks.push({ kind: 'move', x: tx2 + (rnd() - 0.5) * 44, y: Math.max(592, ty2 + (rnd() - 0.5) * 20), face: 0, dur: 0, hit: 0 });
-          }
-        }
-      });
     }
     if (trans) {
       if (cinema.active) { trans = null; } else {
