@@ -86,6 +86,9 @@ export function sleepToMorning() {
   const target = S.hour >= 6 ? 30 - S.hour : 6 - S.hour;
   advance(target);
   tickBuilds(target * 4 * DAY_RATE);
+  // newDay هنگام عبور از نیمه‌شب ذخیره می‌کند؛ بدون این ذخیرهٔ نهایی، save خام
+  // همان ساعت ۰۰:xx می‌ماند در حالی که بازیکن ساعت ۰۶:۰۰ را می‌بیند.
+  saveGame();
   notify();
 }
 export const isNight = () => S.hour >= NIGHT_START_H || S.hour < NIGHT_END_H;

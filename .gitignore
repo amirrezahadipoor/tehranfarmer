@@ -28,3 +28,5 @@ android/capacitor-cordova-android-plugins/
 
 # Local outputs
 artifacts/
+test-results/
+playwright-report/

@@ -114,6 +114,20 @@ html[data-colorblind="1"] .p { background: #dec9ff; }
 .scroll-x::-webkit-scrollbar { display: none; }
 .shop-art-frame { height: clamp(10rem, 37vh, 20rem); }
 @media (max-height: 430px) { .shop-art-frame { height: clamp(8rem, 32vh, 20rem); } }
+/* ماهیگیری در landscape کوتاه بدون اسکرول اجباری: اکشن‌ها همیشه داخل viewport می‌مانند. */
+@media (orientation: landscape) and (max-height: 450px) {
+  [data-fish-dialog="1"] { gap: .35rem; padding: .55rem; max-height: calc(100dvh - .5rem); }
+  [data-fish-dialog="1"] > :first-child .ft { font-size: .95rem; }
+  [data-fish-hint="1"] { padding: .2rem .5rem; line-height: 1.15; }
+  [data-fish-hint="1"] #fish-hold-hint { margin-top: 0; }
+  [data-fish-playfield="1"] { gap: .75rem; padding: 0; }
+  [data-fish-water="1"] { height: 9.5rem; }
+  [data-fish-progress="1"] { height: 6.8rem; }
+  [data-fish-actions="1"] {
+    position: sticky; bottom: -.55rem; z-index: 2; padding-top: .25rem;
+    background: #fff4d8; box-shadow: 0 -.35rem .45rem #fff4d8;
+  }
+}
 html[data-bg="1"], html[data-bg="1"] * { animation-play-state: paused !important; }
 .bar { height: .85rem; border: .14rem solid #503426; border-radius: .6rem; background: #f3e6c4; overflow: hidden; position: relative; }
 .bar > i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; border-radius: .4rem; display: block; transition: width .3s; }

@@ -19,6 +19,15 @@ export function formatVersion(v: string = RAW_APP_VERSION): string {
 export const APP_VERSION = RAW_APP_VERSION;
 export const CHANGELOG: { v: string; note: string }[] = [
   {
+    get v() { return locText('۱۰٫۱٫۲', '10.1.2'); },
+    get note() {
+      return locText(
+        'رفع save ساعت ۶ صبح، چیدمان لمسی و تعادل معدن؛ کاهش بار اولیه، کش آفلاین موسیقی و تست‌های موبایل در CI',
+        'Fix 06:00 sleep saves, touch layouts and mine balance; lighter startup, offline music caching and mobile CI tests',
+      );
+    },
+  },
+  {
     get v() { return locText('۱۰٫۱٫۱', '10.1.1'); },
     get note() {
       return locText(

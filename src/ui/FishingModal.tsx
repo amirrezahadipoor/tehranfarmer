@@ -204,6 +204,7 @@ export function FishingModal() {
       <div
         className="paper popin scroll flex max-h-[94dvh] w-[min(94vw,30rem)] flex-col gap-2.5 overflow-y-auto p-3.5"
         data-modal-scroll="1"
+        data-fish-dialog="1"
         role="region"
         aria-label={`${FT.fishModalTitle} — ${UT.modalContent}`}
         tabIndex={0}
@@ -228,14 +229,15 @@ export function FishingModal() {
           </button>
         </div>
 
-        <div className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
+        <div data-fish-hint="1" className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
           <div>{FT[prof.nameKey]}</div>
           <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{phase === 'ready' ? FT.fishReadyHint : FT.fishHoldHint}</div>
         </div>
 
         {/* Interactive Water Column + Tension Progress Gauge */}
-        <div className="flex items-stretch justify-center gap-4 py-1">
+        <div data-fish-playfield="1" className="flex items-stretch justify-center gap-4 py-1">
           <div
+            data-fish-water="1"
             className="relative h-56 w-20 touch-none overflow-hidden rounded-2xl border-[3px] border-[#3d291a] bg-gradient-to-b from-[#67c3f3] via-[#2b7cb3] to-[#164268]"
             onPointerDown={beginHolding}
           >
@@ -266,6 +268,7 @@ export function FishingModal() {
           <div className="flex flex-col items-center justify-between">
             <span className="ft text-base text-emerald-800">{faPct(Math.round(progress))}</span>
             <div
+              data-fish-progress="1"
               className="relative h-44 w-6 overflow-hidden rounded-full border-2 border-[#503426] bg-[#e9dcc0]"
               role="progressbar"
               aria-label={FT.fishCatchProgress}
@@ -287,7 +290,7 @@ export function FishingModal() {
             {resultMsg}
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div data-fish-actions="1" className="flex flex-wrap gap-2">
             <button
               type="button"
               data-fish-hold="1"

@@ -1,5 +1,8 @@
 export type RenderQualityCap = 1 | 1.5 | 2;
 
+/** روی صفحه‌های لمسی DPR پیش‌فرض ۱٫۵ است؛ افزایش تطبیعی نیز از همین سقف بالاتر نمی‌رود. */
+export const qualityCeiling = (coarsePointer: boolean): RenderQualityCap => coarsePointer ? 1.5 : 2;
+
 export const lowerQualityCap = (cap: RenderQualityCap): RenderQualityCap => cap === 2 ? 1.5 : 1;
 export const raiseQualityCap = (cap: RenderQualityCap): RenderQualityCap => cap === 1 ? 1.5 : 2;
 

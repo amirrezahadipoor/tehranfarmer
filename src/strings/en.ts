@@ -301,6 +301,7 @@ export const UT_EN = {
   outSeasonBonus: '+40% Off-Season',
   yieldRange: 'Yield: ',
   regrowTag: 'Regrows ×',
+  filterAvailableSeeds: 'Available Seeds',
   filterAllSeeds: 'All Seeds',
   filterSeasonSeeds: 'In Season',
   machPerkFeeder: 'Model 2/3: Faster care + 15% to 30% less feed used per day',

@@ -493,10 +493,10 @@ export function Cutscene() {
                     type="button"
                     autoFocus={idx === 0}
                     data-scene-choice={idx}
-                    className="btn y press !min-h-[max(48px,2rem)] w-full !justify-start !px-2.5 !py-1 text-start text-xs font-black"
+                    className="btn y press !min-h-[max(48px,2rem)] !min-w-0 w-full !justify-start !whitespace-normal !px-2.5 !py-1 text-start text-xs font-black"
                     onClick={() => { applyDialogueChoice(choiceNodeId, idx as 0 | 1); next(); }}
                   >
-                    <span>{locale === 'en' ? ch.labelEn : ch.labelFa}</span>
+                    <span className="min-w-0 whitespace-normal break-words leading-snug [overflow-wrap:anywhere]">{locale === 'en' ? ch.labelEn : ch.labelFa}</span>
                   </button>
                 ))}
               </div>

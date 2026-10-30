@@ -36,7 +36,8 @@ let encounterToken = 0;
 
 const CAVE_COORDS = [[305, 478], [468, 548], [642, 578], [808, 478], [945, 568], [520, 632]] as const;
 const FLOOR_GOODS: GoodId[][] = [
-  ['quartz', 'quartz', 'turquoise', 'quartz', 'amber', 'turquoise'],
+  // طبقهٔ شروع فقط دو گوهر ارزان دارد؛ amber از طبقهٔ دوم به بعد وارد اقتصاد می‌شود.
+  ['quartz', 'quartz', 'turquoise', 'quartz', 'turquoise', 'turquoise'],
   ['turquoise', 'amber', 'quartz', 'amethyst', 'garnet', 'opal'],
   ['amber', 'amethyst', 'garnet', 'opal', 'sapphire', 'ruby'],
 ];
@@ -134,7 +135,9 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
   let good = spot.good;
   if (good === 'ruby' && perfect) good = 'diamond';
   const base = GOOD[good]?.base ?? 0;
-  const qty = 1 + (accuracy >= 0.72 && base <= 900 ? 1 : 0) + (perfect && base <= 215 ? 1 : 0);
+  // در طبقهٔ شروع، دقت بالا حداکثر یک کالای اضافه می‌دهد تا چند رگهٔ کوتاه
+  // سود کل چرخهٔ کشاورزی را کنار نگذارد. پاداش سوم از طبقهٔ دوم باز می‌شود.
+  const qty = 1 + (accuracy >= 0.72 && base <= 900 ? 1 : 0) + (perfect && base <= 215 && floor > 1 ? 1 : 0);
   S.stamina = Math.max(0, S.stamina - spot.stam);
   f.nodesDone[mineNodeKey(floor, idx)] = true;
   grantGoodWithMailOverflow(good, qty, 'engineer', 'mine-vein');

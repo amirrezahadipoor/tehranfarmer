@@ -42,6 +42,7 @@ import { UT } from '../strings/uiText';
 import { exitNativeApp } from '../game/androidNav';
 import { maybeStartPrologue } from '../story/engine';
 import { ShopExperience } from './ShopExperience';
+import { nearestScrollDelta } from './scrollNearest';
 
 
 
@@ -116,24 +117,40 @@ function Confirm({ icon, msg, onYes }: { icon: string; msg?: string; onYes: () =
 
 function SeedShop() {
   const L = lv();
-  const [seasonOnly, setSeasonOnly] = useState(false);
+  const [seedFilter, setSeedFilter] = useState<'available' | 'season' | 'all'>('available');
   const curSeason = season();
-  const visibleCrops = seasonOnly ? CROPS.filter((c) => c.seasons.includes(curSeason)) : CROPS;
+  const visibleCrops = seedFilter === 'available'
+    ? CROPS.filter((c) => c.lv <= L)
+    : seedFilter === 'season'
+      ? CROPS.filter((c) => c.seasons.includes(curSeason))
+      : CROPS;
   return (
     <Modal title={UT.u75} icon="seedshop" onClose={close} coins={<Wallet />}>
-      <div className="mb-2 flex items-center gap-1.5">
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <button
-          className={`btn press !px-2.5 !py-0.5 text-xs font-black ${!seasonOnly ? 'y' : ''}`}
-          onClick={() => setSeasonOnly(false)}
+          data-seed-filter="available"
+          aria-pressed={seedFilter === 'available'}
+          className={`btn press !px-2.5 !py-0.5 text-xs font-black ${seedFilter === 'available' ? 'g' : ''}`}
+          onClick={() => setSeedFilter('available')}
         >
-          {UT.filterAllSeeds}
+          {UT.filterAvailableSeeds}
         </button>
         <button
-          className={`btn press !px-2.5 !py-0.5 text-xs font-black ${seasonOnly ? 'g' : ''}`}
-          onClick={() => setSeasonOnly(true)}
+          data-seed-filter="season"
+          aria-pressed={seedFilter === 'season'}
+          className={`btn press !px-2.5 !py-0.5 text-xs font-black ${seedFilter === 'season' ? 'g' : ''}`}
+          onClick={() => setSeedFilter('season')}
         >
           <Ic n={['spring', 'summer', 'autumn', 'winter'][curSeason]} s={1.2} />
           <span>{UT.filterSeasonSeeds}</span>
+        </button>
+        <button
+          data-seed-filter="all"
+          aria-pressed={seedFilter === 'all'}
+          className={`btn press !px-2.5 !py-0.5 text-xs font-black ${seedFilter === 'all' ? 'y' : ''}`}
+          onClick={() => setSeedFilter('all')}
+        >
+          {UT.filterAllSeeds}
         </button>
       </div>
       <div className={grid}>
@@ -142,7 +159,7 @@ function SeedShop() {
           const locked = c.lv > L;
           const yieldTxt = c.yield[0] === c.yield[1] ? fa(c.yield[0]) : `${fa(c.yield[0])}-${fa(c.yield[1])}`;
           return (
-            <div key={c.id} className={'paper relative flex flex-col items-center gap-1 p-2 ' + (locked ? 'opacity-70' : '')}>
+            <div key={c.id} data-crop-card={c.id} data-crop-locked={locked ? '1' : '0'} className={'paper relative flex flex-col items-center gap-1 p-2 ' + (locked ? 'opacity-70' : '')}>
               <div className="relative">
                 <Ic n={locked ? 'lock' : 'seed:' + c.id} s={4.6} cls={locked ? 'grayscale' : ''} />
                 {!locked && (S.seeds[c.id] ?? 0) > 0 && <span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.seeds[c.id])}</span>}
@@ -217,9 +234,9 @@ function Market() {
       const target = document.querySelector<HTMLElement>('[data-sell-one="wheat"]');
       const scroller = target?.closest<HTMLElement>('[data-modal-scroll="1"]');
       if (!target || !scroller) return;
-      const tr = target.getBoundingClientRect();
-      const sr = scroller.getBoundingClientRect();
-      scroller.scrollTop += tr.top - sr.top - (sr.height - tr.height) / 2;
+    const tr = target.getBoundingClientRect();
+    const sr = scroller.getBoundingClientRect();
+    scroller.scrollTop += nearestScrollDelta(sr, tr);
     });
     return () => cancelAnimationFrame(raf);
   }, []);

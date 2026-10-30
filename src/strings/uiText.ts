@@ -302,6 +302,7 @@ export const UT_FA = {
   outSeasonBonus: "+۴۰٪ نوبرانه",
   yieldRange: "محصول: ",
   regrowTag: "چندچین ×",
+  filterAvailableSeeds: "بذرهای بازشده",
   filterAllSeeds: "همهٔ بذرها",
   filterSeasonSeeds: "فصل جاری",
   machPerkFeeder: "مدل ۲/۳: سرعت بیشتر + ۱۵٪ تا ۳۰٪ صرفه‌جویی در مصرف خوراک دام و ماهی",

@@ -27,7 +27,7 @@ import { checkSeamlessEdgePortal } from './core/frontier';
 import { isShopId, openShop } from './shops';
 import { stopPlantingQueueWithoutSeed } from './plantingQueue';
 import { tutOnPlotCompleted } from './tutorial';
-import { frameIsSlow, frameIsStable, lowerQualityCap, raiseQualityCap, type RenderQualityCap } from './renderQuality';
+import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap, type RenderQualityCap } from './renderQuality';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
 import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
 import { sceneSummary } from './a11y';
@@ -65,7 +65,9 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   // تنها ۱ بوم مرئی استاندارد (زیر سقف بودجهٔ Full-HD حافظهٔ GPU وب‌ویو، بدون باگ RGBX alpha:false و با صفر FBO مخفی)
   const ctx = canvas.getContext('2d')!;
   let dpr = 1, cw = 1, ch = 1, sc = 1, tx = 0, ty = 0;
-  let qualityCap: RenderQualityCap = CFG.lowPower ? 1 : 2;
+  const coarsePointer = (navigator.maxTouchPoints ?? 0) > 0 || !!window.matchMedia?.('(pointer: coarse)').matches;
+  const maxQualityCap = qualityCeiling(coarsePointer);
+  let qualityCap: RenderQualityCap = CFG.lowPower ? 1 : maxQualityCap;
   let knownLowPower = CFG.lowPower;
   let qualitySamples: Array<{ ms: number; active: boolean }> = [];
   let qualityStableMs = 0, qualityCooldownUntil = 0, lastQualityAt = 0;
@@ -446,7 +448,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     const stepDriven = Boolean((window as unknown as { __stepFrames?: unknown }).__stepFrames);
     if (knownLowPower !== CFG.lowPower) {
       knownLowPower = CFG.lowPower;
-      qualityCap = knownLowPower ? 1 : 2;
+      qualityCap = knownLowPower ? 1 : maxQualityCap;
       qualitySamples = []; qualityStableMs = 0;
       resize(true);
     }
@@ -599,7 +601,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
               resize(true);
             }
           }
-          if (!CFG.lowPower && !qualityUpscaleBlocked && qualityCap < 2 && qualitySamples.length >= 60 && qualityStableMs >= 5000 && now >= qualityCooldownUntil) {
+          if (!CFG.lowPower && !qualityUpscaleBlocked && qualityCap < maxQualityCap && qualitySamples.length >= 60 && qualityStableMs >= 5000 && now >= qualityCooldownUntil) {
             qualityCap = raiseQualityCap(qualityCap);
             qualityRaisedAt = now;
             qualitySamples = []; qualityStableMs = 0; qualityCooldownUntil = now + 10000;

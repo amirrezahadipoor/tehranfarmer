@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { frameIsSlow, frameIsStable, lowerQualityCap, raiseQualityCap } from './renderQuality';
+import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap } from './renderQuality';
 
 describe('adaptive render quality', () => {
   it('moves one DPR step at a time in both directions', () => {
@@ -9,6 +9,11 @@ describe('adaptive render quality', () => {
     expect(raiseQualityCap(1)).toBe(1.5);
     expect(raiseQualityCap(1.5)).toBe(2);
     expect(raiseQualityCap(2)).toBe(2);
+  });
+
+  it('caps touch devices at DPR 1.5 without restricting desktop', () => {
+    expect(qualityCeiling(true)).toBe(1.5);
+    expect(qualityCeiling(false)).toBe(2);
   });
 
   it('uses separate active and idle thresholds', () => {

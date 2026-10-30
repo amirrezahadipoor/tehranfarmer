@@ -15,11 +15,11 @@ const __dirname = path.dirname(__filename);
 const MUSIC_FILES = ['peaceful-forest.mp3', 'ch2.mp3', 'ch3.mp3', 'ch4.mp3', 'ch5.mp3', 'ch6.mp3', 'ch7.mp3'] as const;
 
 /**
- * Keep the complete soundtrack in inert HTML blocks. The executable bootstrap
- * inflates only game code; sound.ts materializes a data URI for the active track.
+ * فقط آهنگ شروع داخل HTML است؛ بقیهٔ آهنگ‌ها فایل‌های محلی‌اند و Service Worker
+ * آن‌ها را در idle برای اجرای کاملاً آفلاین کش می‌کند.
  */
-function inlineMusicPack(): string {
-  return MUSIC_FILES.map((file) => {
+function inlineMusicPack(files: readonly string[]): string {
+  return files.map((file) => {
     const bytes = fs.readFileSync(path.resolve(__dirname, 'public/music', file));
     return `<script type="application/octet-stream" data-music-pack="${file}">${bytes.toString('base64')}</script>`;
   }).join('');
@@ -48,21 +48,19 @@ function packInlineModule(): Plugin {
             "script-src 'self' blob:",
             `script-src 'self' blob: 'sha256-${bootstrapHash}'`,
           );
-          item.source = item.source.replace('</head>', `<!-- offline-music-pack:${MUSIC_FILES.length} -->\n</head>`);
-          item.source = item.source.replace('</body>', `${inlineMusicPack()}</body>`);
+          item.source = item.source.replace('</head>', `<!-- offline-music-pack:1/${MUSIC_FILES.length} -->\n</head>`);
+          item.source = item.source.replace('</body>', `${inlineMusicPack([MUSIC_FILES[0]])}</body>`);
         }
       }
     },
-    closeBundle() {
-      // Production must not depend on (or ship a duplicate of) the development soundtrack directory.
-      fs.rmSync(path.resolve(__dirname, 'dist/music'), { recursive: true, force: true });
-    },
+    // public/music عمداً در dist باقی می‌ماند؛ Capacitor آن را آفلاین همراه APK
+    // می‌گیرد و نسخهٔ وب نیز همان فایل‌ها را با Service Worker کش می‌کند.
   };
 }
 
 /**
- * موسیقی public فقط یک‌بار در بلوک‌های inert جاسازی می‌شود.
- * این guard صرفاً از دوباره‌کاری/جاسازی مستقیم assetهای importشدهٔ بزرگ جلوگیری می‌کند.
+ * آهنگ شروع در یک بلوک inert جاسازی می‌شود و بقیه فایل‌های محلی‌اند.
+ * این guard از جاسازی مستقیم assetهای importشدهٔ بزرگ جلوگیری می‌کند.
  */
 function audioInlineGuard(): Plugin {
   return {

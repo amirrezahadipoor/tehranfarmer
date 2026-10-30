@@ -51,6 +51,17 @@ jobs:
       - name: نصب وابستگی‌های npm
         run: npm ci
 
+      - name: بررسی TypeScript و تست‌های واحد
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: نصب Chromium برای تست‌های لمسی
+        run: npx playwright install --with-deps chromium
+
+      - name: تست‌های موبایل در سه اندازه
+        run: npm run test:e2e
+
       - name: بازیابی کلید امضا از Secrets (اختیاری)
         id: keystore
         env:
@@ -101,11 +112,16 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: بارگذاری نسخهٔ تک‌فایل وب آفلاین
+      - name: ساخت و بازرسی بستهٔ وب آفلاین
+        run: |
+          npm run build
+          npm run verify:dist
+
+      - name: بارگذاری نسخهٔ وب آفلاین
         uses: actions/upload-artifact@v4
         with:
-          name: mazrae-rangi-web-singlefile
-          path: dist/index.html
+          name: mazrae-rangi-web-offline
+          path: dist/
           if-no-files-found: error
           retention-days: 30
 

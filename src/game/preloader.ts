@@ -54,17 +54,23 @@ function withStepTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<
   });
 }
 
-async function decodeAllUiIcons(): Promise<void> {
-  const unique = Array.from(new Set(UI_ICON_NAMES));
-  const jobs = unique.map((name) => {
-    const src = iconURL(name);
-    if (typeof Image === 'undefined') return Promise.resolve();
-    const img = new Image();
-    img.decoding = 'sync';
-    img.src = src;
-    return typeof img.decode === 'function' ? img.decode().catch(() => {}) : Promise.resolve();
-  });
-  await withStepTimeout(Promise.all(jobs), 450, []);
+const BOOT_ICON_NAMES = ['play', 'book', 'sound', 'mute', 'globe', 'save', 'coin', 'bolt', 'bag', 'menu', 'close', 'arrow'] as const;
+
+async function decodeAllUiIcons(names: readonly string[] = UI_ICON_NAMES): Promise<void> {
+  const unique = Array.from(new Set(names));
+  // دسته‌های کوچک جلوی یک long task بزرگ در زمان پیش‌ساخت پس‌زمینه را می‌گیرند.
+  for (let offset = 0; offset < unique.length; offset += 12) {
+    const jobs = unique.slice(offset, offset + 12).map((name) => {
+      const src = iconURL(name);
+      if (typeof Image === 'undefined') return Promise.resolve();
+      const img = new Image();
+      img.decoding = 'sync';
+      img.src = src;
+      return typeof img.decode === 'function' ? img.decode().catch(() => {}) : Promise.resolve();
+    });
+    await withStepTimeout(Promise.all(jobs), 450, []);
+    if (offset + 12 < unique.length) await waitMs(0);
+  }
 }
 
 let bootDoneOnce = false;
@@ -73,10 +79,37 @@ export function isBootAlreadyWarm(): boolean {
   return bootDoneOnce;
 }
 
+/** کارهای سنگینِ غیرلازم برای اولین تعامل، پس از نمایش بازی و در idle انجام می‌شوند. */
+function scheduleDeferredPrewarm(sn: number) {
+  const work = async () => {
+    for (const scene of ['town', 'river', 'apiary'] as const) {
+      try { await prewarmScene(scene, sn); } catch { /* */ }
+      await waitMs(0);
+    }
+    try {
+      for (const c of CROPS.slice(3, 8)) {
+        for (let st = 0; st < 4; st++) cropPart(c.id, st, false);
+        await waitMs(0);
+      }
+      const bootIcons = new Set<string>(BOOT_ICON_NAMES);
+      await decodeAllUiIcons(UI_ICON_NAMES.filter((name) => !bootIcons.has(name)));
+      await withStepTimeout(flushPendingBitmaps(), 250, undefined);
+    } catch { /* */ }
+  };
+  // اول Start و اولین فریم واقعی نمایش داده شوند؛ پیش‌ساخت اضافی پس از آن آغاز می‌شود.
+  setTimeout(() => {
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(() => { void work(); }, { timeout: 5000 });
+    } else {
+      void work();
+    }
+  }, 700);
+}
+
 export async function runGenuinePreload(onProgress: (p: BootProgress) => void): Promise<void> {
   const forceVisualHold = Boolean(typeof window !== 'undefined' && window.location?.search?.includes('boot=1'));
   const isAutomated = typeof navigator !== 'undefined' && navigator.webdriver === true && !forceVisualHold;
-  const stepGap = isAutomated ? 4 : 130;
+  const stepGap = isAutomated ? 4 : 60;
 
   // گام ۱: بازیابی ذخیرهٔ بومی اندروید، تنظیمات زبان و فونت‌های دست‌نویس (با Timeout سخت‌گیرانه)
   onProgress({ pct: 12, label: UT.bootStepSave });
@@ -103,16 +136,9 @@ export async function runGenuinePreload(onProgress: (p: BootProgress) => void): 
   onProgress({ pct: 52, label: UT.bootStepFarm });
   await waitMs(stepGap);
 
-  // گام ۳: ترسیم شهر، رودخانه و زنبورداری تا جابه‌جایی بین صحنه‌ها آنی و بدون مکث باشد
+  // گام ۳: صحنه‌های غیرجاری عمداً مسیر boot را مسدود نمی‌کنند و در idle ساخته می‌شوند.
   onProgress({ pct: 60, label: UT.bootStepWorlds });
   await waitMs(20);
-  try {
-    await prewarmScene('town', sn);
-    await waitMs(12);
-    await prewarmScene('river', sn);
-    await waitMs(12);
-    await prewarmScene('apiary', sn);
-  } catch { /* */ }
   onProgress({ pct: 76, label: UT.bootStepWorlds });
   await waitMs(stepGap);
 
@@ -126,7 +152,7 @@ export async function runGenuinePreload(onProgress: (p: BootProgress) => void): 
       soilPart('tilled', 1, false, v);
       soilPart('tilled', 1, true, v);
     }
-    for (const c of CROPS.slice(0, 8)) {
+    for (const c of CROPS.slice(0, 3)) {
       for (let st = 0; st < 4; st++) cropPart(c.id, st, false);
     }
     for (const n of ['sun', 'moon', 'star', 'drop', 'hive', 'fish', 'bee', 'hammer', 'cart', 'house']) {
@@ -137,13 +163,14 @@ export async function runGenuinePreload(onProgress: (p: BootProgress) => void): 
   onProgress({ pct: 92, label: UT.bootStepArt });
   await waitMs(stepGap);
 
-  // گام ۵: دیکد کامل همهٔ آیکن‌های رابط کاربری در کش مرورگر
+  // گام ۵: فقط آیکون‌های لازم برای شروع؛ بقیه در idle دیکد می‌شوند
   onProgress({ pct: 96, label: UT.bootStepIcons });
   await waitMs(20);
   try {
-    await decodeAllUiIcons();
+    await decodeAllUiIcons(BOOT_ICON_NAMES);
   } catch { /* */ }
   onProgress({ pct: 100, label: UT.bootStepIcons });
   await waitMs(isAutomated ? 10 : 150);
   bootDoneOnce = true;
+  scheduleDeferredPrewarm(sn);
 }
