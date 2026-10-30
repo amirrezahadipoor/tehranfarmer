@@ -44,6 +44,7 @@ async function exerciseShop(page: Page, shop: Shop) {
   await page.locator(`[data-shop-talk="${shop}"]`).click();
   const dialogue = page.locator('[data-shop-dialogue="1"]');
   await expect(dialogue).toBeVisible();
+  await expectDialogueContained(page);
   await expect(page.locator(`[data-shop-interior="${shop}"]`)).toBeVisible();
   await expect(page.locator('[role="dialog"]')).toHaveCount(1); // فقط حباب گفت‌وگو؛ داخل‌نما inert و aria-hidden است
   await skipScene(dialogue);
@@ -80,11 +81,13 @@ async function expectTextContained(scope: Locator) {
 }
 
 async function expectDialogueContained(page: Page) {
-  const bubble = page.locator('[data-shop-dialogue="1"] div.fixed.w-fit');
+  const bubble = page.locator('[data-shop-speech="1"]');
   await expect(bubble).toBeVisible();
   await page.waitForTimeout(100); // اندازه‌گیری layout پس از فونت/پرتره کامل شود
   const geometry = await bubble.evaluate((el) => {
     const r = el.getBoundingClientRect();
+    const topBar = document.querySelector('[data-cutscene-topbar="1"]')!.getBoundingClientRect();
+    const bottomBar = document.querySelector('[data-cutscene-bottombar="1"]')!.getBoundingClientRect();
     const overflowing = [...el.querySelectorAll('div, span')].filter((child) => {
       const c = child as HTMLElement;
       return !c.classList.contains('sr-only') && c.clientWidth > 0 && c.scrollWidth > c.clientWidth + 2;
@@ -92,12 +95,16 @@ async function expectDialogueContained(page: Page) {
       const c = child as HTMLElement;
       return `${c.tagName}.${String(c.className)}:${(c.textContent ?? '').trim().slice(0, 60)} (${c.scrollWidth}/${c.clientWidth})`;
     });
-    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, vw: innerWidth, vh: innerHeight, overflowing };
+    return {
+      left: r.left, top: r.top, right: r.right, bottom: r.bottom, vw: innerWidth, vh: innerHeight,
+      topBarBottom: topBar.bottom, bottomBarTop: bottomBar.top, overflowing,
+    };
   });
   expect(geometry.left).toBeGreaterThanOrEqual(0);
-  expect(geometry.top).toBeGreaterThanOrEqual(0);
+  expect(geometry.top).toBeGreaterThanOrEqual(geometry.topBarBottom - 1);
+  expect(geometry.top).toBeLessThan(geometry.vh * 0.35); // گفت‌وگوی داخل فروشگاه بالای صفحه است، نه روی دکمه‌های پایین
   expect(geometry.right).toBeLessThanOrEqual(geometry.vw);
-  expect(geometry.bottom).toBeLessThanOrEqual(geometry.vh);
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.bottomBarTop + 1);
   expect(geometry.overflowing).toEqual([]);
   await expectTextContained(bubble);
 }

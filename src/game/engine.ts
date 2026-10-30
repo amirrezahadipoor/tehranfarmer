@@ -25,6 +25,7 @@ import { workerPostFarm } from './core/workers';
 import { createWorkerVisuals } from './engineWorkerVisuals';
 import { checkSeamlessEdgePortal } from './core/frontier';
 import { isShopId, openShop } from './shops';
+import { stopPlantingQueueWithoutSeed } from './plantingQueue';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
 import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
 import { sceneSummary } from './a11y';
@@ -205,7 +206,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         notify();
         return;
       }
-      if (r) { if (player && r !== 'skip') reasonToast(r); return; }
+      if (r) { if (player && tk.kind === 'plant') stopPlantingQueueWithoutSeed(w, S.seeds, tk.seed ?? UI.seed); if (player && r !== 'skip') reasonToast(r); return; }
       const hits = player ? performPlayerPlotSweep(i, tk.kind, canAct, doAct, rnd) : [{ plot: i, ...doAct(tk.kind, i, true, tk.seed) }];
       if (player) {
         notePlayerAction(Math.max(1, hits.length));
@@ -222,6 +223,8 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         else if (tk.kind === 'harvest') { pop(cx, cy - 30, h.crop!, Math.min(3, h.qty ?? 1), h.qty ? '+' + fa(h.qty) : undefined); if (h.golden) pop(cx, cy - 58, 'star', 2); if (!h.qty) toast('bag', GT.g43); }
         else if (tk.kind === 'fert') { pop(cx, cy - 20, 'fert', 1); dust(cx, cy, '#8de06a', 6); }
       }
+      // آخرین بذر در همین ضربه تمام شده باشد، صف کاشت دیگر کرت‌به‌کرت ادامه پیدا نمی‌کند.
+      if (player && tk.kind === 'plant' && stopPlantingQueueWithoutSeed(w, S.seeds, tk.seed ?? UI.seed)) reasonToast('noseed');
       return;
     }
     switch (tk.kind) {

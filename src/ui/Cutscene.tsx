@@ -383,7 +383,7 @@ export function Cutscene() {
 
       {/* Top cinema letterbox controls: live language switch + Skip Scene */}
       <div
-        ref={topBarRef}
+        ref={topBarRef} data-cutscene-topbar="1"
         className="pointer-events-auto fixed inset-x-0 top-0 flex items-center justify-between border-b-2 border-[#d9a441] bg-[#1c120e]/95 px-3 py-1"
         style={{
           paddingTop: 'calc(var(--safe-top) + 0.25rem)',
@@ -436,7 +436,7 @@ export function Cutscene() {
         const bx = shopDialogue ? vw / 2 : Math.max(halfW + 10, Math.min(vw - halfW - 10, anchor.x));
         const safeTop = Math.max(46, barH.top + 4);
         const safeBot = Math.max(44, barH.bot + 4);
-        const by = shopDialogue ? vh - safeBot : Math.min(vh - safeBot, Math.max(safeTop + boxSize.h, anchor.y));
+        const by = shopDialogue ? safeTop + 4 : Math.min(vh - safeBot, Math.max(safeTop + boxSize.h, anchor.y));
         const tailDx = shopDialogue ? 0 : Math.max(-(halfW - 22), Math.min(halfW - 22, anchor.x - bx));
         return isNarrator ? (
           <div
@@ -451,11 +451,11 @@ export function Cutscene() {
           </div>
         ) : (
           <div
-            ref={bubbleRef}
+            ref={bubbleRef} data-shop-speech={shopDialogue ? '1' : undefined}
             style={{
               left: `${bx}px`,
               top: `${by}px`,
-              transform: 'translate(-50%, -100%)',
+              transform: shopDialogue ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
               backgroundColor: '#fffdf4',
             }}
             className={'pointer-events-none fixed w-fit min-w-[9.5rem] rounded-2xl border-[3px] border-[#503426] bg-[#fffdf4]/97 text-[#3d251a] shadow-xl ' + (compact ? 'max-w-[min(76vw,21.5rem)] px-3 py-1.5' : 'max-w-[min(82vw,24.5rem)] px-3.5 py-2.5')}
@@ -507,7 +507,7 @@ export function Cutscene() {
 
       {/* Bottom cinema letterbox bar: full readable Next Objective sentence + beat dots + Advance button */}
       <div
-        ref={botBarRef}
+        ref={botBarRef} data-cutscene-bottombar="1"
         className="pointer-events-auto fixed inset-x-0 bottom-0 flex items-center justify-between gap-2.5 border-t-2 border-[#d9a441] bg-[#1c120e]/95 px-3 py-1 text-[#fff6da]"
         style={{
           backgroundColor: '#1c120e',
