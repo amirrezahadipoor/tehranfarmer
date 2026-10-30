@@ -150,7 +150,8 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
   if (liftUnlocked) {
     f.stairsFound[`cave:${floor}`] = true;
     f.maxCaveFloor = Math.max(f.maxCaveFloor, Math.min(MINE_FLOOR_COUNT, floor + 1));
-    toast('cave', FT.mineLiftOpened);
+    // بازشدن آسانسور نباید خبر گوهرِ همان رگه را پنهان کند.
+    toast(good, `${FT.mineLoot(GOOD[good]?.fa ?? good, qty)} · ${FT.mineLiftOpenedShort}`);
     sfx.fanfare();
   } else {
     toast(good, FT.mineLoot(GOOD[good]?.fa ?? good, qty));

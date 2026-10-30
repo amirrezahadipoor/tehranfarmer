@@ -38,7 +38,7 @@ export function Museum() {
           </div>
 
           <button
-            className={'btn press !px-4 !py-1.5 ' + (S.museumVisited ? 'b' : 'g')}
+            className={'btn press w-full max-w-md flex-wrap justify-center !px-4 !py-1.5 ' + (S.museumVisited ? 'b' : 'g')}
             disabled={S.museumVisited}
             onClick={() => {
               visitMuseum();

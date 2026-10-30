@@ -160,7 +160,7 @@ function fresh(): Save {
     cityVisits: 0, machines: {}, auto: {}, ponds: [], hives: 0, honeyAcc: 0, builds: [],
     pens: { chicken: 1 }, gh: 0, silo: 0, nests: [],
     xp: 0, stats: {}, ach: {},
-    story: { chapter: 0, seen: {}, prologueSeen: false, postgame: false, pending: null, questDone: {} },
+    story: { chapter: 0, seen: {}, prologueSeen: false, postgame: false, pending: null, questDone: {}, questBase: {} },
     debt: null,
     quests: { day: 0, week: 0, daily: [], weekly: null, claimed: {}, base: {} },
     event: null,

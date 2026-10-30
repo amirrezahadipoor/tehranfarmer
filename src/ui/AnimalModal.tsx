@@ -101,20 +101,22 @@ export function AnimalShop() {
                   <div className="grid w-full grid-cols-2 gap-1.5">
                     <button
                       className="btn g press min-w-0 !flex-col !gap-0 !px-1.5 !py-1 leading-tight"
+                      aria-label={UT.buyFemale}
                       disabled={cannotBuy}
                       onClick={() => buyAnimal(k, 'f')}
                       data-buy-female={k}
                     >
-                      <span className="max-w-full truncate text-[.72rem] font-black">{UT.buyFemale}</span>
+                      <span className="inline-flex max-w-full items-center gap-0.5 text-[.72rem] font-black"><Ic n="female" s={0.9} />{UT.buyFemaleShort}</span>
                       <Coin v={d.price} s={0.95} cls="text-[.72rem]" />
                     </button>
                     <button
                       className="btn g press min-w-0 !flex-col !gap-0 !px-1.5 !py-1 leading-tight"
+                      aria-label={UT.buyMale}
                       disabled={cannotBuy}
                       onClick={() => buyAnimal(k, 'm')}
                       data-buy-male={k}
                     >
-                      <span className="max-w-full truncate text-[.72rem] font-black">{UT.buyMale}</span>
+                      <span className="inline-flex max-w-full items-center gap-0.5 text-[.72rem] font-black"><Ic n="male" s={0.9} />{UT.buyMaleShort}</span>
                       <Coin v={d.price} s={0.95} cls="text-[.72rem]" />
                     </button>
                   </div>
@@ -123,20 +125,22 @@ export function AnimalShop() {
                     <div className="grid w-full grid-cols-2 gap-1.5">
                       <button
                         className="btn y press min-w-0 !flex-col !gap-0 !px-1.5 !py-1 leading-tight"
+                        aria-label={UT.sellFemale}
                         disabled={females <= 0}
                         onClick={() => sellAnimal(k, 'f')}
                         data-sell-female={k}
                       >
-                        <span className="max-w-full truncate text-[.72rem] font-black">{UT.sellFemale}</span>
+                        <span className="inline-flex max-w-full items-center gap-0.5 text-[.72rem] font-black"><Ic n="female" s={0.9} />{UT.sellFemaleShort}</span>
                         <Coin v={resell} s={0.95} cls="text-[.72rem]" />
                       </button>
                       <button
                         className="btn y press min-w-0 !flex-col !gap-0 !px-1.5 !py-1 leading-tight"
+                        aria-label={UT.sellMale}
                         disabled={males <= 0}
                         onClick={() => sellAnimal(k, 'm')}
                         data-sell-male={k}
                       >
-                        <span className="max-w-full truncate text-[.72rem] font-black">{UT.sellMale}</span>
+                        <span className="inline-flex max-w-full items-center gap-0.5 text-[.72rem] font-black"><Ic n="male" s={0.9} />{UT.sellMaleShort}</span>
                         <Coin v={resell} s={0.95} cls="text-[.72rem]" />
                       </button>
                     </div>

@@ -29,11 +29,8 @@ const FX = FIELD_X;
 const FY = FIELD_Y;
 const plotC = (i: number) => ({ cx: FX + (i % COLS) * PLOT_DX + TW / 2, cy: FY + Math.floor(i / COLS) * PLOT_DY + TH / 2 });
 
-export interface Task { kind: string; plot?: number; animal?: number; node?: number; x: number; y: number; face: number; dur: number; hit: number; to?: string; seed?: CropId }
-export interface Walker {
-  x: number; y: number; face: number; rig: FarmerRig; ph: number; mode: 'idle' | 'walk' | 'act'; kind: string; p: number;
-  tasks: Task[]; cur: Task | null; hitDone: boolean; speed: number; player: boolean; wait: number;
-}
+export interface Task { kind: string; plot?: number; animal?: number; node?: number; x: number; y: number; face: number; dur: number; hit: number; to?: string; seed?: CropId; visual?: boolean; good?: string; qty?: number; golden?: boolean }
+export interface Walker { x: number; y: number; face: number; rig: FarmerRig; ph: number; mode: 'idle' | 'walk' | 'act'; kind: string; p: number; tasks: Task[]; cur: Task | null; hitDone: boolean; speed: number; player: boolean; wait: number; post?: 'farm' | 'north' | 'valley' }
 export interface AR { id: number; kind: AnimalKind; rig: AnimalRig; x: number; y: number; face: number; mode: 'idle' | 'walk' | 'graze'; timer: number; tx: number; ty: number; ph: number; seed: number; sc: number }
 export interface Fx { x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; icon?: string; text?: string; col?: string; sc: number; r?: number }
 
@@ -125,6 +122,8 @@ export function createSceneRenderer(
 
   return function renderView(v: FrameView) {
     const { dpr, cw, ch, sc, tx, ty, t, bph, trans, hoverPlot = -1 } = v;
+    // فقط کارگرانِ پستِ همین مزرعه دیده می‌شوند؛ حضور بازیکن محل کار یا مجموعهٔ کارگران را تغییر نمی‌دهد.
+    const sceneWorkers = workers.filter((w, wi) => wi < S.workers && w.post === UI.scene);
     let activeSc = sc, activeTx = tx, activeTy = ty;
   function render() {
     const sn = season();
@@ -195,13 +194,13 @@ export function createSceneRenderer(
     }
     if (UI.scene === 'farm') renderFarm();
     else if (UI.scene === 'north') {
-      renderEstateFieldScene(ctx, 'north', bgActive!, OX, OY, t, S.lv.land, S.gh, S.weather, S.northPlots, hoverPlot, farmer, workers, S.workers);
+      renderEstateFieldScene(ctx, 'north', bgActive!, OX, OY, t, S.lv.land, S.gh, S.weather, S.northPlots, hoverPlot, farmer, sceneWorkers, sceneWorkers.length);
     } else if (UI.scene === 'valley') {
-      renderEstateFieldScene(ctx, 'valley', bgActive!, OX, OY, t, S.lv.land, S.gh, S.weather, S.valleyPlots, hoverPlot, farmer, workers, S.workers);
+      renderEstateFieldScene(ctx, 'valley', bgActive!, OX, OY, t, S.lv.land, S.gh, S.weather, S.valleyPlots, hoverPlot, farmer, sceneWorkers, sceneWorkers.length);
     } else if (UI.scene === 'town') renderTown();
     else if (UI.scene === 'river') renderRiver();
     else if (UI.scene === 'cave' || UI.scene === 'forest') {
-      renderFrontierScene(ctx, UI.scene, bgActive!, t, farmer, workers);
+      renderFrontierScene(ctx, UI.scene, bgActive!, t, farmer, sceneWorkers);
     }
     else renderApiary();
     // بازیگران و دکور صحنهٔ سینمایی پیش از باران/برف/شب رسم می‌شوند تا نورپردازی و هوا روی کاراکترها طبیعی بنشیند
@@ -441,7 +440,7 @@ export function createSceneRenderer(
       });
     }
     list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.72); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.72); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.72); } });
-    workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) }); });
+    sceneWorkers.forEach((w) => { list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.72) }); });
     if (bph !== 'off') list.push({ y: builder.y, f: () => drawFarmer(ctx, builder.rig, builder.x, builder.y, builder.face, 0.72) });
     for (const a of animals.values()) {
       if (a.x < vx0 || a.x > vx1) continue;
@@ -499,7 +498,7 @@ export function createSceneRenderer(
   function renderRiver() {
     blitVisibleBG();
     drawUnifiedPond(ctx, t);
-    const activeRods = Math.min(RIVER_SPOTS.length, S.workers);
+    const activeRods = Math.min(RIVER_SPOTS.length, sceneWorkers.length);
     RIVER_SPOTS.forEach((sp, si) => {
       shape(ctx, ell(sp.x + 28, sp.y + 14 + Math.sin(t * 2 + sp.x) * 2, 26, 9.5, 12), { fill: 'rgba(255,255,255,.44)', line: 2 });
       if (si < activeRods) {
@@ -510,7 +509,7 @@ export function createSceneRenderer(
     });
     const list: Dr[] = [];
     list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.75); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.75); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.75); } });
-    workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.75) }); });
+    sceneWorkers.forEach((w) => { list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.75) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
     drawSignPlaque(ctx, 1212, 576, WX.gateFarm);
@@ -540,7 +539,7 @@ export function createSceneRenderer(
     }
     const list: Dr[] = [];
     list.push({ y: farmer.y, f: () => { drawBackpack(ctx, farmer.x, farmer.y, farmer.face, 0.74); drawFarmer(ctx, farmer.rig, farmer.x, farmer.y, farmer.face, 0.74); drawBackpackFront(ctx, farmer.x, farmer.y, farmer.face, 0.74); } });
-    workers.forEach((w, wi) => { if (wi < S.workers) list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.74) }); });
+    sceneWorkers.forEach((w) => { list.push({ y: w.y, f: () => drawFarmer(ctx, w.rig, w.x, w.y, w.face, 0.74) }); });
     list.sort((a, b) => a.y - b.y);
     for (const d of list) d.f();
     drawSignPlaque(ctx, 1218, 626, WX.gateFarm);

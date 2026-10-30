@@ -202,7 +202,9 @@ describe('۸ الزام جدید توسعهٔ جهان، مکالمهٔ بدون
     }
     const grandmaSpec = NPC_QUEST_SPECS.find((q) => q.id === 'npc-q-grandma-1')!;
     expect(isNpcQuestActive(grandmaSpec)).toBe(true);
-    // چون S.stats.harv = 50 >= 12 آمادهٔ تحویل است، علامت ! برای دریافت جایزه روشن می‌ماند و پس از دریافت جایزه خاموش می‌شود!
+    // ۵۰ برداشت قبل از پذیرش، کوئست را فوری کامل نمی‌کند؛ فقط ۱۲ برداشت تازه علامت تحویل را روشن می‌کند.
+    expect(npcHasQuestMarker('grandma')).toBe(false);
+    S.stats.harv = (S.stats.harv ?? 0) + 12;
     expect(npcHasQuestMarker('grandma')).toBe(true);
     const doneNode = talkToTownNpc(0)!;
     expect(doneNode.id).toBe('npc-q-grandma-1-done');

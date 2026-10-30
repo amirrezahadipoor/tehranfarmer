@@ -36,7 +36,7 @@ export function WorldAtlasModal() {
   ];
 
   return (
-    <ModalShell title={FT.atlasTitle} icon="atlas" wide onClose={() => { UI.modal = null; notify(); }}>
+    <ModalShell title={FT.atlasModalTitle} icon="atlas" wide onClose={() => { UI.modal = null; notify(); }}>
       <div data-atlas-modal="1" className="space-y-2.5 pb-2">
         <div className="flex flex-wrap gap-1.5">
           {([
@@ -59,8 +59,8 @@ export function WorldAtlasModal() {
         </div>
 
         {tab === 'map' && (
-          <div className="paper relative h-72 w-full overflow-hidden rounded-2xl border-2 border-[#503426] bg-[#e9efc8] p-2">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full">
+          <div className="paper relative grid h-auto w-full grid-cols-2 gap-2 overflow-hidden rounded-2xl border-2 border-[#503426] bg-[#e9efc8] p-2 sm:block sm:h-72 sm:gap-0">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 hidden h-full w-full sm:block">
               {links.map(([x1, y1, x2, y2], i) => (
                 <line
                   key={i}
@@ -76,12 +76,12 @@ export function WorldAtlasModal() {
                 data-atlas-go={n.id}
                 aria-label={n.label}
                 style={{ left: `${n.x}%`, top: `${n.y}%` }}
-                className={'btn press absolute -translate-x-1/2 -translate-y-1/2 !px-2.5 !py-1 text-[.7rem] font-black ' + (UI.scene === n.id ? 'y' : 'g')}
+                className={'btn press static w-full min-w-0 translate-x-0 translate-y-0 !px-1.5 !py-1 text-[.7rem] font-black sm:absolute sm:w-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:!px-2.5 ' + (UI.scene === n.id ? 'y' : 'g')}
                 onClick={() => { UI.modal = null; cmd.travelTo(n.id); notify(); }}
               >
                 <Ic n={n.ic} s={1.3} />
-                <span>{n.label}</span>
-                {n.sub && <span className="rounded bg-black/15 px-1 text-[.66rem]" dir="ltr">{n.sub}</span>}
+                <span className="min-w-0 leading-tight">{n.label}</span>
+                {n.sub && <span className="shrink-0 rounded bg-black/15 px-1 text-[.66rem]" dir="ltr">{n.sub}</span>}
               </button>
             ))}
           </div>

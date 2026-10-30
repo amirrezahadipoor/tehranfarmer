@@ -1,6 +1,6 @@
 import {
   ANIMALS, CROP, CROPS, DAY_RATE, GH_SPEED, GOODS, LIVE_DAY_STRETCH, MK_BREED, MK_COLLECT, MK_EAT, MK_GROW, MK_THIRST,
-  HONEY_SEASON_MULT, NIGHT_END_H, WAGE_WARN_HOUR, NIGHT_START_H, PEN_KINDS, STAM_REGEN, WORKER_WAGE, XP, type CropId,
+  HONEY_SEASON_MULT, NIGHT_END_H, WAGE_WARN_HOUR, NIGHT_START_H, PEN_KINDS, STAM_REGEN, WORKER_WAGE, WORKER_SHIFT_START, WORKER_SHIFT_END, XP, type CropId,
 } from '../data';
 import { estateGrowthRate, estateSpecialtyMult, estateWaterRetention, isFarmScene } from '../estates';
 import { flowerSynergyMult, hasDecor, hasSkill, processMorningCompanionAndReport } from './rpgSystems';
@@ -324,6 +324,10 @@ export function advance(h: number): boolean {
     const d = Math.min(0.5, left);
     left -= d;
     stepSim(d);
+    // فقط بخش واقعاً داخل شیفتِ همین گام حساب شود؛ نه ساعت قبل از نیمه‌شب گم می‌شود
+    // و نه عبور از شب، کلِ بازه را کارِ روزانه جلوه می‌دهد. خواب و غیبت بازیکن اثری بر این حساب ندارد.
+    const worked = Math.max(0, Math.min(S.hour + d, WORKER_SHIFT_END) - Math.max(S.hour, WORKER_SHIFT_START));
+    if (worked > 0) tickWorkersSim(worked);
     S.hour += d;
     warnWageShortfall();
     // بازیابی نیرو در طول روز + اثر فانوس‌های باغی و آلاچیق حیاط
@@ -340,7 +344,6 @@ export function advance(h: number): boolean {
     runAuto();
     checkSecretTriggers('farm-step');
   }
-  tickWorkersSim(h);
   return passed;
 }
 

@@ -25,13 +25,13 @@ describe('مهاجرت سِیو', () => {
     expect('debt' in d).toBe(true);
   });
 
-  it('نسخهٔ ۷ به ۸ حلقهٔ درآمدِ ۳۰ روز اخیر را می‌سازد و دادهٔ قدیمی را نگه می‌دارد', () => {
+  it('نسخهٔ ۷ به آخرین نسخه می‌رسد و حلقهٔ درآمد ۳۰ روز اخیر را حفظ می‌کند', () => {
     const d = migrateSave({ v: 7, coins: 999, day: 30, earn30: [10, 20, 30] })!;
-    expect(d.v).toBe(8);
+    expect(d.v).toBe(SAVE_VERSION);
     expect(Array.isArray(d.earn30)).toBe(true);
     expect((d.earn30 as number[]).slice(-3)).toEqual([10, 20, 30]);
     const d2 = migrateSave({ v: 7, coins: 1, day: 2 })!;
-    expect(d2.v).toBe(8);
+    expect(d2.v).toBe(SAVE_VERSION);
     expect(Array.isArray(d2.earn30)).toBe(true);
     expect((d2.earn30 as unknown[]).length).toBe(0);
   });

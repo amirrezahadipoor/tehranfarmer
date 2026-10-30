@@ -1,5 +1,5 @@
 // ===== هوش مصنوعی جامع و بدون باگ کارگران در هر ۳ مزرعه + دامداری، کاه تخم‌ها، استخر، رودخانه و کندو =====
-import { ANIMALS, FINGER_PRICE, POND_FEED, POND_GROW_DAYS, XP, type CropId } from '../data';
+import { ANIMALS, FINGER_PRICE, POND_FEED, POND_GROW_DAYS, WORKER_SHIFT_START, WORKER_SHIFT_END, XP, type CropId } from '../data';
 import type { FarmSceneId } from '../estates';
 import {
   S, addGood, addStat, addXp, canAct, cureAnimal, doAct, fertAddAmt,
@@ -13,6 +13,51 @@ import { rnd } from '../rng';
 let workerSimAcc = 0;
 let workerRiverAcc = 0;
 let rrCursor = 0;
+
+/** رویداد فقط برای بازنمایی کارِ واقعاً انجام‌شده در sim است؛ مصرف آن هیچ تولیدی انجام نمی‌دهد. */
+export interface WorkerVisualEvent {
+  farm: FarmSceneId;
+  worker: number;
+  kind: string;
+  plot?: number;
+  animal?: number;
+  seed?: CropId;
+  good?: string;
+  qty?: number;
+  golden?: boolean;
+}
+let visualEvents: WorkerVisualEvent[] = [];
+let visualSeq = 0;
+
+/** پست ثابت کارگر از مالکیت مزارع پیروی می‌کند، نه صحنه‌ای که بازیکن در آن ایستاده است. */
+export function workerPostFarm(workerIdx: number): FarmSceneId {
+  const farms = ownedFarms();
+  return farms[workerIdx % farms.length] ?? 'farm';
+}
+
+function visualWorkerFor(farm: FarmSceneId): number {
+  const candidates: number[] = [];
+  for (let i = 0; i < S.workers; i++) if (workerPostFarm(i) === farm) candidates.push(i);
+  if (!candidates.length) return -1;
+  return candidates[visualSeq++ % candidates.length] ?? -1;
+}
+
+function emitVisual(farm: FarmSceneId, kind: string, extra: Partial<WorkerVisualEvent> = {}) {
+  visualEvents.push({ ...extra, farm, kind, worker: visualWorkerFor(farm) });
+  // رویدادها ذخیرهٔ اقتصادی نیستند؛ هنگام خواب فقط آخرین نمونه‌های قابل نمایش نگه می‌مانند.
+  if (visualEvents.length > 48) visualEvents.splice(0, visualEvents.length - 48);
+}
+
+/** حداکثر یک رویداد برای هر کارگرِ پستِ صحنهٔ جاری؛ رویدادهای قدیمی/صحنه‌های دیگر دور ریخته می‌شوند. */
+export function drainWorkerVisualEvents(farm: FarmSceneId): WorkerVisualEvent[] {
+  const latest = new Map<number, WorkerVisualEvent>();
+  for (const e of visualEvents) {
+    if (e.farm === farm && e.worker >= 0 && workerPostFarm(e.worker) === farm) latest.set(e.worker, e);
+  }
+  visualEvents = [];
+  return [...latest.values()];
+}
+export function discardWorkerVisualEvents() { visualEvents = []; }
 
 /** پر کردن هوشمند آخور توسط کارگر — فقط و فقط وقتی واقعاً دام علوفه‌خوار داریم! */
 export function workerRefillGrazingTrough(): number {
@@ -88,6 +133,7 @@ export function workerCollectAllRanchGoods(): number {
       total += got;
       addStat('collect', got);
       addXp(got * XP.collect);
+      emitVisual('farm', 'collect', { animal: a.id, good: prod, qty: got });
     } else break;
   }
   return total;
@@ -97,6 +143,8 @@ export function resetWorkerSim() {
   workerSimAcc = 0;
   workerRiverAcc = 0;
   rrCursor = 0;
+  visualEvents = [];
+  visualSeq = 0;
 }
 
 function stepFarmWorkerPlotOp(farm: FarmSceneId, startIdx: number): boolean {
@@ -115,6 +163,7 @@ function stepFarmWorkerPlotOp(farm: FarmSceneId, startIdx: number): boolean {
         if (S.fert > 0 && (p.st === 1 || (p.st === 2 && !p.dead)) && p.fert < 0.55) {
           S.fert--;
           p.fert = Math.min(1, p.fert + fertAddAmt());
+          emitVisual(farm, kind, { plot: i, good: 'fert' });
           return true;
         }
         continue;
@@ -123,7 +172,8 @@ function stepFarmWorkerPlotOp(farm: FarmSceneId, startIdx: number): boolean {
       const seed: CropId | undefined = kind === 'plant' ? (ghCoversFarm(farm, i) ? seedGh : seedOut) : undefined;
       if (kind === 'plant' && !seed) continue;
       if (canAct(kind, i, true, seed, farm) === '') {
-        doAct(kind, i, true, seed, true, farm);
+        const result = doAct(kind, i, true, seed, true, farm);
+        emitVisual(farm, kind, { plot: i, seed, good: result.crop ?? seed, qty: result.qty });
         return true;
       }
     }
@@ -133,7 +183,7 @@ function stepFarmWorkerPlotOp(farm: FarmSceneId, startIdx: number): boolean {
 
 /** اجرای پیوسته و چرخشی کارگران با احترام به اولویت کاری (همه‌جانبه / کشت ۳ مزرعه / دام و شیلات) و هم‌افزایی ماشین‌ها */
 export function tickWorkersSim(hours: number) {
-  if (S.workers <= 0 || S.hour < 6 || S.hour > 21.5) return;
+  if (S.workers <= 0 || S.hour < WORKER_SHIFT_START || S.hour > WORKER_SHIFT_END) return;
   const role = S.crewRole ?? 'balanced';
   const syn = machineSynergySpeedMult();
   workerSimAcc += hours * S.workers * syn * (role === 'crops' ? 1.18 : 1);
@@ -145,7 +195,8 @@ export function tickWorkersSim(hours: number) {
       if (pendingStrawEggs() > 0 || S.animals.some((a) => a.grown <= 0 && a.ready > 0)) {
         workerCollectAllRanchGoods();
       }
-      workerRefillGrazingTrough();
+      const fed = workerRefillGrazingTrough();
+      if (fed > 0) emitVisual('farm', 'feed', { good: 'feed', qty: fed });
       workerServiceUnifiedPond();
       if (S.hives > 0 && S.honeyAcc >= 2 && invCount() < invCap()) {
         harvestHoney(true, true);
@@ -162,7 +213,8 @@ export function tickWorkersSim(hours: number) {
       if (pendingStrawEggs() > 0 || S.animals.some((a) => a.grown <= 0 && a.ready > 0)) {
         workerCollectAllRanchGoods();
       }
-      workerRefillGrazingTrough();
+      const fed = workerRefillGrazingTrough();
+      if (fed > 0) emitVisual('farm', 'feed', { good: 'feed', qty: fed });
     }
   }
 

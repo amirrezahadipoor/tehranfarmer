@@ -23,8 +23,8 @@ export const WX = {
   get pillarTitle() { return en() ? '3-Pillar Farm Power: Tools + Crew + Industrial Machines' : 'توان سه‌گانهٔ مزرعه: ابزار دستی + کارگران + ماشین‌های صنعتی'; },
   get pillarDesc() {
     return en()
-      ? 'Workers handle single-plot chores by hand, while Machines multiply harvest yield, save expensive seeds, speed up crop growth, and boost Crew speed!'
-      : 'کارگران به تنهایی فقط تک‌کرتی و با بازده معمولی کار می‌کنند؛ اما ماشین‌ها محصول را چندبرابر می‌کنند، بذرهای گران را پس‌انداز می‌کنند، سرعت رشد را بالا می‌برند و توان کارگران را جهش می‌دهند!';
+      ? 'Crew works one plot at a time. Machines boost yield, save seeds, and speed crops and Crew work.'
+      : 'کارگران تک‌کرت کار می‌کنند؛ ماشین‌ها برداشت را بیشتر، بذر را صرفه‌جویی و رشد و سرعت کارگر را بالا می‌برند.';
   },
   get synergyLabel() { return en() ? 'Machine × Crew Speed Boost: ' : 'جهش سرعت کارگران با ماشین‌آلات: '; },
   get crewFocusTitle() { return en() ? 'Worker Crew Priority Focus' : 'تخصیص اولویت کاری کارگران'; },
@@ -35,13 +35,13 @@ export const WX = {
     get seedAutoBest() { return en() ? 'Smart Best Profit' : 'هوشمند (سودآورترین فصل)'; },
   get autoSlowWarn() {
     return en()
-      ? 'Smart-auto warning: on Northern Meadow / Sunlit Valley, the smart-auto setting grows crops several times slower. To keep full speed, lock a target seed for the estate (or hand-plant).'
-      : 'هشدار هوشمند: در دشت شمالی و باغ‌دره، حالت «هوشمند» رشد گیاهان را چند برابر کُند می‌کند؛ برای حفظ سرعت کامل، برای هر مزرعه بذر هدف را قفل کنید (یا خودتان بکارید).';
+      ? 'Smart-auto warning: growth slows on Northern Meadow & Sunlit Valley. Lock a target seed or hand-plant for full speed.'
+      : 'هشدار هوشمند: رشد در دشت شمالی و باغ‌دره کند می‌شود؛ برای سرعت کامل بذر هدف قفل کن یا دستی بکار.';
   },
   get autoSeasonNote() {
     return en()
-      ? 'Reminder: out-of-season crops sleep until their season returns, and 36 hours without water kills a thirsty crop — check season and water before planting.'
-      : 'یادآور: گیاه خارج از فصل می‌خوابد و تا بازگشت فصلش رشد نمی‌کند؛ بی‌آبی ۳۶ ساعته هم محصول تشنه را از بین می‌برد — پیش از کاشت، فصل و آب را بررسی کنید.';
+      ? 'Reminder: out-of-season crops sleep. A thirsty crop dies after 36 dry hours; check season and water before planting.'
+      : 'یادآور: محصول خارج‌فصل می‌خوابد و ۳۶ ساعت بی‌آبی محصول تشنه را خشک می‌کند؛ پیش از کاشت فصل و آب را ببین.';
   },
   get machExclusiveTag() { return en() ? 'Machine Exclusive Power' : 'قدرت انحصاری ماشین'; },
   get perkSprinkler() { return en() ? 'Multi-plot misting · -14/-26/-38% thirst · +0/+10/+20% faster crop growth & Drought Shield (MK3)' : 'مه‌پاشی خودکار ۳ مزرعه · کاهش مصرف آب · تا +۲۰٪ رشد سریع‌تر گیاه و سپر ضدخشکسالی'; },
@@ -165,7 +165,7 @@ export const WX = {
   get tierArtisan() { return en() ? 'Ranch & Delicacy Guild Order' : 'سفارش ویژهٔ دام و نوبرانه'; },
 
   // === Almanac / Compendium, 28-Day Calendar & Morning Farm Summary (Items 20, 21, 22) ===
-  get almanacTitle() { return en() ? 'Grand Homestead Almanac & Records' : 'دایرةالمعارف جامع و کارنامهٔ مزرعه'; },
+  get almanacTitle() { return en() ? 'Homestead Almanac' : 'دایرةالمعارف مزرعه'; },
   get almTabCrops() { return en() ? '24 Crops' : '۲۴ محصول زراعی'; },
   get almTabRanch() { return en() ? '6 Livestock' : '۶ گونهٔ دام'; },
   get almTabFish() { return en() ? '8 River Fish' : '۸ گونهٔ ماهی'; },

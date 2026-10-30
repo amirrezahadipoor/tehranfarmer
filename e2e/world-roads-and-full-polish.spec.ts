@@ -182,19 +182,17 @@ test('بازطراحی کامل جاده‌های خروجی، حذف کامل �
     await page.waitForTimeout(100);
     await snap(page, `02_late_${ex.name}`);
 
-    // تضمین حیاتی: کارگران در رودخانه هرگز داخل آب رودخانه (y < 480) یا روی هم در زنبورستان جمع نمی‌شوند!
+      // کارگران در پست مزارعشان می‌مانند و با سفر بازیکن به رودخانه/زنبورستان دنبال او نمی‌آیند.
     if (ex.to === 'river' || ex.to === 'apiary') {
       const ws = await page.evaluate(() => {
-        const fn = (window as unknown as { __inspectEngine?: () => { workers: Array<{ x: number; y: number }> } }).__inspectEngine;
+        const fn = (window as unknown as { __inspectEngine?: () => { workers: Array<{ post?: string; visible: boolean }> } }).__inspectEngine;
         return fn ? fn().workers : [];
       });
       expect(ws.length).toBe(4);
       for (const w of ws) {
-        if (ex.to === 'river') expect(w.y).toBeGreaterThanOrEqual(480);
-        if (ex.to === 'apiary') expect(w.y).toBeGreaterThanOrEqual(520);
+        expect(w.visible).toBe(false);
+        expect(['farm', 'north', 'valley']).toContain(w.post);
       }
-      const uniqueXs = new Set(ws.map((w) => Math.round(w.x / 20)));
-      expect(uniqueXs.size).toBeGreaterThanOrEqual(3);
     }
 
     // تست کلیک روی کلبهٔ سرخ عسل در زنبورستان -> باز شدن انبار و دیگ پخت!

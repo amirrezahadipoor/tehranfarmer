@@ -153,7 +153,7 @@ export const ESTATE_EN_LINES: Record<string, string[]> = {
     'The Northern Meadow windmill is turning for our family once more! Take this keepsake reward, my proud heir!',
   ],
   'npc-q-rancher-2-start': [
-    'Time to scale up the ranch! Gather twenty-five total dairy, wool, or egg products across your animal sections!',
+    'Time to scale up the ranch! Gather twenty-five fresh dairy, wool, or egg products!',
     'Consider it done, Uncle Morad—all our animal sections are thriving!',
   ],
   'npc-q-rancher-2-done': [

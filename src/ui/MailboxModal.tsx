@@ -139,7 +139,7 @@ export function MailboxModal() {
         ) : (
           <div className="grid gap-2 sm:grid-cols-12">
             {/* ستون فهرست پاکت‌های نامه با مهر موم رنگی */}
-            <div data-mail-list="1" className={`${active ? 'hidden sm:flex' : 'flex'} max-h-[42vh] flex-col gap-1.5 overflow-y-auto pr-0.5 sm:col-span-5 sm:max-h-[58vh]`}>
+            <div data-mail-list="1" className={`${active ? 'hidden sm:flex' : 'flex'} max-h-none flex-col gap-1.5 overflow-y-auto pr-0.5 sm:col-span-5 sm:max-h-[42vh] lg:max-h-[58vh]`}>
               {filtered.map((m) => {
                 const meta = SENDER_META[m.sender];
                 const txt = renderMailTemplate(m, mailItemLabel);
@@ -174,11 +174,11 @@ export function MailboxModal() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1 text-[.68rem] font-bold text-[#7c5838]">
-                        <span className="truncate font-extrabold text-[#4c2e16]">{en ? meta.nameEn : meta.nameFa}</span>
+                        <span className="min-w-0 font-extrabold leading-tight text-[#4c2e16]">{en ? meta.nameEn : meta.nameFa}</span>
                         <span className="shrink-0">{MAIL_UI.postmarkDay(m.day, seasonLabel(m.season))}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="min-w-0 flex-1 truncate text-xs font-black text-[#2e1c0e]">{txt.subject}</div>
+                        <div className="min-w-0 flex-1 whitespace-normal break-words text-xs font-black leading-snug text-[#2e1c0e]">{txt.subject}</div>
                         {!m.read && (
                           <span data-mail-unread-tag="1" className="shrink-0 rounded-full bg-[#cf3834] px-1.5 py-0.5 text-[.62rem] font-black leading-none text-white">
                             {MAIL_UI.unreadTag}

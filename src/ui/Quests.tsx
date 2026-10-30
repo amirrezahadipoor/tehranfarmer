@@ -12,7 +12,7 @@ import { fa } from '../strings/fa';
 import { Bar, Coin, Ic, Modal } from './parts';
 import { BuyBtn, close } from './shopKit';
 import { CFG } from '../game/settings';
-import { NPC_QUEST_SPECS, isNpcQuestActive, npcHasQuestMarker } from '../story/npcQuests';
+import { NPC_QUEST_SPECS, isNpcQuestActive, npcHasQuestMarker, npcQuestProgress } from '../story/npcQuests';
 import { ESTATE_UI, NPC_ROLES } from '../strings/estateStoryText';
 import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
@@ -218,7 +218,7 @@ export function Quests() {
           )}
           <div className="grid gap-1.5 sm:grid-cols-2">
             {activeNpcQuests.map((sq) => {
-              const [curVal, target] = sq.progress();
+              const [curVal, target] = npcQuestProgress(sq);
               const ready = curVal >= target;
               const role = NPC_ROLES[loc][sq.who];
               const idxMap = { grandma: 0, sara: 1, engineer: 2, rancher: 3 } as const;

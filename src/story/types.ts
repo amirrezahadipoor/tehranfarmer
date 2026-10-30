@@ -49,4 +49,6 @@ export interface StoryState {
   queue?: string[];             // صف ماندگار صحنه‌های سینمایی در سِیو
   lastAutoDay?: number;         // جلوگیری از اجرای پیاپی خودکار صحنه‌ها در یک روز بدون فعالیت
   questDone: Record<number, boolean>;
+  /** مبنای شاخص‌های تجمیعی کوئست اهالی هنگام پذیرش؛ کوئست‌های قدیمیِ بدون مبنا رفتار قبلی را حفظ می‌کنند. */
+  questBase?: Record<string, number>;
 }

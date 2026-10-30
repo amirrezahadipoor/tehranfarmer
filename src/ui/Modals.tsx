@@ -250,7 +250,7 @@ function Market() {
               </div>
               <div className="text-sm font-extrabold leading-none">{g.fa}</div>
               {offSeason && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.66rem] font-black text-amber-900">{UT.outSeasonBonus}</span>}
-              <div className="flex items-center gap-2"><Coin v={goodPrice(g.id)} s={1.4} cls="text-base" /><Trend r={goodRatio(g.id)} /></div>
+              <div className="flex min-w-0 flex-wrap items-center justify-center gap-1"><Coin v={goodPrice(g.id)} s={1.4} cls="text-base" /><Trend r={goodRatio(g.id)} /></div>
               <div className="flex w-full flex-wrap gap-1">
                 <button data-sell-one={g.id} className="btn y press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, 1) > 0) tutOnSale(); }}><span className="font-black">{UT.u77}</span><Ic n="coin" s={1.1} /></button>
                 <button className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, q) > 0) tutOnSale(); }}><span className="font-black">{UT.sellAllStack}</span><Ic n="coin" s={1.1} /></button>

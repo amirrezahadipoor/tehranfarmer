@@ -5,7 +5,7 @@ import { ANIMALS, COLS, CROP, GOOD, LAND_PRICES, LEVEL_CAP, ROWS, WORKER_MAX, xp
 import { NORTH_PLOTS_COUNT, VALLEY_PLOTS_COUNT } from '../estates';
 import { NOTES } from '../../story/debtData';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 /** نسخه‌ای که از آن به بعد طول آرایه‌های کرت‌ها دقیقاً باید مطابق سازه باشد (ناهمخوانی = خرابی، نه مهاجرت) */
 const STRICT_LAYOUT_FROM = 7;
 
@@ -91,7 +91,23 @@ function v7_to_v8(d: Raw) {
   d.earn30 = Array.isArray(d.earn30) ? (d.earn30 as unknown[]).slice(-30) : [];
 }
 
-const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8];
+/** نسخهٔ ۸ به ۹: مبنای پیشرفت کوئست‌های اهالی؛ مبنای خالی، پیشرفت کوئستِ فعالِ قدیمی را حفظ می‌کند. */
+function v8_to_v9(d: Raw) {
+  d.v = 9;
+  const story = d.story;
+  if (!story || typeof story !== 'object' || Array.isArray(story)) return;
+  const st = story as Raw;
+  const rawBase = st.questBase;
+  if (!rawBase || typeof rawBase !== 'object' || Array.isArray(rawBase)) { st.questBase = {}; return; }
+  const clean: Record<string, number> = {};
+  for (const [k, v] of Object.entries(rawBase as Record<string, unknown>)) {
+    const n = num(v, -1);
+    if (n >= 0) clean[k] = n;
+  }
+  st.questBase = clean;
+}
+
+const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9];
 
 /**
  * سِیو خام را به آخرین نسخه مهاجرت می‌دهد.

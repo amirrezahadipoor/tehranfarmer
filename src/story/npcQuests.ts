@@ -21,6 +21,8 @@ export interface NpcQuestSpec {
   rewardCoins: number;
   rewardXp: number;
   canActivate: () => boolean;
+  /** شاخص تجمیعی هنگام پذیرش ثبت می‌شود؛ اهداف وضعیتِ ساختمان/ارتقا عمداً بدون مبنا می‌مانند. */
+  cumulative?: boolean;
   progress: () => [number, number];
 }
 
@@ -38,7 +40,8 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardCoins: 450,
     rewardXp: 35,
     canActivate: () => !!S.story?.prologueSeen,
-    progress: () => [Math.min(12, S.stats.harv ?? 0), 12],
+    cumulative: true,
+    progress: () => [S.stats.harv ?? 0, 12],
   },
   {
     id: 'npc-q-rancher-1',
@@ -51,7 +54,8 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardCoins: 750,
     rewardXp: 60,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 2,
-    progress: () => [Math.min(6, S.stats.collect ?? 0), 6],
+    cumulative: true,
+    progress: () => [S.stats.collect ?? 0, 6],
   },
   {
     id: 'npc-q-sara-1',
@@ -59,12 +63,13 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     icon: 'coin',
     titleFa: 'تأمین‌کنندهٔ خوش‌حساب بازار',
     titleEn: 'Trusted Market Supplier',
-    descFa: 'مجموع فروش محصولاتت در بازار را به ۲٬۵۰۰ سکه برسان و با سارا گفتگو کن.',
-    descEn: 'Reach 2,500 total coins earned from Market sales and speak with Sara.',
+    descFa: '۲٬۵۰۰ سکه از فروش تازه در بازار درآمد کن و با سارا گفتگو کن.',
+    descEn: 'Earn 2,500 coins from new Market sales and speak with Sara.',
     rewardCoins: 1100,
     rewardXp: 85,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 3,
-    progress: () => [Math.min(2500, Math.floor(S.earned ?? 0)), 2500],
+    cumulative: true,
+    progress: () => [Math.floor(S.earned ?? 0), 2500],
   },
   {
     id: 'npc-q-engineer-1',
@@ -98,12 +103,13 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     icon: 'milk',
     titleFa: 'رونق دامستان بزرگ دره',
     titleEn: 'Thriving Valley Ranch',
-    descFa: 'مجموع برداشت محصولات دامستان را به ۲۵ واحد برسان و نزد عمو مراد برگرد.',
-    descEn: 'Gather 25 total ranch goods across your animal sections and visit Uncle Morad.',
+    descFa: '۲۵ محصول دامی تازه جمع کن و نزد عمو مراد برگرد.',
+    descEn: 'Gather 25 fresh ranch goods and visit Uncle Morad.',
     rewardCoins: 4500,
     rewardXp: 250,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 7 && (S.story.chapter ?? 1) >= 2 && !!S.story.seen['npc-q-rancher-1-done'],
-    progress: () => [Math.min(25, S.stats.collect ?? 0), 25],
+    cumulative: true,
+    progress: () => [S.stats.collect ?? 0, 25],
   },
   {
     id: 'npc-q-engineer-2',
@@ -142,7 +148,8 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardCoins: 7500,
     rewardXp: 340,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 9 && !!S.story.seen['npc-q-grandma-2-done'],
-    progress: () => [Math.min(6, S.stats.honey ?? 0), 6],
+    cumulative: true,
+    progress: () => [S.stats.honey ?? 0, 6],
   },
   {
     id: 'npc-q-rancher-3',
@@ -155,7 +162,8 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardCoins: 12000,
     rewardXp: 480,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 11 && !!S.story.seen['npc-q-rancher-2-done'],
-    progress: () => [Math.min(12, (S.stats.fish ?? 0) + (S.stats.pondH ?? 0)), 12],
+    cumulative: true,
+    progress: () => [(S.stats.fish ?? 0) + (S.stats.pondH ?? 0), 12],
   },
   {
     id: 'npc-q-sara-3',
@@ -168,7 +176,8 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     rewardCoins: 15000,
     rewardXp: 600,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 12 && !!S.story.seen['npc-q-sara-1-done'],
-    progress: () => [Math.min(8, S.stats.artisan ?? 0), 8],
+    cumulative: true,
+    progress: () => [S.stats.artisan ?? 0, 8],
   },
   {
     id: 'npc-q-engineer-3',
@@ -189,12 +198,13 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     icon: 'pomegranate',
     titleFa: 'سفرهٔ بزرگ برداشت خاندان',
     titleEn: 'Grand Family Harvest Feast',
-    descFa: 'مجموع کل محصولات برداشت‌شدهٔ مزارع را به ۴۰۰ واحد برسان و پیش مادربزرگ برو.',
-    descEn: 'Reach 400 total harvested crops across your estates and celebrate with Grandma.',
+    descFa: '۴۰۰ محصول تازه از مزارع برداشت کن و پیش مادربزرگ برو.',
+    descEn: 'Harvest 400 fresh crops across your estates and celebrate with Grandma.',
     rewardCoins: 34000,
     rewardXp: 1100,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 18 && !!S.story.seen['npc-q-grandma-3-done'],
-    progress: () => [Math.min(400, S.stats.harv ?? 0), 400],
+    cumulative: true,
+    progress: () => [S.stats.harv ?? 0, 400],
   },
   {
     id: 'npc-q-rancher-4',
@@ -202,12 +212,13 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
     icon: 'cow',
     titleFa: 'امپراتوری دامداری دره',
     titleEn: 'Valley Livestock Empire',
-    descFa: 'مجموع محصولات جمع‌آوری‌شدهٔ دام‌ها را به ۱۲۰ واحد برسان و نزد عمو مراد برگرد.',
-    descEn: 'Gather 120 total livestock goods across your pens and visit Uncle Morad.',
+    descFa: '۱۲۰ محصول دامی تازه جمع کن و نزد عمو مراد برگرد.',
+    descEn: 'Gather 120 fresh livestock goods and visit Uncle Morad.',
     rewardCoins: 42000,
     rewardXp: 1350,
     canActivate: () => !!S.story?.prologueSeen && farmLevel() >= 20 && !!S.story.seen['npc-q-rancher-3-done'],
-    progress: () => [Math.min(120, S.stats.collect ?? 0), 120],
+    cumulative: true,
+    progress: () => [S.stats.collect ?? 0, 120],
   },
   {
     id: 'npc-q-sara-4',
@@ -226,9 +237,16 @@ export const NPC_QUEST_SPECS: NpcQuestSpec[] = [
 
 export const isNpcQuestActive = (q: NpcQuestSpec) => !!S.story?.seen?.[q.id + '-active'] && !S.story?.seen?.[q.id + '-done'];
 export const isNpcQuestDone = (q: NpcQuestSpec) => !!S.story?.seen?.[q.id + '-done'];
+/** UI، نشان NPC و تحویل همه از همین پیشرفت مشترک استفاده می‌کنند. */
+export function npcQuestProgress(q: NpcQuestSpec): [number, number] {
+  const [raw, target] = q.progress();
+  if (!q.cumulative) return [raw, target];
+  const base = S.story?.questBase?.[q.id] ?? 0;
+  return [Math.max(0, Math.min(target, raw - base)), target];
+}
 export const isNpcQuestReadyToTurnIn = (q: NpcQuestSpec) => {
   if (!isNpcQuestActive(q)) return false;
-  const [cur, max] = q.progress();
+  const [cur, max] = npcQuestProgress(q);
   return cur >= max;
 };
 export const isNpcQuestReadyToStart = (q: NpcQuestSpec) => !isNpcQuestDone(q) && !S.story?.seen?.[q.id + '-active'] && q.canActivate();
@@ -261,6 +279,10 @@ export function pickNpcQuestScene(who: Exclude<QuestNpcId, 'jahangir'>): string 
   }
   const startable = NPC_QUEST_SPECS.find((q) => q.who === who && isNpcQuestReadyToStart(q));
   if (startable) {
+    if (startable.cumulative) {
+      const bases = (S.story.questBase ??= {});
+      bases[startable.id] = startable.progress()[0];
+    }
     S.story.seen[startable.id + '-active'] = true;
     saveGame();
     notify();
@@ -330,7 +352,7 @@ export const ESTATE_AND_NPC_STORY_NODES: StoryNode[] = [
     { who: 'rancher', text: 'ایول پسر! کاه تمیز و رسیدگی درست یعنی همین؛ این کیسه سکه جایزهٔ دامدار نمونه‌ات!' },
   ]),
   mkNode('npc-q-sara-1-start', [
-    { who: 'sara', text: 'حجره‌های بازار حسابی مشتری محصول تازه دارند! مجموع فروشت را به دوهزاروپانصد سکه برسان تا نامت را در فهرست ویژه ثبت کنم.' },
+    { who: 'sara', text: 'بازار مشتری محصول تازه دارد! دوهزاروپانصد سکه فروش تازه انجام بده تا نامت را ثبت کنم.' },
     { who: 'player', text: 'قبول است سارا؛ سبدهای محصول تازه یکی‌یکی راهی بازار می‌شوند!' },
   ]),
   mkNode('npc-q-sara-1-done', [
@@ -351,7 +373,7 @@ export const ESTATE_AND_NPC_STORY_NODES: StoryNode[] = [
     { who: 'grandma', text: 'پره‌های آسیاب بادی دشت شمالی دوباره به نام ما می‌چرخند! آفرین به همتت پسرم، این هدیه مال توست!' },
   ]),
   mkNode('npc-q-rancher-2-start', [
-    { who: 'rancher', text: 'وقت گسترش دامستان است! مجموع محصولات جمع‌آوری‌شدهٔ دام‌هایت را به بیست‌وپنج واحد برسان تا نشانت بدهم دامداری حرفه‌ای یعنی چه!' },
+    { who: 'rancher', text: 'بیست‌وپنج محصول دامی تازه جمع کن تا نشانت بدهم دامداری حرفه‌ای یعنی چه!' },
     { who: 'player', text: 'بخش‌های جداگانهٔ دام‌ها آماده‌اند؛ با دست پر برمی‌گردم عمو مراد!' },
   ]),
   mkNode('npc-q-rancher-2-done', [
@@ -400,14 +422,14 @@ export const ESTATE_AND_NPC_STORY_NODES: StoryNode[] = [
     { who: 'engineer', text: 'صدای هماهنگ موتورهای مزرعه‌ات مثل موسیقی است! این هم جایزهٔ بزرگ نوآوری کشاورزی!' },
   ]),
   mkNode('npc-q-grandma-4-start', [
-    { who: 'grandma', text: 'امسال می‌خواهیم سفرهٔ شکرگزاری کل دهکده را پهن کنیم پسرم؛ مجموع برداشت مزارعت را به چهارصد برسان!' },
+    { who: 'grandma', text: 'برای سفرهٔ شکرگزاری دهکده، چهارصد محصول تازه از مزارعت برداشت کن پسرم!' },
     { who: 'player', text: 'چشم مادرجون! انبارها را پر از برکت هر سه مزرعه می‌کنم.' },
   ]),
   mkNode('npc-q-grandma-4-done', [
     { who: 'grandma', text: 'پدربزرگت اگر امروز اینجا بود از شوق اشک می‌ریخت؛ خدا به دست‌وپایت برکت بدهد عزیزم!' },
   ]),
   mkNode('npc-q-rancher-4-start', [
-    { who: 'rancher', text: 'بگذار رک بگویم: اگر مجموع برداشت دام‌هایت از صدوبیست بگذرد، رسماً استادت می‌شوی نه شاگردم!' },
+    { who: 'rancher', text: 'اگر صدوبیست محصول دامی تازه جمع کنی، رسماً استادت می‌شوی نه شاگردم!' },
     { who: 'player', text: 'قبول است عمو مراد؛ رکورد کل دره را با هم می‌شکنیم!' },
   ]),
   mkNode('npc-q-rancher-4-done', [
@@ -452,14 +474,14 @@ export const EXTRA_NPC_QUEST_EN_LINES: Record<string, string[]> = {
     'Those synchronized engines sound like music! Accept the Guild Innovation Prize!',
   ],
   'npc-q-grandma-4-start': [
-    'We are hosting a thanksgiving feast for the whole village, dear! Bring your lifetime crop harvests up to four hundred!',
+    'We are hosting a village thanksgiving feast, dear! Harvest four hundred fresh crops across your estates!',
     'You got it, Grandma — all three estates will overflow with fresh produce!',
   ],
   'npc-q-grandma-4-done': [
     'Your grandfather would weep with pride if he saw these fields today — bless you, my child!',
   ],
   'npc-q-rancher-4-start': [
-    'Tell you what: push your lifetime ranch collections past one hundred and twenty, and I will call YOU master rancher!',
+    'Gather one hundred and twenty fresh livestock goods, and I will call YOU master rancher!',
     'Deal, Uncle Morad — let us shatter the valley record together!',
   ],
   'npc-q-rancher-4-done': [

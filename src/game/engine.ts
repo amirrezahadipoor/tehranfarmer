@@ -1,12 +1,12 @@
 import { ANIMALS, FISH_STAM, HOE_SPEED, PORTAL_TRAVEL_HOURS, XP, MACHINES, MK_SPEED, type AnimalKind, type CropId, type MachineId } from './data';
 declare const __DEV_TOOLS__: boolean;
 import {
-  PAL_BUILDER, PAL_JAHANGIR, PAL_NPC, PAL_PLAYER, PAL_WORKERS, makeFarmer, poseFarmer, type AnimalRig, type FarmerRig, type Pal,
+  PAL_BUILDER, PAL_JAHANGIR, PAL_NPC, PAL_PLAYER, PAL_WORKERS, makeFarmer, poseFarmer, type Pal,
 } from './rig';
 import { ESTATES, estatePlotAt, estatePlotCenter, isFarmScene, type FarmSceneId } from './estates';
 import { FIELD_X, FIELD_Y, type SceneKey } from './scenes';
 import {
-  S, UI, activeFarm, addGood, addStat, addXp, advance, bumpPlayerCombo, canAct, canCap, catchRegionalFish, completeBuild, doAct, harvestHoney, mkOf, notify, performPlayerPlotSweep, rollRiverTreasure, saveGame, syncMailboxState, tickLiveClock, toast, onNewDay, season, troughCap,
+  S, UI, activeFarm, addGood, addStat, addXp, advance, bumpPlayerCombo, canAct, canCap, catchRegionalFish, completeBuild, doAct, mkOf, notify, performPlayerPlotSweep, rollRiverTreasure, saveGame, syncMailboxState, tickLiveClock, toast, onNewDay, season, troughCap,
 } from './state';
 import { createSceneTapRouter } from './engineInput';
 import { castPrecisionNow, fishCast } from './worldVisuals';
@@ -20,25 +20,19 @@ import { TOWN_ACTORS, npcTargetAt } from '../story/townNpc';
 import { notePlayerAction, playNode, talkToSharkhar, talkToTownNpc, triggerAreaIntro, triggerShopIntro } from '../story/engine';
 import { checkSecretTriggers } from '../story/secrets';
 import { bindCanvasInput, type CanvasPoint } from './touchBridge';
-import { FEED_TROUGH, STRAW_NEST, collectAllStrawEggs, hasGrazingLivestock, unifiedPondGeom } from './farmZones';
-import { workerCatchRiverFish, workerServiceUnifiedPond } from './core/workers';
+import { FEED_TROUGH, STRAW_NEST, collectAllStrawEggs, hasGrazingLivestock } from './farmZones';
+import { workerPostFarm } from './core/workers';
+import { createWorkerVisuals } from './engineWorkerVisuals';
 import { checkSeamlessEdgePortal } from './core/frontier';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
-import { placeActorsForScene, planLiveWorker, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
+import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
 const W = 1280, H = 720;
 void FIELD_X; void FIELD_Y;
 const plotC = (i: number) => estatePlotCenter(activeFarm(), i);
-interface Task { kind: string; plot?: number; animal?: number; node?: number; x: number; y: number; face: number; dur: number; hit: number; to?: string; seed?: CropId }
-interface Walker {
-  x: number; y: number; face: number; rig: FarmerRig; ph: number; mode: 'idle' | 'walk' | 'act'; kind: string; p: number;
-  tasks: Task[]; cur: Task | null; hitDone: boolean; speed: number; player: boolean; wait: number;
-}
-interface AR { id: number; kind: AnimalKind; rig: AnimalRig; x: number; y: number; face: number; mode: 'idle' | 'walk' | 'graze'; timer: number; tx: number; ty: number; ph: number; seed: number; sc: number }
-interface Fx { x: number; y: number; vx: number; vy: number; g: number; life: number; max: number; icon?: string; text?: string; col?: string; sc: number; r?: number }
 export const JAHANGIR_HUT = { cx: 1156, cy: 646 };
 export interface EngineRigSnapshot {
   builder: { phase: 'off' | 'walk' | 'work' | 'exit'; mode: string; x: number; y: number; legF: number; legB: number; shinF: number; armF: number; hasTool: boolean };
-  workers: Array<{ x: number; y: number; mode: string; kind: string; legF: number; stuckRecoveries: number }>;
+  workers: Array<{ x: number; y: number; mode: string; kind: string; legF: number; stuckRecoveries: number; post?: FarmSceneId; visible: boolean }>;
   animals: Array<{ id: number; kind: AnimalKind; x: number; y: number; mode: string; scale: number }>;
   pausedInBackground: boolean;
   framesRendered: number;
@@ -60,9 +54,9 @@ function machineSpeed(kind: string): number {
   return 1;
 }
 function mkWalker(pal: Pal, x: number, y: number, player: boolean): Walker {
-  return { x, y, face: 1, rig: makeFarmer(pal), ph: 0, mode: 'idle', kind: '', p: 0, tasks: [], cur: null, hitDone: false, speed: player ? 320 : 210, player, wait: 0 };
+  return { x, y, face: 1, rig: makeFarmer(pal), ph: 0, mode: 'idle', kind: '', p: 0, tasks: [], cur: null, hitDone: false, speed: player ? 320 : 210, player, wait: 0, post: 'farm' };
 }
-import { createSceneRenderer } from './engineRender';
+import { createSceneRenderer, type AR, type Fx, type Task, type Walker } from './engineRender';
 import { bindWorldActors, cinema, stepCinemaStage } from './cinemaStage';
 export function startEngine(canvas: HTMLCanvasElement): () => void {
   // تنها ۱ بوم مرئی استاندارد (زیر سقف بودجهٔ Full-HD حافظهٔ GPU وب‌ویو، بدون باگ RGBX alpha:false و با صفر FBO مخفی)
@@ -197,8 +191,12 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   }
 
   // ===== اجرای وظیفه =====
+  const workerVisuals = createWorkerVisuals({ workers, animals, plotCenter: plotC, plotTask, mkTask, pop, dust, drops });
   function applyTask(w: Walker, tk: Task) {
+    if (tk.visual) { workerVisuals.apply(w, tk); return; }
     const player = w.player;
+    // هیچ کارگرِ زنده‌ای مجاز به تولید مستقل از sim نیست؛ حتی وظیفهٔ قدیمیِ باقی‌مانده هم بی‌اثر است.
+    if (!player && (tk.plot !== undefined || ['straw', 'pondwork', 'hivework', 'collect', 'feed', 'fish'].includes(tk.kind))) return;
     if (tk.plot !== undefined) {
       const i = tk.plot;
       const r = canAct(tk.kind, i, !player, tk.seed);
@@ -236,11 +234,6 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         if (got > 0) { if (player) notePlayerAction(1); pop(STRAW_NEST.cx, STRAW_NEST.cy - 34, 'egg', Math.min(4, got), '+' + fa(got)); }
         break;
       }
-      case 'pondwork': if (workerServiceUnifiedPond()) { const g = unifiedPondGeom(); pop(g.cx, g.cy - 36, 'fish', 2); } break;
-      case 'hivework': {
-        if (S.hives > 0 && S.honeyAcc >= 1) { const got = harvestHoney(true); if (got > 0) pop(w.x, w.y - 46, 'honey', Math.min(3, got), '+' + fa(got)); }
-        break;
-      }
       case 'collect': {
         const a = S.animals.find((q) => q.id === tk.animal);
         if (a && a.ready > 0) {
@@ -267,11 +260,6 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         break;
       }
       case 'fish': {
-        if (!player) {
-          const got = workerCatchRiverFish();
-          if (got > 0) pop(w.x, w.y - 56, 'fish', Math.min(2, got), '+' + fa(got));
-          break;
-        }
         resolveCast(w.x, w.y, 0.35);
         break;
       }
@@ -316,7 +304,6 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       }
     } else w.mode = 'idle';
   }
-  const workerThink = (w: Walker, wi: number) => planLiveWorker(w, wi, t, mkTask, plotTask, moveTo, workers);
   const updateBuilder = (dt: number) => { bph = stepLiveBuilder(builder, bph, BSITE, dt, updateWalker, dust, completeBuild); };
   const syncAnimals = () => syncLiveAnimals(animals);
   const updateAnimal = (a: AR, dt: number) => stepLiveAnimal(a, dt, t);
@@ -416,7 +403,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     scene: UI.scene,
     farmer: { x: farmer.x, y: farmer.y, mode: farmer.mode, kind: farmer.kind, cur: farmer.cur ? { ...farmer.cur } : null, tasks: farmer.tasks.map((q) => ({ ...q })) },
     builder: { phase: bph, mode: builder.mode, x: builder.x, y: builder.y, legF: builder.rig.legF.r, legB: builder.rig.legB.r, shinF: builder.rig.shinF.r, armF: builder.rig.armF.r, hasTool: Boolean(builder.rig.tool.p) },
-    workers: workers.slice(0, S.workers).map((w, i) => ({ x: w.x, y: w.y, mode: w.mode, kind: w.kind, legF: w.rig.legF.r, stuckRecoveries: workerStuck[i]?.fixes ?? 0 })),
+    workers: workers.slice(0, S.workers).map((w, i) => ({ x: w.x, y: w.y, mode: w.mode, kind: w.kind, legF: w.rig.legF.r, stuckRecoveries: workerStuck[i]?.fixes ?? 0, post: w.post, visible: w.post === UI.scene })),
     animals: [...animals.values()].map((a) => ({ id: a.id, kind: a.kind, x: a.x, y: a.y, mode: a.mode, scale: a.sc })),
     pausedInBackground: bgPaused,
     framesRendered,
@@ -449,16 +436,19 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour, S.story?.chapter ?? 1); }
       stepCinemaStage(dt);
     }
-    // کارگر جدید بدون نیاز به نجار خودش پای پیاده از جادهٔ دهکده وارد مزرعه می‌شود!
+    // استخدام یا خرید سند فقط پستِ همان کارگر را هماهنگ می‌کند؛ کارگران دیگر در مسیرشان می‌مانند.
     if (S.workers > knownWorkers) {
       for (let wi = knownWorkers; wi < S.workers; wi++) {
         const w = workers[wi];
-        if (!w) continue;
-        w.x = 1272; w.y = 352; w.face = -1; w.wait = 0; w.cur = null; w.tasks = [];
-        w.tasks.push({ kind: 'move', x: 520 + wi * 65, y: 318, face: -1, dur: 0, hit: 0 });
+        if (w) placeWorkerAtPost(w, wi, workerPostFarm(wi));
       }
       knownWorkers = S.workers;
     } else if (S.workers < knownWorkers) knownWorkers = S.workers;
+    workers.forEach((w, wi) => {
+      if (wi >= S.workers) return;
+      const post = workerPostFarm(wi);
+      if (w.post !== post) placeWorkerAtPost(w, wi, post);
+    });
 
     syncAnimals();
     if (!frozen) {
@@ -483,14 +473,19 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         const edgeTo = checkSeamlessEdgePortal(UI.scene, farmer.x, farmer.y);
         if (edgeTo) startTrans(edgeTo);
       }
+      if (!busy) workerVisuals.assign();
       workers.forEach((w, wi) => {
         if (wi >= S.workers) return;
         w.wait -= dt;
-        if (w.wait <= 0 || w.cur || w.tasks.length > 0) {
-          updateWalker(w, dt);
-          guardWalker(w, workerStuck[wi], dt);
-          if (!busy) workerThink(w, wi);
-        } else w.mode = 'idle';
+        updateWalker(w, dt);
+        guardWalker(w, workerStuck[wi], dt);
+        // گشتِ کوتاه در همان پست، بدون تولید مستقل و بدون دنبال‌کردن بازیکن به ناحیهٔ دیگر.
+        const post = w.post;
+        if (!busy && post && post === UI.scene && !w.cur && !w.tasks.length && w.wait <= 0) {
+          const spec = ESTATES[post];
+          w.wait = 4 + rnd() * 4;
+          moveTo(w, spec.fx + 30 + rnd() * Math.max(40, spec.cols * spec.dx - 80), 236 + rnd() * 20, false);
+        }
       });
       for (const a of animals.values()) updateAnimal(a, dt);
       if (UI.scene === 'town') npcs.forEach((n, ni) => {
@@ -512,7 +507,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         if (trans.t > 0.31 && !trans.done) {
           trans.done = true; UI.scene = trans.to; UI.info = null;
           fishCast.active = false; fishCast.armed = false;
-          placeActorsForScene(trans.to, trans.from, farmer, workers);
+          placeActorsForScene(trans.to, trans.from, farmer);
           lastScene = trans.to; camX = farmer.x;
           advance(PORTAL_TRAVEL_HOURS); notify();
         }
@@ -535,7 +530,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       }
     } else if (!cinema.active && UI.scene !== lastScene) {
       lastScene = UI.scene;
-      placeActorsForScene(UI.scene, null, farmer, workers);
+      placeActorsForScene(UI.scene, null, farmer);
       camX = farmer.x;
     }
     for (let i = fx.length - 1; i >= 0; i--) {

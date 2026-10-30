@@ -184,6 +184,9 @@ export const WORKER_PRICES = [900, 6000, 25000, 75000, 175000];
 export const WORKER_LV = [2, 6, 12, 20, 25];
 export const WORKER_MAX = 5;
 export const WORKER_WAGE = 60;
+/** شیفت کارگران؛ شب هم برای بازیکن و هم برای کارگر استراحت است، اما خوابِ روز کار را متوقف نمی‌کند. */
+export const WORKER_SHIFT_START = 6;
+export const WORKER_SHIFT_END = 21.5;
 /** ضریب تولید عسل در هر فصل (بهار، تابستان، پاییز، زمستان) — منبع واحد برای شبیه‌ساز روزانه و زنده */
 export const HONEY_SEASON_MULT = [1.5, 2, 1, 1] as const;
 /** بازهٔ شب: از ساعت ۱۹٫۵ تا ۵٫۵ (منبع واحد برای نور، بازیابی نیرو، زنبور و صدا) */

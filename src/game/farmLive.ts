@@ -1,12 +1,12 @@
 // ===== هوش حرکتی زنده و بدون باگ کارگران در هر ۳ مزرعه + دامداری، رودخانه و زنبورستان =====
-import { PEN_KINDS, type AnimalKind, type CropId } from './data';
-import { ESTATES, estatePlotCenter, isEstateOwned, isFarmScene } from './estates';
+import { PEN_KINDS, type AnimalKind } from './data';
+import type { FarmSceneId } from './estates';
 import { makeAnimal, poseAnimal } from './rig';
-import { HIVE_SLOTS, PEN_SLOTS, RIVER_SPOTS } from './scenes';
-import { S, UI, activeFarm, canAct, ghCoversFarm, invCap, invCount, pickSeed, plotsForFarm } from './state';
+import { PEN_SLOTS } from './scenes';
+import { S } from './state';
 import { rnd } from './rng';
-import { FEED_TROUGH, STRAW_NEST, hasGrazingLivestock, isPoultry, pendingStrawEggs, unifiedPondGeom } from './farmZones';
-import type { AR, Task, Walker } from './engineRender';
+import { unifiedPondGeom } from './farmZones';
+import type { AR, Walker } from './engineRender';
 
 /** مسیر خشک‌زمینی دور حوضچهٔ پرورش ماهی رودخانه تا کشاورز هرگز از وسط آب حوضچه عبور نکند */
 export function routeRiverWalkWaypoints(wx: number, wy: number, x: number, y: number): Array<[number, number]> {
@@ -27,148 +27,15 @@ export function routeRiverWalkWaypoints(wx: number, wy: number, x: number, y: nu
 
 export const penRect = (kind: AnimalKind) => PEN_SLOTS[Math.max(0, PEN_KINDS.indexOf(kind))] ?? PEN_SLOTS[0];
 
-function claimedByPeers(allWorkers: Walker[], selfIdx: number) {
-  const plots = new Set<number>();
-  const kinds = new Set<string>();
-  const anims = new Set<number>();
-  const seedUsed = new Map<CropId, number>();
-  allWorkers.forEach((peer, idx) => {
-    if (idx === selfIdx) return;
-    const tasks = peer.cur ? [peer.cur, ...peer.tasks] : peer.tasks;
-    for (const q of tasks) {
-      if (q.plot !== undefined) plots.add(q.plot);
-      kinds.add(q.kind);
-      if (q.animal !== undefined) anims.add(q.animal);
-      if (q.kind === 'plant' && q.seed) seedUsed.set(q.seed, (seedUsed.get(q.seed) ?? 0) + 1);
-    }
-  });
-  return { plots, kinds, anims, seedUsed };
+/** کارگر تازه‌ایستاده یا تغییرپست‌داده‌ شده فقط روی همان مزرعهٔ کاری قرار می‌گیرد. */
+export function placeWorkerAtPost(w: Walker, wi: number, post: FarmSceneId) {
+  w.post = post;
+  w.cur = null; w.tasks = []; w.wait = 0.2; w.mode = 'idle'; w.kind = '';
+  if (post === 'farm') { w.x = 402 + (wi % 5) * 62; w.y = 238 + (wi % 2) * 18; }
+  else { w.x = 268 + (wi % 5) * 95; w.y = 248 + (wi % 2) * 18; }
 }
 
-function tryAssignRanchWork(
-  w: Walker,
-  claimed: ReturnType<typeof claimedByPeers>,
-  mkTask: (kind: string, x: number, y: number, extra?: Partial<Task>) => Task,
-): boolean {
-  if (
-    !claimed.kinds.has('feed') &&
-    hasGrazingLivestock() &&
-    S.trough < 6 &&
-    ((S.inv.feed ?? 0) + (S.inv.wheat ?? 0) + (S.inv.corn ?? 0)) > 0
-  ) {
-    w.wait = 0;
-    w.tasks.push(mkTask('feed', FEED_TROUGH.walkX, FEED_TROUGH.walkY, { face: -1 }));
-    return true;
-  }
-  if (!claimed.kinds.has('straw') && pendingStrawEggs() > 0 && invCount() < invCap()) {
-    w.wait = 0;
-    w.tasks.push(mkTask('straw', STRAW_NEST.walkX, STRAW_NEST.walkY, { face: -1, dur: 0.65, hit: 0.4 }));
-    return true;
-  }
-  if (invCount() < invCap()) {
-    const ready = S.animals.find((q) => !isPoultry(q.kind) && q.grown <= 0 && q.ready > 0 && !claimed.anims.has(q.id));
-    if (ready) {
-      const pr = penRect(ready.kind);
-      const gateY = pr.y0 < 350 ? pr.y0 - 4 : pr.y1 + 10;
-      w.wait = 0;
-      w.tasks.push(mkTask('collect', (pr.x0 + pr.x1) * 0.5, gateY, { animal: ready.id }));
-      return true;
-    }
-  }
-  return false;
-}
-
-export function planLiveWorker(
-  w: Walker,
-  wi: number,
-  t: number,
-  mkTask: (kind: string, x: number, y: number, extra?: Partial<Task>) => Task,
-  plotTask: (kind: string, i: number, player: boolean, seed?: CropId) => Task,
-  moveTo: (w: Walker, x: number, y: number, clearQ?: boolean) => void,
-  allWorkers: Walker[] = [],
-) {
-  if (wi >= S.workers || w.cur || w.tasks.length || S.hour < 6 || S.hour > 21) return;
-  const claimed = claimedByPeers(allWorkers, wi);
-  const role = S.crewRole ?? 'balanced';
-
-  if (UI.scene === 'river') {
-    const g = unifiedPondGeom();
-    w.wait = 0;
-    if (S.ponds.length > 0 && !claimed.kinds.has('pondwork') && rnd() < 0.5) {
-      w.tasks.push(mkTask('pondwork', g.cx + (wi - 1) * 56, 498, { dur: 0.9, hit: 0.5 }));
-    } else if (invCount() < invCap()) {
-      const sp = RIVER_SPOTS[(wi + Math.floor(t * 0.2)) % RIVER_SPOTS.length];
-      w.tasks.push(mkTask('fish', sp.x - 16, 494, { face: 1 }));
-    } else {
-      moveTo(w, 620 + wi * 70, 496, false);
-      w.wait = 1.6;
-    }
-    return;
-  }
-
-  if (UI.scene === 'apiary') {
-    const hi = S.hives > 0 ? wi % S.hives : 0;
-    const sp = HIVE_SLOTS[hi] ?? { x: 480, y: 440 };
-    w.wait = 0;
-    w.tasks.push(mkTask('hivework', sp.x + 18, 622, { face: -1, dur: 0.85, hit: 0.5 }));
-    return;
-  }
-
-  if (!isFarmScene(UI.scene)) return;
-  const farm = activeFarm();
-  if (!isEstateOwned(farm, S.lv.land)) return;
-
-  // روی مزرعهٔ اصلی: احترام کامل به نقش انتخابی خدمه (همه‌جانبه / کشت / دامداری)
-  if (farm === 'farm' && role !== 'crops' && tryAssignRanchWork(w, claimed, mkTask)) {
-    return;
-  }
-
-  // انتخاب نزدیک‌ترین کرت آزاد با اولویت هوشمند (برداشت > آبیاری تشنه‌ها > کاشت > شخم > کوددهی)
-  const arr = plotsForFarm(farm);
-  const total = ESTATES[farm].cols * ESTATES[farm].rows;
-  const bagFull = invCount() >= invCap();
-  for (const kind of ['harvest', 'water', 'plant', 'till', 'fert'] as const) {
-    if (kind === 'harvest' && bagFull) continue;
-    let bestIdx = -1;
-    let bestSeed: CropId | undefined;
-    let bestDist = Infinity;
-    for (let i = 0; i < total; i++) {
-      if (claimed.plots.has(i)) continue;
-      const p = arr[i];
-      if (!p) continue;
-      if (kind === 'water' && (p.st !== 2 || p.dead || p.water >= 0.5)) continue;
-      const seed = kind === 'plant' ? (pickSeed(ghCoversFarm(farm, i), farm) ?? undefined) : undefined;
-      if (kind === 'plant') {
-        if (!seed) continue;
-        const left = (S.seeds[seed] ?? 0) - (claimed.seedUsed.get(seed) ?? 0);
-        if (left <= 0) continue;
-      }
-      if (canAct(kind, i, true, seed, farm) !== '') continue;
-      const { cx, cy } = estatePlotCenter(farm, i);
-      const d = Math.hypot(cx - w.x, cy - w.y);
-      if (d < bestDist) {
-        bestDist = d;
-        bestIdx = i;
-        bestSeed = seed;
-      }
-    }
-    if (bestIdx >= 0) {
-      w.wait = 0;
-      w.tasks.push(plotTask(kind, bestIdx, false, bestSeed));
-      return;
-    }
-  }
-
-  if (farm === 'farm' && role === 'crops' && tryAssignRanchWork(w, claimed, mkTask)) {
-    return;
-  }
-
-  const spec = ESTATES[farm];
-  w.wait = 1.8 + rnd() * 2.2;
-  moveTo(w, spec.fx + 30 + rnd() * Math.max(40, spec.cols * spec.dx - 80), 236 + rnd() * 20, false);
-}
-
-export function placeActorsForScene(to: string, from: string | null, farmer: Walker, workers: Walker[]) {
+export function placeActorsForScene(to: string, from: string | null, farmer: Walker) {
   if (to === 'town') { farmer.x = 152; farmer.y = 616; farmer.face = 1; }
   else if (to === 'north' || to === 'valley') { farmer.x = 186; farmer.y = 582; farmer.face = 1; }
   else if (to === 'river') { farmer.x = from === 'cave' ? 168 : 1138; farmer.y = 534; farmer.face = from === 'cave' ? 1 : -1; }
@@ -181,15 +48,7 @@ export function placeActorsForScene(to: string, from: string | null, farmer: Wal
   else if (from === 'apiary') { farmer.x = 308; farmer.y = 602; farmer.face = -1; }
   else if (from) { farmer.x = 1142; farmer.y = 338; farmer.face = -1; }
   else { farmer.x = 404; farmer.y = 356; farmer.face = 1; }
-  for (let wi = 0; wi < workers.length; wi++) {
-    const w = workers[wi];
-    w.cur = null; w.tasks = []; w.wait = 0.2;
-    if (to === 'river') { w.x = 380 + wi * 165; w.y = 496; }
-    else if (to === 'apiary') { w.x = 380 + wi * 175; w.y = 622; }
-    else if (to === 'cave' || to === 'forest') { w.x = 238 + wi * 92; w.y = 592; }
-    else if (to === 'north' || to === 'valley') { w.x = 268 + wi * 95; w.y = 248; }
-    else { w.x = 402 + wi * 62; w.y = 238; }
-  }
+  // کارگران این‌جا عمداً دست نمی‌خورند: سفرِ بازیکن نه پست، نه مسیر و نه وظیفهٔ تصویری آن‌ها را پاک نمی‌کند.
   farmer.cur = null; farmer.tasks = []; farmer.mode = 'idle';
 }
 

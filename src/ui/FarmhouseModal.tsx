@@ -88,8 +88,8 @@ export function FarmhouseModal() {
       </div>
 
       {tab === 'home' && (
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <div className="paper flex flex-col gap-2 p-3">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2">
+          <div className="paper min-w-0 flex flex-col gap-2 p-3">
             <div className="ft text-lg text-[#5a3518]">{WX.farmerNameLbl}: {S.custom?.farmerName || WX.defaultFarmerName}</div>
             <div className="flex flex-wrap gap-1">
               {WX.farmerPresets.map((nm) => (
@@ -118,10 +118,10 @@ export function FarmhouseModal() {
             </div>
           </div>
 
-          <div className="paper flex flex-col justify-between gap-2 p-3">
+          <div className="paper min-w-0 flex flex-col justify-between gap-2 p-3">
             <div>
               <div className="ft text-lg text-[#5a3518]">{WX.outfitTitle}</div>
-              <div className="scroll-x mt-1.5 flex gap-1.5 pb-1" aria-label={WX.outfitTitle}>
+              <div className="mt-1.5 flex w-full min-w-0 max-w-full flex-wrap gap-1.5 pb-1" aria-label={WX.outfitTitle}>
                 {OUTFIT_THEMES.map((o) => {
                   const unlocked = isOutfitUnlocked(o.id);
                   const reward = ACH_OUTFIT_REWARDS.find((r) => r.outfit === o.id);
