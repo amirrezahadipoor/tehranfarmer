@@ -3,6 +3,9 @@ import { S, addStat, addXp, notify, saveGame, toast } from '../game/state';
 import { CFG } from '../game/settings';
 import { fa } from '../strings/fa';
 import { sfx } from '../game/sound';
+import { dailyKindCap, weeklyKindCap } from './questCapacity';
+
+const QUEST_FEASIBILITY_VERSION = 2;
 
 export type QKind = 'harvest' | 'plant' | 'collect' | 'honey' | 'pond' | 'sell' | 'build' | 'fish' | 'babies';
 
@@ -15,6 +18,10 @@ export interface QuestsState {
   claimed: Record<string, boolean>;
   base: Partial<Record<QKind, number>>;
   weeklyBase?: number;
+  /** امضاهای اخیر سه‌تایی‌ها؛ با تغییر pool هم از تکرار پنجاه روزه جلوگیری می‌کند. */
+  dailyHistory?: string[];
+  /** نسخهٔ تولید feasibility؛ برای جایگزینی یک‌بارهٔ اهداف قدیمی ناممکن */
+  feasibilityV?: number;
 }
 
 export function metric(kind: QKind): number {
@@ -135,14 +142,27 @@ function isKindUnlocked(kind: QKind): boolean {
   return true;
 }
 
-export function ensureQuests(force = false, shouldNotify = false) {
+export function ensureQuests(force = false, shouldNotify = false, atDawn = false) {
   if (!S.quests) return;
   const q = S.quests;
-  const needDaily = force || q.day !== S.day || q.daily.length === 0;
-  const needWeekly = force || q.week !== weekOf() || !q.weekly;
+  const migrating = (q.feasibilityV ?? 0) < QUEST_FEASIBILITY_VERSION;
+  const dayChanged = q.day !== S.day;
+  const weekChanged = q.week !== weekOf();
+  const needDaily = force || dayChanged || q.daily.length !== 3 || migrating;
+  const needWeekly = force || weekChanged || !q.weekly || migrating;
   if (!needDaily && !needWeekly) return;
   if (needDaily) {
-    const avail = DAILY_POOL.filter((p) => isKindUnlocked(p.kind));
+    const caps = new Map(DAILY_POOL.map((p) => [p.kind, dailyKindCap(p.kind, atDawn)]));
+    const avail = DAILY_POOL.filter((p) => isKindUnlocked(p.kind) && (caps.get(p.kind) ?? 0) > 0);
+    // زمین و فروشِ محصولِ همین روز همیشه سه‌تایی معتبر را تضمین می‌کنند؛
+    // fallback فقط برای saveهای خراب/دست‌کاری‌شده است، نه مسیر عادی بازی.
+    if (avail.length < 3) {
+      for (const p of DAILY_POOL) {
+        if (avail.length >= 3) break;
+        if ((p.kind === 'harvest' || p.kind === 'plant' || p.kind === 'sell') &&
+          isKindUnlocked(p.kind) && !avail.includes(p)) avail.push(p);
+      }
+    }
     const triples: [number, number, number][] = [];
     for (let i = 0; i < avail.length; i++) {
       for (let j = i + 1; j < avail.length; j++) {
@@ -151,17 +171,47 @@ export function ensureQuests(force = false, shouldNotify = false) {
     }
     const dayZero = Math.max(0, S.day - 1);
     const step = questRotationStep(triples.length);
-    const idx = (dayZero * step) % triples.length;
-    const epoch = Math.floor(dayZero / triples.length);
-    const picks = triples[idx].map((ti) => avail[ti]);
+    const idx = triples.length ? (dayZero * step) % triples.length : 0;
+    const epoch = Math.floor(dayZero / Math.max(1, triples.length));
     const tier = Math.min(2, Math.floor(dayZero / 30));
     const progMult = 1 + Math.min(4, Math.floor(dayZero / 70)) * 0.14;
-    q.daily = picks.map((p) => {
-      const target = p.kind === 'sell'
+    const candidates = triples.length ? triples.map((t) => t.map((ti) => avail[ti])) : [avail.slice(0, 3)];
+    const targetOf = (p: (typeof DAILY_POOL)[number]) => {
+      const rawTarget = p.kind === 'sell'
         ? p.tiers[tier] + epoch * 200 + (S.day % 3) * 100
         : p.kind === 'build' || p.kind === 'babies'
           ? p.tiers[tier] + Math.min(1, epoch)
           : p.tiers[tier] + epoch * 3 + (S.day % 3);
+      return Math.max(1, Math.min(rawTarget, caps.get(p.kind) || 1));
+    };
+    const signature = (picks: typeof candidates[number], override?: { index: number; target: number }) =>
+      picks.map((p, index) => `${p.kind}:${index === override?.index ? override.target : targetOf(p)}`).sort().join('|');
+    const history = new Set(q.dailyHistory ?? []);
+    let picks = candidates[idx] ?? candidates[0];
+    let override: { index: number; target: number } | undefined;
+    let found = false;
+    for (let offset = 0; offset < candidates.length; offset++) {
+      const candidate = candidates[(idx + offset) % candidates.length];
+      if (!history.has(signature(candidate))) { picks = candidate; found = true; break; }
+    }
+    // اگر تمام ترکیب‌ها در سابقه باشند، فقط هدف را درون سقف واقعی تغییر می‌دهیم؛
+    // هیچ نوع ناممکن یا هدف بالاتر از ظرفیت ساخته نمی‌شود.
+    if (!found) {
+      for (let offset = 0; offset < candidates.length && !found; offset++) {
+        const candidate = candidates[(idx + offset) % candidates.length];
+        for (let index = 0; index < candidate.length && !found; index++) {
+          const cap = caps.get(candidate[index].kind) ?? 1;
+          for (let target = 1; target <= cap; target++) {
+            const next = { index, target };
+            if (!history.has(signature(candidate, next))) {
+              picks = candidate; override = next; found = true; break;
+            }
+          }
+        }
+      }
+    }
+    q.daily = picks.map((p, index) => {
+      const target = index === override?.index ? override.target : targetOf(p);
       const g: QuestGoal = {
         kind: p.kind,
         target,
@@ -171,17 +221,21 @@ export function ensureQuests(force = false, shouldNotify = false) {
       };
       return g;
     });
+    const currentSignature = q.daily.map((g) => `${g.kind}:${g.target}`).sort().join('|');
+    q.dailyHistory = [currentSignature, ...(q.dailyHistory ?? []).filter((s) => s !== currentSignature)].slice(0, 50);
     q.day = S.day;
-    q.claimed = Object.fromEntries(Object.entries(q.claimed).filter(([k]) => k.startsWith('w:')));
+    if (dayChanged || (force && !migrating)) {
+      q.claimed = Object.fromEntries(Object.entries(q.claimed).filter(([k]) => k.startsWith('w:')));
+    }
     q.base = { ...snapshot(q.daily.map((d) => d.kind)) };
   }
   if (needWeekly) {
-    const wAvail = WEEKLY_POOL.filter((p) => isKindUnlocked(p.kind));
+    const wAvail = WEEKLY_POOL.filter((p) => isKindUnlocked(p.kind) && weeklyKindCap(p.kind, p.target) > 0);
     const p = wAvail[(weekOf() - 1) % wAvail.length];
     const wMult = 1 + Math.min(4, Math.floor((weekOf() - 1) / 10)) * 0.16;
     const wg: QuestGoal = {
       kind: p.kind,
-      target: p.target,
+      target: weeklyKindCap(p.kind, p.target),
       reward: Math.round(p.reward * wMult),
       xp: Math.round(p.xp * wMult),
       get label() { return questLabelOf(wg, true); },
@@ -189,8 +243,11 @@ export function ensureQuests(force = false, shouldNotify = false) {
     q.weekly = wg;
     q.week = weekOf();
     q.weeklyBase = metric(p.kind);
-    q.claimed = Object.fromEntries(Object.entries(q.claimed).filter(([k]) => !k.startsWith('w:')));
+    if (weekChanged || (force && !migrating)) {
+      q.claimed = Object.fromEntries(Object.entries(q.claimed).filter(([k]) => !k.startsWith('w:')));
+    }
   }
+  q.feasibilityV = QUEST_FEASIBILITY_VERSION;
   if (shouldNotify && (needDaily || needWeekly)) notify();
 }
 
@@ -224,7 +281,7 @@ export function claim(g: QuestGoal, week = false): boolean {
 export const isClaimed = (g: QuestGoal, week = false) => !!S.quests?.claimed[key(g.kind, week) + ':' + g.target];
 
 export function freshQuests(): QuestsState {
-  return { day: 0, week: 0, daily: [], weekly: null, claimed: {}, base: {} };
+  return { day: 0, week: 0, daily: [], weekly: null, claimed: {}, base: {}, dailyHistory: [], feasibilityV: QUEST_FEASIBILITY_VERSION };
 }
 
-export function tickQuests() { ensureQuests(false, true); }
+export function tickQuests() { ensureQuests(false, true, true); }

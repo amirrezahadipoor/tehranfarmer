@@ -7,6 +7,7 @@ import { isQuestDone } from './quests';
 import { fa } from '../strings/fa';
 import { sfx } from '../game/sound';
 import type { CharId, StoryNode } from './types';
+import { addAffinity } from './socialVillagers';
 
 export type QuestNpcId = Exclude<CharId, 'narrator' | 'player' | 'carpenter' | 'estateAgent'>;
 
@@ -262,21 +263,34 @@ export function npcHasQuestMarker(who: QuestNpcId): boolean {
   return NPC_QUEST_SPECS.some((q) => q.who === who && (isNpcQuestReadyToTurnIn(q) || isNpcQuestReadyToStart(q)));
 }
 
+/**
+ * تراکنش یک‌بارهٔ تحویل؛ توسط گرهٔ واقعی done صدا زده می‌شود.
+ * doneِ ازپیش‌ثبت‌شده فقط برای مهاجرت save نیمه‌کارهٔ نسخهٔ قبلی است که سکه/XP را уже داده است.
+ */
+export function completeNpcQuestTurnIn(nodeId: string): boolean {
+  const q = NPC_QUEST_SPECS.find((spec) => `${spec.id}-done` === nodeId);
+  if (!q || !S.story) return false;
+  const rewardKey = `${q.id}-turnin-rewarded`;
+  if (S.story.seen[rewardKey]) return false;
+  const legacyPremarked = !!S.story.seen[`${q.id}-done`];
+  S.story.seen[rewardKey] = true;
+  if (!legacyPremarked) {
+    S.coins += q.rewardCoins;
+    addXp(q.rewardXp);
+    addStat('quests', 1);
+    const en = CFG.locale === 'en';
+    toast('star', en ? `Quest complete: +${fa(q.rewardCoins)} coins` : `پاداش مأموریت: +${fa(q.rewardCoins)} سکه`);
+    sfx.coin();
+  }
+  addAffinity(q.who, 10);
+  S.story.seen[`${q.id}-done`] = true;
+  return true;
+}
+
 /** Resolves the right quest start/completion scene if available when talking to a Town NPC */
 export function pickNpcQuestScene(who: Exclude<QuestNpcId, 'jahangir'>): string | null {
   const turnIn = NPC_QUEST_SPECS.find((q) => q.who === who && isNpcQuestReadyToTurnIn(q));
-  if (turnIn) {
-    S.story.seen[turnIn.id + '-done'] = true;
-    S.coins += turnIn.rewardCoins;
-    addXp(turnIn.rewardXp);
-    addStat('quests', 1);
-    const en = CFG.locale === 'en';
-    toast('star', en ? `Quest complete: +${fa(turnIn.rewardCoins)} coins` : `پاداش مأموریت: +${fa(turnIn.rewardCoins)} سکه`);
-    sfx.coin();
-    saveGame();
-    notify();
-    return `${turnIn.id}-done`;
-  }
+  if (turnIn) return `${turnIn.id}-done`;
   const startable = NPC_QUEST_SPECS.find((q) => q.who === who && isNpcQuestReadyToStart(q));
   if (startable) {
     if (startable.cumulative) {

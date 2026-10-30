@@ -406,7 +406,9 @@ export default function App() {
       )}
       {UI.started && UI.portrait && portraitAcknowledged() && !inCinema && !UI.modal && !portraitHintDone && (
         <button
-          className="paper-dark pointer-events-auto fixed left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 px-3 py-1"
+          data-portrait-hint="1"
+          aria-label={UT.u7}
+          className="paper-dark pointer-events-auto fixed left-1/2 z-30 flex !min-h-[max(48px,3rem)] -translate-x-1/2 items-center gap-2 px-3 py-1"
           style={{ bottom: 'max(14.5rem, 196px)' }}
           onClick={() => { portraitHintDone = true; notify(); }}
           title={UT.u6}

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "generator": "scripts/generate-sfx.mjs",
+  "command": "npm run generate:sfx",
+  "sampleRate": 44100,
+  "bitrateKbps": 24,
+  "sourceMaterial": "None; original mathematical PCM synthesis only",
+  "records": {
+    "boop": {
+      "sha256": "38789044dbea4d86734c2f93723b10739253f835648b8826ae890433ec46b717",
+      "bytes": 648,
+      "durationSeconds": 0.12,
+      "sourcePeakBeforeNormalization": 0.54041,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.2703351955210835
+    },
+    "buy": {
+      "sha256": "bac379a0c0cc51c49ac7e345a9043b95efb2b3c03cbbe8ab0a6339247880faf2",
+      "bytes": 1944,
+      "durationSeconds": 0.55,
+      "sourcePeakBeforeNormalization": 0.46623,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.25163493971499534
+    },
+    "cluck": {
+      "sha256": "9e77829ed790e20713d588fb267c8ac5064fae922bbd60dae61a6c2884e73bec",
+      "bytes": 1188,
+      "durationSeconds": 0.32,
+      "sourcePeakBeforeNormalization": 0.44948,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.2564074555465745
+    },
+    "coin": {
+      "sha256": "93da752ef987181d88836c876f87bbc796b2a774042ae37fc16bf9b7b7f1d9eb",
+      "bytes": 1620,
+      "durationSeconds": 0.45,
+      "sourcePeakBeforeNormalization": 0.5769,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.2358600785462028
+    },
+    "dig": {
+      "sha256": "f6330b0f85c563aa9277f97d84d60b18f9ce13b06b5babeff1b9c04710bb19d5",
+      "bytes": 972,
+      "durationSeconds": 0.25,
+      "sourcePeakBeforeNormalization": 0.43244,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.19109648330418155
+    },
+    "err": {
+      "sha256": "2c4b1e576d4ba4bbc0944e4f23064b3d754adc0d676389f0de164768b18eab36",
+      "bytes": 1188,
+      "durationSeconds": 0.3,
+      "sourcePeakBeforeNormalization": 0.56993,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.23514733020432713
+    },
+    "fanfare": {
+      "sha256": "02d93f79249033d51d48d09479617bdd24e70b21304ad67a4a8e84b70fa60006",
+      "bytes": 3564,
+      "durationSeconds": 1.1,
+      "sourcePeakBeforeNormalization": 0.33041,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.2385784673696232
+    },
+    "guitar": {
+      "sha256": "c4d089a99b0e119f74fec3c226e054363afda2d2bc484f2b5362db0409db554d",
+      "bytes": 3240,
+      "durationSeconds": 1,
+      "sourcePeakBeforeNormalization": 0.56087,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.18918033880592877
+    },
+    "nibble": {
+      "sha256": "c8b1c137ee9879d6e03f3c0724b1b595074d2c1d838add2cf45e2f56e2479030",
+      "bytes": 972,
+      "durationSeconds": 0.22,
+      "sourcePeakBeforeNormalization": 0.44172,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.1060595371755736
+    },
+    "pad": {
+      "sha256": "f6b84482cb41f61d911403f3ac07a5a69769aea5357ccba2d9f23cde3dcb654b",
+      "bytes": 3888,
+      "durationSeconds": 1.2,
+      "sourcePeakBeforeNormalization": 0.43996,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.207569709819779
+    },
+    "paper": {
+      "sha256": "e312529626cd71fde6413e19d7d0ea1e5e1d85846a132af4fe1b479dd62741d1",
+      "bytes": 1188,
+      "durationSeconds": 0.32,
+      "sourcePeakBeforeNormalization": 0.5855,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.1439550886012543
+    },
+    "pop": {
+      "sha256": "4758fed016d6c8d41a10323a8e5993d57fb1fcc2dc26388e6bb4284b19bc48a7",
+      "bytes": 540,
+      "durationSeconds": 0.1,
+      "sourcePeakBeforeNormalization": 0.62193,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.26293901094404576
+    },
+    "splash": {
+      "sha256": "ea7d774ab9d3a7e15f23a15bb9643345f497290edb32fb21f907fc43ec617899",
+      "bytes": 1620,
+      "durationSeconds": 0.45,
+      "sourcePeakBeforeNormalization": 0.43783,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.16026980824775633
+    },
+    "step": {
+      "sha256": "6bfe5ab077c1badd5adc26c4592963e8f6482ef781a28ba0784779af7730161f",
+      "bytes": 648,
+      "durationSeconds": 0.14,
+      "sourcePeakBeforeNormalization": 0.47453,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.2129992605505919
+    },
+    "tap": {
+      "sha256": "6142ad2064b830d0f36105a70ccb3f8057c566d70c73bb478f64f8fca3272be7",
+      "bytes": 540,
+      "durationSeconds": 0.08,
+      "sourcePeakBeforeNormalization": 0.57874,
+      "pcmPeak": 0.8200018311105686,
+      "pcmRms": 0.26311323356936317
+    }
+  }
+}

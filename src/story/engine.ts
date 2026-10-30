@@ -2,13 +2,13 @@
 import { S, UI, addXp, farmLevel, notify, saveGame, season, stamCap, addGood } from '../game/state';
 import { SHOP_META, isShopId, type ShopId } from '../game/shops';
 import { CFG } from '../game/settings';
-import { nodeById } from './story';
+import { nodeById, visitNodeId } from './story';
 import type { StoryNode, StoryCtx } from './types';
-import { startDebt, minPay, standingBand } from '../game/core/debt';
+import { debt, startDebt, minPay, standingBand } from '../game/core/debt';
 import { STAND_BAD, STAND_GOOD, STAND_BAD_INTEREST_MULT, STAND_GOOD_INTEREST_MULT } from './debtData';
 import { sharkharNodeId, type SharkharMood } from './sharkhar';
 import { TOWN_ACTORS } from './townNpc';
-import { pickNpcQuestScene } from './npcQuests';
+import { completeNpcQuestTurnIn, pickNpcQuestScene } from './npcQuests';
 import type { SceneKey } from '../game/scenes';
 import { fa } from '../strings/fa';
 import { SCENE_CHOICES, addAffinity, applyDialogueChoice, isVillagerId, maybeGrantVillagerFriendTreat, villagerHearts } from './socialVillagers';
@@ -129,10 +129,7 @@ export function applyEffects(node: StoryNode) {
     }
   }
   if (node.id === 'prologue' || node.id === 'p7') S.story.prologueSeen = true;
-  if (node.id.startsWith('npc-q-') && node.id.endsWith('-done') && !S.story.seen[node.id]) {
-    const who = node.id.split('-')[2] ?? '';
-    if (isVillagerId(who)) addAffinity(who, 10);
-  }
+  if (node.id.startsWith('npc-q-') && node.id.endsWith('-done')) completeNpcQuestTurnIn(node.id);
   S.story.seen[node.id] = true;
 }
 
@@ -198,6 +195,23 @@ export function maybeStartPrologue() {
 
 export function queueNode(id: string) {
   triggerCutscene(id, { forceReplay: true });
+}
+
+/** مسیر مشترک VisitGate و هارنس: بازکردن ملاقاتِ واقعی در مزرعه و ساعت مجاز. */
+export function openPendingDebtVisit(): boolean {
+  if (!UI.started || UI.modal || S.story.pending) return false;
+  const d = debt();
+  if (!d || S.story.postgame || !d.pendingVisit || UI.scene !== 'farm' || S.hour < 9 || S.hour >= 17) return false;
+  const missed = d.lastVisit?.kind === 'due-missed';
+  const nodeId = d.pendingVisit === 'raid'
+    ? 'visit-raid'
+    : d.lastVisit?.kind === 'rest'
+      ? 'visit-rest'
+      : visitNodeId('due', missed, d.beatings);
+  if (!triggerCutscene(nodeId, { forceReplay: true })) return false;
+  d.pendingVisit = null;
+  saveGame();
+  return true;
 }
 
 export function dueWarningText(days: number, shortfall?: number): string | null {

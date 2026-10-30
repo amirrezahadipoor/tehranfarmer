@@ -64,13 +64,13 @@ export function Hud() {
           <div className="flex flex-wrap items-center gap-1">
             {UI.scene === 'cave' ? <MineStatusChip /> : <DebtChip />}
             {S.builds.slice(0, 2).map((b) => (
-              <div key={b.id} className="paper flex w-44 items-center gap-1.5 px-2 py-0.5">
+              <div key={b.id} data-build-card={b.id} role="group" aria-label={buildJobLabel(b)} className="paper flex w-44 shrink-0 items-center gap-1.5 px-2 py-0.5">
                 <Ic n={b.icon} s={1.6} cls="bob" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[.72rem] font-black">{buildJobLabel(b)}</div>
+                  <div data-build-label={b.id} title={buildJobLabel(b)} className="whitespace-normal break-words text-[.72rem] font-black leading-tight">{buildJobLabel(b)}</div>
                   <div className="bar mt-0.5 !h-2"><i style={{ width: `${(b.prog / b.dur) * 100}%`, background: '#6cc84c' }} /></div>
                 </div>
-                <span className="ft text-xs text-green-800">{faPct(Math.round((b.prog / b.dur) * 100))}</span>
+                <span className="ft shrink-0 text-xs text-green-800">{faPct(Math.round((b.prog / b.dur) * 100))}</span>
               </div>
             ))}
           </div>

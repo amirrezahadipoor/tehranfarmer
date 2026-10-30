@@ -11,6 +11,7 @@ import { mineAccuracyAt, mineTargetOpenAt, mineWeakPointAt } from '../src/game/c
 import { InventoryModal } from '../src/ui/InventoryModal';
 import { FarmhouseModal } from '../src/ui/FarmhouseModal';
 import { inventoryJoke } from '../src/strings/inventoryText';
+import { DAY_RATE, POND_GROW_DAYS } from '../src/game/data';
 
 const { JSDOM } = createRequire(import.meta.url)('jsdom') as {
   JSDOM: new (html: string) => { window: { document: Document; close(): void } };
@@ -98,10 +99,11 @@ describe('Agentic audit implementation regressions', () => {
     S.hives = 1;
     S.rod = 1;
     S.animals = [{ id: 1, kind: 'chicken', sex: 'f', grown: 0, health: 100, fed: 1, age: 1 } as never];
+    S.inv.wheat = 1000;
     const seen = new Set<string>();
     for (let day = 1; day <= 35; day++) {
       S.day = day;
-      ensureQuests();
+      ensureQuests(false, false, true);
       const signature = S.quests.daily.map((q) => q.kind).sort().join('|');
       expect(seen.has(signature), `repeated daily combination on day ${day}`).toBe(false);
       seen.add(signature);
@@ -122,7 +124,9 @@ describe('Agentic audit implementation regressions', () => {
   it('keeps every weekly coin and XP reward above its corresponding daily reward', () => {
     S.hives = 1;
     S.rod = 1;
-    S.ponds = [{} as never];
+    S.ponds = [{ id: 1, stocked: true, grow: POND_GROW_DAYS, feed: 0 }];
+    S.nests = [{ id: 9, kind: 'chicken', hatch: DAY_RATE }];
+    S.inv.wheat = 1000;
     S.animals = [
       { id: 1, kind: 'chicken', sex: 'f', grown: 0, health: 100, fed: 1, age: 1 } as never,
       { id: 2, kind: 'chicken', sex: 'm', grown: 0, health: 100, fed: 1, age: 1 } as never,
@@ -131,7 +135,7 @@ describe('Agentic audit implementation regressions', () => {
     const weekly = new Map<string, { reward: number; xp: number }>();
     for (let day = 1; day <= 63; day++) {
       S.day = day;
-      ensureQuests();
+      ensureQuests(false, false, true);
       for (const q of S.quests.daily) {
         const old = daily.get(q.kind);
         daily.set(q.kind, { reward: Math.max(old?.reward ?? 0, q.reward), xp: Math.max(old?.xp ?? 0, q.xp) });

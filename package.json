@@ -36,7 +36,11 @@
     "audit:startup": "node scripts/startup-audit.mjs",
     "audit:agents": "node scripts/agents-audit.mjs",
     "build:e2e": "node scripts/e2e-build.mjs",
-    "version:bump": "node scripts/version-bump.mjs"
+    "version:bump": "node scripts/version-bump.mjs",
+    "audit:mobile-layout": "node scripts/mobile-layout-gate.mjs",
+    "sim:completionist": "tsx scripts/completionist-50x.ts",
+    "generate:sfx": "node scripts/generate-sfx.mjs",
+    "audit:audio": "node scripts/audio-decode-gate.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.2",
@@ -50,6 +54,7 @@
     "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@capacitor/android": "^8.5.3",
     "@capacitor/cli": "^8.6.0",
     "@playwright/test": "^1.64.1",

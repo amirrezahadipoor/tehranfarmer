@@ -7,7 +7,8 @@ import { migrateSave, SAVE_VERSION } from '../src/game/core/saveMigrations';
 import {
   NPC_QUEST_SPECS, isNpcQuestReadyToTurnIn, npcQuestProgress, pickNpcQuestScene,
 } from '../src/story/npcQuests';
-import { notePlayerAction, triggerSeasonDawn } from '../src/story/engine';
+import { advanceNode, notePlayerAction, triggerSeasonDawn } from '../src/story/engine';
+import { nodeById } from '../src/story/story';
 import type { Plot } from '../src/game/state';
 
 function ripePlot(): Plot {
@@ -83,7 +84,10 @@ describe('worker continuity and activation-based NPC quest pacing', () => {
     expect(npcQuestProgress(q)).toEqual([11, 12]);
     S.stats['cropHarv:farm'] += 1;
     expect(isNpcQuestReadyToTurnIn(q)).toBe(true);
-    expect(pickNpcQuestScene('grandma')).toBe('npc-q-grandma-1-done');
+    const doneId = pickNpcQuestScene('grandma');
+    expect(doneId).toBe('npc-q-grandma-1-done');
+    expect(S.coins).toBe(coins); // انتخاب گره هنوز تراکنش تحویل نیست
+    advanceNode(nodeById(doneId!)!);
     expect(S.coins - coins).toBeGreaterThanOrEqual(q.rewardCoins);
     const settled = S.coins;
     expect(pickNpcQuestScene('grandma')).toBeNull();

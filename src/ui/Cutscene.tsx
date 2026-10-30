@@ -2,9 +2,9 @@
 // Drives real world actors on Canvas, world-anchored comic speech bubbles with live head tracking,
 // character voice blips + mouth-flap, dramatic pauses, Skip with full consequences, and Next Objective shot.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { S, UI, notify, resetGame, saveGame } from '../game/state';
-import { advanceNode, pendingNode, skipActiveCutscene, triggerCutscene } from '../story/engine';
-import { nodeById, visitNodeId } from '../story/story';
+import { S, UI, notify, resetGame } from '../game/state';
+import { advanceNode, openPendingDebtVisit, pendingNode, skipActiveCutscene } from '../story/engine';
+import { nodeById } from '../story/story';
 import { compileSceneScript, objectiveKeyFor } from '../story/sceneScripts';
 import {
   actorScreenAnchor, applyBeatToStage, beginSceneStage, cinema, endSceneStage, enterClosingShot, notifyTypewriterStep,
@@ -571,24 +571,8 @@ export function VisitGate() {
   useEffect(() => {
     const iv = window.setInterval(() => {
       if (typeof document !== 'undefined' && document.hidden) return;
-      if (!UI.started) return;
-      if (UI.modal || S.story.pending) return;
-      const d = debt();
-      if (!d || S.story.postgame || !d.pendingVisit) return;
-      const hour = S.hour;
-      if (hour < 9 || hour >= 17) return;
-      // هرگز صحنهٔ ملاقات مزرعه را وسط شهر یا رودخانه اجرا نکن (بدون پرش بی‌منطق مکان!)
-      if (UI.scene !== 'farm') return;
       if (Date.now() - sceneAt.current < 20000) return;
-      const missed = d.lastVisit?.kind === 'due-missed';
-      const nodeId = d.pendingVisit === 'raid'
-        ? 'visit-raid'
-        : d.lastVisit?.kind === 'rest'
-          ? 'visit-rest'
-          : visitNodeId('due', missed, d.beatings);
-      triggerCutscene(nodeId, { forceReplay: true });
-      d.pendingVisit = null;
-      saveGame();
+      openPendingDebtVisit();
     }, 1200);
     return () => window.clearInterval(iv);
   }, []);

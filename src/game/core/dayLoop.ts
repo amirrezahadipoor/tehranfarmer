@@ -92,6 +92,8 @@ export const isNight = () => S.hour >= NIGHT_START_H || S.hour < NIGHT_END_H;
 export function newDay() {
   const old = season();
   S.day++;
+  // مبنا پیش از تولد/تولید سحرگاه ثبت می‌شود تا خروجی همین روز پیشرفت کوئست باشد.
+  tickQuests();
   const sn = season();
   rollWeather(sn);
   if (sn !== old) {
@@ -291,7 +293,6 @@ export function newDay() {
     }
   }
   tickContract();
-  tickQuests();
   syncMailboxState();
   processMorningCompanionAndReport();
   onNewDay.cb?.();
