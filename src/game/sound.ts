@@ -93,20 +93,34 @@ function scheduleIdleAudioSuspend(a: AudioContext) {
   }
 }
 
+function audioContextShouldRun() {
+  return snd.on && CFG.sound && !bgAudioPaused && !(typeof document !== 'undefined' && document.hidden);
+}
+
+function reconcileAudioContext() {
+  const a = ac;
+  if (!a) return;
+  if (!audioContextShouldRun() && a.state === 'running') {
+    void a.suspend().then(() => {
+      if (audioContextShouldRun() && a.state === 'suspended') reconcileAudioContext();
+    }).catch(() => {});
+  } else if (audioContextShouldRun() && a.state === 'suspended') {
+    void a.resume().then(() => {
+      if (!audioContextShouldRun() && a.state === 'running') reconcileAudioContext();
+    }).catch(() => {});
+  }
+}
+
 export function suspendAudioForBackground() {
   bgAudioPaused = true;
   syncMusicPlayback();
-  if (ac && ac.state === 'running') {
-    void ac.suspend().catch(() => {});
-  }
+  reconcileAudioContext();
 }
 
 export function resumeAudioFromBackground() {
   bgAudioPaused = false;
   if (!snd.on || !CFG.sound) return;
-  if (ac && ac.state === 'suspended') {
-    void ac.resume().catch(() => {});
-  }
+  reconcileAudioContext();
   syncMusicPlayback();
 }
 
@@ -139,7 +153,7 @@ export function audioCtx(): AudioContext | null {
       if (AC) ac = new AC();
     }
     if (ac) {
-      if (ac.state === 'suspended') void ac.resume().catch(() => {});
+      reconcileAudioContext();
       warmDecodeSamples(ac);
       sfxOutput(ac);
     }
@@ -342,6 +356,7 @@ export function syncAudioSettings() {
   if (ac && sfxBus) sfxOutput(ac);
   updateMusicVolume();
   syncMusicPlayback();
+  reconcileAudioContext();
 }
 
 // چرخهٔ چهارآهنگه برای هر فصل؛ فصل پنجم دیگر میان دو قطعهٔ ثابت گیر نمی‌کند.
