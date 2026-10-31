@@ -2,7 +2,7 @@
 // Drives real world actors on Canvas, world-anchored comic speech bubbles with live head tracking,
 // character voice blips + mouth-flap, dramatic pauses, Skip with full consequences, and Next Objective shot.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { S, UI, notify, resetGame } from '../game/state';
+import { S, UI, farmLevel, notify, ownedFarms, resetGame } from '../game/state';
 import { advanceNode, clearSceneQueue, openPendingDebtVisit, pendingNode, skipActiveCutscene } from '../story/engine';
 import { nodeById } from '../story/story';
 import { compileSceneScript, objectiveKeyFor } from '../story/sceneScripts';
@@ -44,28 +44,42 @@ export function BeatStage({ variant }: { variant: 0 | 1 | 2 }) {
 
 function FinaleTableau() {
   const stats = [
-    { icon: 'wheat', value: fa(S.stats.cropHarv), label: UT.finaleHarvests, key: 'harvests' },
-    { icon: 'land', value: fa(S.lv.land), label: UT.finaleEstates, key: 'estates' },
+    { icon: 'sun', value: fa(S.day), label: UT.finaleDays, key: 'days' },
+    { icon: 'medal', value: fa(farmLevel()), label: UT.finaleLevel, key: 'level' },
+    { icon: 'land', value: fa(ownedFarms().length), label: UT.finaleEstates, key: 'estates' },
     { icon: 'note', value: fa(S.debt?.paidTotal ?? 0), label: UT.finaleDebtPaid, key: 'debt' },
+    { icon: 'wheat', value: fa(S.stats.cropHarv ?? 0), label: UT.finaleHarvests, key: 'harvests' },
+    { icon: 'coin', value: fa(S.earned), label: UT.finaleEarned, key: 'earned' },
+  ];
+  const sideStats = [
+    { icon: 'fish', value: fa(S.stats.fish ?? 0), label: UT.finaleFish, key: 'fish' },
+    { icon: 'cave', value: fa(S.stats.mineNodes ?? 0), label: UT.finaleMines, key: 'mines' },
   ];
   return (
     <div data-finale-tableau="1" className="finale-tableau pointer-events-none fixed inset-0 z-[5] flex items-center justify-center overflow-hidden px-3 py-20" role="status" aria-label={UT.finaleLegacyTitle}>
       <div className="finale-tableau-rays" aria-hidden="true" />
-      <div className="finale-legacy-card paper relative w-[min(92vw,42rem)] px-4 py-4 text-center shadow-2xl sm:px-7 sm:py-5">
-        <div className="mb-1 flex items-end justify-center gap-3" aria-label={UT.museumEstateSeal}>
+      <div className="finale-legacy-card paper relative max-h-full w-[min(92vw,42rem)] px-4 py-4 text-center shadow-2xl sm:px-7 sm:py-5">
+        <div className="finale-estates mb-1 flex items-end justify-center gap-3" aria-label={UT.museumEstateSeal}>
           <Ic n="house" s={3.1} cls="finale-estate" />
           <Ic n="greenhouse" s={3.8} cls="finale-estate" />
           <Ic n="valley" s={3.1} cls="finale-estate" />
         </div>
         <Ic n="trophy" s={4.2} cls="finale-trophy mx-auto" />
         <div className="ft mt-1 text-2xl text-[#4b2b18] sm:text-3xl">{UT.finaleLegacyTitle}</div>
-        <div className="mx-auto mt-1 max-w-xl text-xs font-extrabold leading-relaxed opacity-80 sm:text-sm">{UT.finaleLegacyText}</div>
-        <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+        <div className="finale-legacy-copy mx-auto mt-1 max-w-xl text-xs font-extrabold leading-relaxed opacity-80 sm:text-sm">{UT.finaleLegacyText}</div>
+        <div className="finale-stats mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
           {stats.map((item) => (
-            <div key={item.key} data-finale-stat={item.key} className="rounded-xl border-2 border-[#c89b53] bg-[#fff4d8]/85 px-1.5 py-2">
+            <div key={item.key} data-finale-stat={item.key} className="finale-stat rounded-xl border-2 border-[#c89b53] bg-[#fff4d8]/85 px-1.5 py-2">
               <Ic n={item.icon} s={1.8} cls="mx-auto mb-0.5" />
-              <div className="ft text-lg leading-none text-[#5a3518] sm:text-xl">{item.value}</div>
-              <div className="mt-1 text-[.65rem] font-black leading-tight opacity-75 sm:text-xs">{item.label}</div>
+              <div className="ft break-words text-lg leading-none text-[#5a3518] sm:text-xl">{item.value}</div>
+              <div className="finale-stat-label mt-1 text-[.65rem] font-black leading-tight opacity-75 sm:text-xs">{item.label}</div>
+            </div>
+          ))}
+        </div>
+        <div className="finale-side-stats mt-2 grid grid-cols-2 gap-2 text-xs font-black text-[#5a3518]">
+          {sideStats.map((item) => (
+            <div key={item.key} data-finale-stat={item.key} className="flex items-center justify-center gap-1.5">
+              <Ic n={item.icon} s={1.35} /><span>{item.label}: {item.value}</span>
             </div>
           ))}
         </div>
@@ -101,6 +115,7 @@ export function Cutscene() {
   const beatings = d?.beatings ?? 0;
   const effectiveScript: SceneScript | null = script ?? (activePending ? compileSceneScript(activePending.id) : null);
   const rootId = effectiveScript?.id ?? activePending?.id ?? '';
+  const prologueDigest = /^p[1-7]$/.test(rootId) && !UI.directorReplay;
   const finaleScene = effectiveScript?.beats.some((step) => step.nodeId === 'finale') ?? false;
   const beating = isBeatingNode(rootId);
   const queuedScenes = S.story.queue?.length ?? 0;
@@ -115,6 +130,9 @@ export function Cutscene() {
       }
       return;
     }
+    // advanceNode در آخرین beat ممکن است صحنهٔ بعدیِ صف را فعال کرده باشد؛
+    // کارنامهٔ finale تا تأیید بازیکن می‌ماند و سپس همان صف ادامه می‌یابد.
+    if (closing && finaleScene && script) return;
     if (script && script.beats[beatIdx]?.nodeId === pid) return;
 
     if ((isBeatingNode(pid) || pid.startsWith('visit-raid')) && CFG.shortBeat) {
@@ -136,7 +154,7 @@ export function Cutscene() {
     setBeatIdx(0);
     setTyped(0);
     beginSceneStage(compiled);
-  }, [activePending?.id]);
+  }, [activePending?.id, closing]);
 
   useEffect(() => () => {
     if (closingTimer.current !== null) window.clearTimeout(closingTimer.current);
@@ -196,7 +214,7 @@ export function Cutscene() {
 
   // Typewriter reveal with per-character voice blips & mouth-flap sync
   useEffect(() => {
-    if (!beat || summary || closing || holding) return;
+    if (!beat || prologueDigest || summary || closing || holding) return;
     if (typed >= full.length) return;
     // پرولوگ کوتاه بلافاصله خوانا است؛ تایپ تدریجی برای صحنه‌های سینمایی بعدی حفظ می‌شود.
     if (rootId === 'p1' || isReducedMotion()) { setTyped(full.length); return; }
@@ -228,7 +246,8 @@ export function Cutscene() {
 
   const skipScene = () => {
     const wasVisit = rootId.startsWith('visit-');
-    skipActiveCutscene();
+    // در closing، گره جاری قبلاً advance شده و pending متعلق به صحنهٔ بعدی است.
+    if (!closing) skipActiveCutscene();
     sfx.tap();
     finishSceneCompletely(wasVisit);
   };
@@ -293,6 +312,7 @@ export function Cutscene() {
   const onSceneKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape' && (!beating || canSkipBeating(beatings))) {
       e.preventDefault();
+      e.stopPropagation();
       skipScene();
     } else if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
       e.preventDefault();
@@ -311,7 +331,7 @@ export function Cutscene() {
         tabIndex={-1}
         className="fixed inset-0 z-[70] flex items-center justify-center bg-black/55 p-3"
         dir={rtl ? 'rtl' : 'ltr'}
-        onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); closeSummary(); } }}
+        onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSummary(); } }}
       >
         <div className="paper popin w-[min(94vw,34rem)] p-4">
           <div className="ft text-center text-3xl text-[#e8564a]">{UT.u8}</div>
@@ -373,6 +393,87 @@ export function Cutscene() {
 
   if (!effectiveScript || (!beat && !closing)) return null;
 
+  // پرولوگ به‌جای شش توقف تایپ‌نویس، یک کارت خوانا و یک انتخاب پایانی دارد.
+  // انتخاب و اثرات گره‌ها، فصل و شروع بدهی از همان مسیرهای واقعی حفظ می‌شوند.
+  if (prologueDigest && beat) {
+    const lines = effectiveScript.beats.map((line) => {
+      const node = nodeById(line.nodeId);
+      const textFa = node?.lines[line.lineIdx]?.text ?? '';
+      const textEn = EN_LINES[line.nodeId]?.[line.lineIdx];
+      return { key: `${line.nodeId}:${line.lineIdx}`, who: line.who, text: locale === 'en' && textEn ? textEn : textFa };
+    });
+    const choiceNodeId = effectiveScript.beats[effectiveScript.beats.length - 1]?.nodeId ?? rootId;
+    const prologueChoices = !S.story.seen[`choice:${choiceNodeId}`] ? SCENE_CHOICES[choiceNodeId] : undefined;
+    const choosePrologue = (index: number) => {
+      applyDialogueChoice(choiceNodeId, index === 1 ? 1 : 0);
+      skipScene();
+    };
+    return (
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={UT.prologueTitle}
+        tabIndex={-1}
+        data-tap="cutscene"
+        data-prologue-digest="1"
+        data-instant-text="1"
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-[#1c120e]/70 p-3"
+        dir={rtl ? 'rtl' : 'ltr'}
+        onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); skipScene(); } }}
+      >
+        <section className="paper popin flex max-h-[calc(100dvh-1.5rem)] w-[min(94vw,38rem)] flex-col overflow-hidden p-3 sm:p-5">
+          <header className="flex shrink-0 items-center gap-2 border-b-2 border-[#d7b270] pb-2">
+            <Ic n="house" s={2.4} />
+            <div className="min-w-0 flex-1">
+              <h2 className="ft text-2xl text-[#4b2b18]">{UT.prologueTitle}</h2>
+              <p className="text-[.7rem] font-bold leading-relaxed opacity-70">{UT.prologueReadHint}</p>
+            </div>
+            <button
+              type="button"
+              data-lang-toggle="1"
+              className="btn b press !min-h-[48px] !min-w-[48px] !px-2.5 !py-1 text-xs font-black"
+              onClick={() => { updateSetting('locale', locale === 'fa' ? 'en' : 'fa'); sfx.tap(); notify(); }}
+            >{ui.langToggle}</button>
+          </header>
+          <div className="scroll min-h-0 flex-1 space-y-2 py-3 pl-1" tabIndex={0} data-modal-scroll="1">
+            {lines.map((line) => (
+              <article key={line.key} className="rounded-xl border-2 border-[#dfc28b] bg-[#fff9e9]/75 p-2.5">
+                <div className="text-xs font-black text-[#8a5a2e]">{CHAR_NAMES[locale][line.who]}</div>
+                <p className="mt-0.5 text-sm font-extrabold leading-7 text-[#3d251a]">{line.text}</p>
+              </article>
+            ))}
+          </div>
+          {prologueChoices ? (
+            <div className="mt-1 shrink-0" aria-label={UT.prologueStart}>
+              <div className="mb-1 flex items-center justify-center gap-1 text-xs font-black opacity-75"><Ic n="check" s={1.25} />{UT.prologueStart}</div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {prologueChoices.map((choice, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    data-scene-choice={index}
+                    className="btn g press !min-h-[52px] !whitespace-normal !px-3 !py-2 text-xs font-black leading-5"
+                    onClick={() => choosePrologue(index)}
+                  ><span>{locale === 'en' ? choice.labelEn : choice.labelFa}</span></button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              data-cutscene-next="1"
+              className="btn g press mt-1 !min-h-[52px] shrink-0 !px-5 !py-2"
+              onClick={skipScene}
+            >
+              <Ic n="check" s={2.1} /><span className="ft text-xl">{UT.prologueStart}</span>
+            </button>
+          )}
+        </section>
+      </div>
+    );
+  }
+
   const who = closing ? 'narrator' : beat!.who;
   const speakerName = CHAR_NAMES[locale][who];
   const isNarrator = who === 'narrator';
@@ -416,7 +517,7 @@ export function Cutscene() {
       style={{ touchAction: 'manipulation' }}
       onPointerDown={onStagePointerDown}
       onClick={onStageClick}
-      data-scene-id={effectiveScript.id} data-beat-node={beat?.nodeId} data-shop-dialogue={UI.modal === 'shop' ? '1' : undefined}
+      data-scene-id={effectiveScript.id} data-beat-node={beat?.nodeId} data-scene-closing={closing ? '1' : undefined} data-shop-dialogue={UI.modal === 'shop' ? '1' : undefined}
       data-instant-text={rootId === 'p1' ? '1' : undefined}
     >
       {beating && <BeatStage variant={beatVariantOf(rootId, beatings)} />}
@@ -454,7 +555,7 @@ export function Cutscene() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {(!beating || canSkipBeating(beatings)) && (
+          {!closing && (!beating || canSkipBeating(beatings)) && (
             <button
               type="button"
               data-skip-beat={beating ? '1' : undefined}

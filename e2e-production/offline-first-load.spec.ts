@@ -4,6 +4,12 @@ async function dismissCutscenes(page: Page) {
   for (let i = 0; i < 16; i++) {
     const root = page.locator('[data-tap="cutscene"]');
     if (!await root.isVisible().catch(() => false)) return;
+    const choice = page.locator('[data-scene-choice]:visible');
+    if (await choice.count()) {
+      await choice.first().tap();
+      await page.waitForTimeout(180);
+      continue;
+    }
     const skip = page.locator('[data-cutscene-skip="1"]');
     if (await skip.isVisible().catch(() => false)) {
       await skip.tap();

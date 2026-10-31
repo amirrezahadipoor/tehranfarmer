@@ -12,6 +12,17 @@ export const AUDIO_SAMPLE_URIS = SFX_DATA_URIS;
 
 export type SampleId = keyof typeof AUDIO_SAMPLE_URIS;
 
+// RMS اندازه‌گیری‌شدهٔ فایل‌های فعلی (dBFS). ضریب فقط هنگام پخش اعمال می‌شود؛
+// فایل‌های آفلاین دست‌نخورده‌اند و limiter خروجی، پیک‌های نمونه‌های تقویت‌شده را می‌گیرد.
+const SFX_TARGET_RMS_DB = -18;
+const SFX_RMS_DB: Record<SampleId, number> = {
+  boop: -14.5, buy: -13.17, cluck: -16.47, coin: -13.76,
+  dig: -16.08, err: -14.06, fanfare: -13.2, guitar: -15.07,
+  nibble: -22.21, pad: -14.44, paper: -25.1, pop: -18.58,
+  splash: -17.44, step: -15.38, tap: -16.04, water: -24.66,
+};
+export const sfxSampleGain = (id: SampleId): number => Math.pow(10, (SFX_TARGET_RMS_DB - SFX_RMS_DB[id]) / 20);
+
 let ac: AudioContext | null = null;
 let sfxBus: GainNode | null = null;
 let sfxLimiter: DynamicsCompressorNode | null = null;
@@ -162,7 +173,7 @@ export function playSample(
   if (!snd.on || !CFG.sound || bgAudioPaused) return false;
   if (typeof document !== 'undefined' && document.hidden) return false;
   if (voiceCount() >= MAX_SFX_VOICES) return false;
-  const vol = opts?.vol ?? 0.55;
+  const vol = (opts?.vol ?? 0.55) * sfxSampleGain(id);
   const jit = opts?.jitter ? 1 + (audioRnd() - 0.5) * 2 * opts.jitter : 1;
   const rate = Math.max(0.35, Math.min(3.2, (opts?.rate ?? 1) * jit));
   const delay = opts?.delay ?? 0;
@@ -280,15 +291,28 @@ const musicUrlFor = (chapter: number) => {
 };
 let musicChapter = 1;
 let musicTrackChapter = 1;
-let musicCompanion = false;
+let musicTrackIndex = 0;
 let musicSrcLoaded = '';
 let musicEl: HTMLAudioElement | null = null;
 let musicWanted = false;
 let musicBaseVolume = 0.27;
 let musicDuck = 1;
 
+// trim مستقل از RMS واقعی فایل‌ها برای رسیدن به هدف مشترک ۱۸٫۴-dB؛ بدون افزایش
+// گین تراک‌های بلندتر و بدون تغییر فایل‌های آفلاین.
+const MUSIC_GAIN: Record<number, number> = {
+  1: 1,
+  2: Math.pow(10, -1.22 / 20),
+  3: Math.pow(10, -1.74 / 20),
+  4: Math.pow(10, -0.3 / 20),
+  5: Math.pow(10, -0.52 / 20),
+  6: Math.pow(10, -0.11 / 20),
+  7: Math.pow(10, -0.48 / 20),
+};
+
 function updateMusicVolume() {
-  if (musicEl) musicEl.volume = Math.max(0, Math.min(0.6, musicBaseVolume * musicDuck * CFG.musicVolume / 100));
+  const trackGain = MUSIC_GAIN[musicTrackChapter] ?? 1;
+  if (musicEl) musicEl.volume = Math.max(0, Math.min(0.6, musicBaseVolume * trackGain * musicDuck * CFG.musicVolume / 100));
 }
 
 /** اعمال فوری sliderها روی صدای در حال پخش، بدون انتظار برای action یا آهنگ بعدی. */
@@ -298,9 +322,18 @@ export function syncAudioSettings() {
   syncMusicPlayback();
 }
 
-// هر فصل یک آهنگ مکمل دارد؛ تعویض در پایان طبیعی قطعه، بدون timer و بدون مصرف
-// منابع هم‌زمان، از تکرار بی‌پایان همان ۹۰–۱۴۰ ثانیه جلوگیری می‌کند.
-const MUSIC_COMPANION: Record<number, number> = { 1: 7, 2: 5, 3: 6, 4: 2, 5: 1, 6: 3, 7: 4 };
+// چرخهٔ چهارآهنگه برای هر فصل؛ فصل پنجم دیگر میان دو قطعهٔ ثابت گیر نمی‌کند.
+// همهٔ فهرست‌ها از همان هفت فایل محلی استفاده می‌کنند و هیچ asset تازه‌ای لازم ندارند.
+const MUSIC_PLAYLISTS: Record<number, readonly number[]> = {
+  1: [1, 7, 3, 5],
+  2: [2, 5, 4, 7],
+  3: [3, 6, 1, 4],
+  4: [4, 2, 7, 5],
+  5: [5, 1, 4, 7],
+  6: [6, 3, 2, 5],
+  7: [7, 4, 1, 6],
+};
+export const musicPlaylist = (chapter: number): readonly number[] => MUSIC_PLAYLISTS[chapter] ?? MUSIC_PLAYLISTS[1];
 
 function syncMusicPlayback() {
   const hidden = typeof document !== 'undefined' && document.hidden;
@@ -318,9 +351,9 @@ function syncMusicPlayback() {
     musicEl.preload = 'auto';
     musicEl.onended = () => {
       if (!musicWanted || !musicEl) return;
-      musicCompanion = !musicCompanion;
-      musicTrackChapter = musicCompanion ? MUSIC_COMPANION[musicChapter] : musicChapter;
-      musicEl.currentTime = 0;
+      const playlist = musicPlaylist(musicChapter);
+      musicTrackIndex = (musicTrackIndex + 1) % playlist.length;
+      musicTrackChapter = playlist[musicTrackIndex];
       syncMusicPlayback();
     };
   } else if (musicSrcLoaded !== wantUrl) {
@@ -350,7 +383,7 @@ export const ambient = {
       if (want !== musicChapter) {
         musicChapter = want;
         musicTrackChapter = want;
-        musicCompanion = false;
+        musicTrackIndex = 0;
       }
     }
     const night = hour >= NIGHT_START_H || hour < NIGHT_END_H;

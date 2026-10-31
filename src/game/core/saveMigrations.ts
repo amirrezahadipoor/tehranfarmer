@@ -5,7 +5,7 @@ import { ANIMALS, COLS, CROP, GOOD, LAND_PRICES, LEVEL_CAP, ROWS, WORKER_MAX, xp
 import { NORTH_PLOTS_COUNT, VALLEY_PLOTS_COUNT } from '../estates';
 import { NOTES } from '../../story/debtData';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 /** نسخه‌ای که از آن به بعد طول آرایه‌های کرت‌ها دقیقاً باید مطابق سازه باشد (ناهمخوانی = خرابی، نه مهاجرت) */
 const STRICT_LAYOUT_FROM = 7;
 
@@ -141,7 +141,14 @@ function v10_to_v11(d: Raw) {
   if (typeof d.scene !== 'string' || !valid.includes(d.scene)) d.scene = 'farm';
 }
 
-const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9, v9_to_v10, v10_to_v11];
+/** نسخهٔ ۱۱ به ۱۲: آخرین ابزار انتخاب‌شده ماندگار می‌شود؛ سیو قدیمی از ابزار امن «نگاه» شروع می‌کند. */
+function v11_to_v12(d: Raw) {
+  d.v = 12;
+  const valid = ['hand', 'till', 'plant', 'water', 'harvest', 'fert'];
+  if (typeof d.tool !== 'string' || !valid.includes(d.tool)) d.tool = 'hand';
+}
+
+const STEPS: ((d: Raw) => void)[] = [v1_to_v2, v2_to_v3, v3_to_v4, v4_to_v5, v5_to_v6, v6_to_v7, v7_to_v8, v8_to_v9, v9_to_v10, v10_to_v11, v11_to_v12];
 
 /**
  * سِیو خام را به آخرین نسخه مهاجرت می‌دهد.

@@ -1,5 +1,5 @@
 // ===== موزهٔ میراث مزرعه، تندیس طلایی جهانگیر و تالار رازهای کهن دره =====
-import { S, visitMuseum } from '../game/state';
+import { S, ownedFarms, visitMuseum } from '../game/state';
 import { MUSEUM_GIFT_COINS } from '../game/data';
 import { SECRETS, TRUE_ENDING_MIN_SECRETS, checkSecretTriggers, discoveredSecretCount } from '../story/secrets';
 import { fa } from '../strings/fa';
@@ -32,7 +32,7 @@ export function Museum() {
               {[
                 { id: 'freedom', icon: 'note', value: fa(S.debt?.paidTotal ?? 0), label: UT.museumDebtSeal },
                 { id: 'harvest', icon: 'wheat', value: fa(S.stats.cropHarv), label: UT.museumHarvestSeal },
-                { id: 'estates', icon: 'land', value: fa(S.lv.land), label: UT.museumEstateSeal },
+                { id: 'estates', icon: 'land', value: fa(ownedFarms().length), label: UT.museumEstateSeal },
               ].map((exhibit) => (
                 <div key={exhibit.id} data-museum-exhibit={exhibit.id} className="rounded-lg border-2 border-[#c89b53] bg-[#fff4d8]/80 px-1.5 py-1.5 text-center">
                   <Ic n={exhibit.icon} s={1.55} cls="mx-auto" />

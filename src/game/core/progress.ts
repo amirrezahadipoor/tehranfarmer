@@ -61,10 +61,18 @@ export function checkAch() {
     }
   }
 }
+/**
+ * پاداش تازهٔ XP در نیمهٔ دوم campaign بیشتر می‌شود؛ XP ذخیره‌شده و xpNeed
+ * دست‌نخورده می‌مانند، بنابراین سیوهای موجود نه جهش سطح می‌گیرند و نه عقب می‌افتند.
+ */
+export function xpRewardMultiplier(level = farmLevel()): number {
+  return level >= 14 ? 6 : level >= 10 ? 2 : 1;
+}
+
 export function addXp(n: number) {
   if (n <= 0) return;
   const before = farmLevel();
-  S.xp += n;
+  S.xp += n * xpRewardMultiplier(before);
   lvCache = -1;
   const after = farmLevel();
   if (after > before) {

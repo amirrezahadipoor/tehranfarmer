@@ -20,6 +20,7 @@ describe('save snapshots and backup recovery', () => {
     Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: new MemoryStorage() });
     Object.assign(S, fresh());
     UI.scene = 'farm';
+    UI.tool = 'hand';
     UI.modal = null;
     UI.toasts = [];
   });
@@ -81,5 +82,31 @@ describe('save snapshots and backup recovery', () => {
     expect(S.v).toBe(SAVE_VERSION);
     expect(S.scene).toBe('farm');
     expect(UI.scene).toBe('farm');
+  });
+
+  it('restores the selected tool instead of falling back to hand after resume', () => {
+    UI.tool = 'water';
+    expect(saveGame()).toBe(true);
+    UI.tool = 'hand';
+    expect(loadGame()).toBe(true);
+    expect(S.tool).toBe('water');
+    expect(UI.tool).toBe('water');
+    expect(S.v).toBe(12);
+  });
+
+  it('migrates v11 saves to a safe hand tool and rejects invalid persisted tools', () => {
+    const old = { ...fresh(), v: 11 } as Record<string, unknown>;
+    delete old.tool;
+    localStorage.setItem(KEY, JSON.stringify(old));
+    UI.tool = 'harvest';
+    expect(loadGame()).toBe(true);
+    expect(S.v).toBe(12);
+    expect(S.tool).toBe('hand');
+    expect(UI.tool).toBe('hand');
+
+    localStorage.setItem(KEY, JSON.stringify({ ...fresh(), v: 11, tool: 'invalid-tool' }));
+    expect(loadGame()).toBe(true);
+    expect(S.tool).toBe('hand');
+    expect(UI.tool).toBe('hand');
   });
 });

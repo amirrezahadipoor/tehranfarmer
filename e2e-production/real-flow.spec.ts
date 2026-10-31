@@ -6,6 +6,12 @@ async function dismissCutscenes(page: Page) {
   for (let i = 0; i < 16; i++) {
     const root = page.locator('[data-tap="cutscene"]');
     if (!await root.isVisible().catch(() => false)) return;
+    const choice = page.locator('[data-scene-choice]:visible');
+    if (await choice.count()) {
+      await choice.first().tap();
+      await page.waitForTimeout(180);
+      continue;
+    }
     const skip = page.locator('[data-cutscene-skip="1"]');
     if (await skip.isVisible().catch(() => false)) {
       await skip.tap();
@@ -25,6 +31,9 @@ async function dismissCutscenes(page: Page) {
 
 async function beginFromStart(page: Page) {
   await page.getByRole('button', { name: 'شروع', exact: true }).tap();
+  const prologue = page.locator('[data-prologue-digest="1"]');
+  await expect(prologue).toBeVisible();
+  await expect(prologue.locator('article')).toHaveCount(6);
   await dismissCutscenes(page);
   await expect(page.locator('canvas')).toBeVisible();
   const portraitGate = page.locator('[data-portrait-continue="1"]');
@@ -100,7 +109,7 @@ test('production real journey: start, tutorial skip, fishing, market sale and sl
       sold = true;
     }
     await page.getByRole('button', { name: 'بستن پنجره', exact: true }).tap();
-    await page.locator('[data-shop-exit="1"]').tap();
+    await expect(page.locator('[data-shop-exit="1"]')).toHaveCount(0);
   }
   expect(sold).toBe(true);
 
@@ -114,8 +123,22 @@ test('production real journey: start, tutorial skip, fishing, market sale and sl
   expect(saved.day).toBe(2);
   expect(saved.scene).toBe('farm');
   expect(saved.coins).toBeGreaterThan(700);
-  expect(saved.v).toBe(11);
+  expect(saved.v).toBe(12);
   expect(errors).toEqual([]);
+});
+
+test('production selected tool survives a real save and reload', async ({ page }) => {
+  await startFresh(page);
+  await page.locator('[data-tool="till"]').tap();
+  await expect(page.locator('[data-tool="till"]')).toHaveAttribute('aria-pressed', 'true');
+  const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), SAVE_KEY);
+  expect(saved.v).toBe(12);
+  expect(saved.tool).toBe('till');
+
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.getByRole('button', { name: 'ادامه', exact: true }).tap();
+  await expect(page.locator('[data-tool="till"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-tool="hand"]')).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('production skilled fishing uses one species for the result and persistent fish log', async ({ page }) => {

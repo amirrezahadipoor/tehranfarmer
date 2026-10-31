@@ -49,6 +49,15 @@ export function handleHardwareBack(): BackOutcome {
       sfx.tap();
       return 'cutscene-locked';
     }
+    // در closing گره جاری advance شده است؛ Back باید همان overlay را ببندد،
+    // نه اینکه pendingِ صحنهٔ بعدی را مصرف کند. مسیر React همان cleanup را انجام می‌دهد.
+    const closingNext = typeof document !== 'undefined'
+      ? document.querySelector<HTMLButtonElement>('[data-scene-closing="1"] [data-cutscene-next="1"]')
+      : null;
+    if (closingNext) {
+      closingNext.click();
+      return 'cutscene-skipped';
+    }
     skipActiveCutscene();
     endSceneStage();
     clearVisit();

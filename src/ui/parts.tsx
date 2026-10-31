@@ -50,7 +50,7 @@ export function Bar({ v, col, icon }: { v: number; col: string; icon?: string })
 
 export function Pips({ n, max }: { n: number; max: number }) {
   return (
-    <div className="flex max-w-[9.5rem] flex-wrap justify-center gap-1" dir="ltr">
+    <div className="flex max-w-[9.5rem] flex-wrap justify-center gap-1" dir="ltr" data-pips={n} data-pips-max={max}>
       {Array.from({ length: max }, (_, i) => (
         <span key={i} className="inline-block h-3 w-3 rounded-full border-2 border-[#503426]" style={{ background: i < n ? '#ffd93b' : '#f3e6c4' }} />
       ))}

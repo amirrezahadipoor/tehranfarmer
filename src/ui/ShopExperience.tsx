@@ -138,7 +138,7 @@ function ShopLobby() {
 /** مودال خرید قبلی بدون تغییر اقتصادی، حالا با نوار فروشنده و مسیر بازگشت به داخل‌نما. */
 export function ShopExperience({ catalog }: { catalog: ReactNode }) {
   if (UI.shopPanel === 'buy') {
-    return <ModalVisitContext.Provider value={{ onClose: backToLobby, banner: <PurchaseBanner /> }}>{catalog}</ModalVisitContext.Provider>;
+    return <ModalVisitContext.Provider value={{ onClose: leaveShop, banner: <PurchaseBanner /> }}>{catalog}</ModalVisitContext.Provider>;
   }
   return <ShopLobby />;
 }

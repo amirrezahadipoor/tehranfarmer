@@ -90,9 +90,11 @@ export const QUESTS: QuestDef[] = [
   mkQ('q1', 1, 'اولین برداشت مزرعه', 'First Farm Harvest', '۲۰ بار محصول از مزرعهٔ ۴۰ کرتی برداشت کن تا مزرعه دوباره جان بگیرد.', 'Plant and harvest 20 crops across your 40-plot Main Farm.', 20, harv, 1200),
   mkQ('q2', 2, 'دشت شمالی، ابزار و دامداری', 'Northern Meadow, Tools & Ranch', '۲ حصار دام در نجاری بساز، ۱ ابزار ارتقا بده، سند «دشت شمالی» (۵۴ کرت) را باز کن و به سطح ۶ برس.', 'Build 2 pens, upgrade 1 tool, claim the 54-plot Northern Meadow deed, and reach Level 6.', 6, gated(2, 6), 6000),
   mkQ('q3', 3, 'شیلات، زنبورستان و کارگاه', 'Ponds, Bees & Workshop', '۲ استخر ماهی، ۲ کندوی عسل و ۲ ماشین از کارگاه شهر تهیه کن و به سطح ۱۰ برس.', 'Build 2 fish ponds, 2 beehives, buy 2 Workshop machines, and reach Level 10.', 10, gated(3, 10), 26000),
-  mkQ('q4', 4, 'گلخانه، قنات دشت شمالی و مکانیزاسیون', 'Greenhouse, Qanat & Automation', 'گلخانه و چاه قطره‌ای بساز، قنات دشت شمالی (پلهٔ ۲) را احیا کن، ۴ ماشین بگیر و به سطح ۱۴ برس.', 'Build Greenhouse & Drip Well, restore Northern Qanat (Tier 2), own 4 machines, and reach Level 14.', 14, gated(4, 14), 90000),
-  mkQ('q5', 5, 'باغ‌درهٔ آفتاب، کارگران و ماشین مدل ۲', 'Sunlit Valley, Crew & Model 2', '۳ کارگر در املاکی، سیلو در نجاری، سند باغ‌درهٔ آفتاب (۶۰ کرت) و ۵ ماشین (یکی مدل ۲) بگیر و به سطح ۱۸ برس.', 'Hire 3 farmhands, build a Silo, claim 60-plot Sunlit Valley, own 5 machines (1 Model 2), and hit Level 18.', 18, gated(5, 18), 300000),
-  mkQ('q6', 6, 'منشور ۱۵۴ کرت، خاک طلایی و ۶ ماشین', 'All 154 Plots Mastery', 'منشور هر ۳ مزرعه (۱۵۴ کرت) را کامل کن، خاک طلایی و ۶ ماشین بخر و در سطح ۱۸ مزرعه را آزاد کن.', 'Complete All 3 Estates Charter (154 plots), buy Golden Soil & 6 machines, and reach Level 18.', 18, gated(6, 18), 1500000),
+  // پاداش‌های q4+q5+q6 در مجموع ۱٬۸۹۰٬۰۰۰ سکه می‌مانند؛ زمان‌بندی آن‌ها
+  // با هزینهٔ الزامی فصل بعد هماهنگ است تا قسط و خرید منشور بازیکن را قفل نکند.
+  mkQ('q4', 4, 'گلخانه، قنات دشت شمالی و مکانیزاسیون', 'Greenhouse, Qanat & Automation', 'گلخانه و چاه قطره‌ای بساز، قنات دشت شمالی (پلهٔ ۲) را احیا کن، ۴ ماشین بگیر و به سطح ۱۴ برس.', 'Build Greenhouse & Drip Well, restore Northern Qanat (Tier 2), own 4 machines, and reach Level 14.', 14, gated(4, 14), 240000),
+  mkQ('q5', 5, 'باغ‌درهٔ آفتاب، کارگران و ماشین مدل ۲', 'Sunlit Valley, Crew & Model 2', '۳ کارگر در املاکی، سیلو در نجاری، سند باغ‌درهٔ آفتاب (۶۰ کرت) و ۵ ماشین (یکی مدل ۲) بگیر و به سطح ۱۸ برس.', 'Hire 3 farmhands, build a Silo, claim 60-plot Sunlit Valley, own 5 machines (1 Model 2), and hit Level 18.', 18, gated(5, 18), 600000),
+  mkQ('q6', 6, 'منشور ۱۵۴ کرت، خاک طلایی و ۶ ماشین', 'All 154 Plots Mastery', 'منشور هر ۳ مزرعه (۱۵۴ کرت) را کامل کن، خاک طلایی و ۶ ماشین بخر و در سطح ۱۸ مزرعه را آزاد کن.', 'Complete All 3 Estates Charter (154 plots), buy Golden Soil & 6 machines, and reach Level 18.', 18, gated(6, 18), 1050000),
 ];
 
 export const questOf = (chapter: number): QuestDef | null => QUESTS.find((q) => q.chapter === chapter) ?? null;

@@ -40,6 +40,8 @@ export interface Nest { id: number; kind: AnimalKind; hatch: number } // لان�
 export interface Save {
   v: number; coins: number; day: number; hour: number; stamina: number;
   scene: SceneKey;
+  /** آخرین ابزار انتخاب‌شده؛ از save v12 ماندگار است. */
+  tool: Tool;
   plots: Plot[];
   northPlots: Plot[];
   valleyPlots: Plot[];
@@ -148,7 +150,7 @@ export function fresh(): Save {
   const sdem: Record<string, number> = {};
   CROPS.forEach((c) => (sdem[c.id] = 1));
   return {
-    v: SAVE_VERSION, coins: 700, day: 1, hour: 7, stamina: 100, scene: 'farm',
+    v: SAVE_VERSION, coins: 700, day: 1, hour: 7, stamina: 100, scene: 'farm', tool: 'hand',
     plots: Array.from({ length: COLS * ROWS }, newPlot),
     northPlots: Array.from({ length: NORTH_PLOTS_COUNT }, newPlot),
     valleyPlots: Array.from({ length: VALLEY_PLOTS_COUNT }, newPlot),
@@ -248,6 +250,7 @@ export function saveGame(): boolean {
     }
     S.savedAt = now;
     S.scene = UI.scene;
+    S.tool = UI.tool;
     const serialized = JSON.stringify(S);
     trustedSaveA = serialized;
     // نوشتن اصلی باید واقعاً موفق باشد؛ خطای حافظه (QuotaExceeded) نباید بی‌صدا رد شود
@@ -272,6 +275,7 @@ function applyParsedSave(rawObj: unknown): boolean {
   S = { ...fresh(), ...(d as Partial<Save>) } as Save;
   S.v = SAVE_VERSION;
   UI.scene = S.scene ?? 'farm';
+  UI.tool = S.tool ?? 'hand';
   UI.modal = null; UI.afterModal = null; UI.afterTalkNpc = null; UI.info = null; UI.seedTray = false;
   // سازگاری‌های فیلدی که به نسخه گره نخورده‌اند (سِیو ناقص هم باید لود شود)
   S.machines = S.machines ?? {}; S.auto = S.auto ?? {};
@@ -405,6 +409,7 @@ import { resetAutoClock } from './core/dayLoop';
 export function resetGame() {
   S = fresh();
   UI.scene = 'farm';
+  UI.tool = 'hand';
   UI.modal = null;
   saveLocked = false;
   lastRotateAt = 0;

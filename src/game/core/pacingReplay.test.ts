@@ -295,43 +295,58 @@ function serviceDebt() {
   }
 }
 
+function runVerifiedReplay(sideActivityEvery: 1 | 2) {
+  stubStorage();
+  resetScenario(0x51f15e);
+  const rows: unknown[] = [];
+  const noteDays: Record<number, number> = {};
+  let previousNote = 0;
+  const maxDays = 240;
+  for (let day = 1; day <= maxDays && !S.story.postgame; day++) {
+    if (S.debt && S.debt.noteIdx !== previousNote) {
+      previousNote = S.debt.noteIdx;
+      noteDays[previousNote] = S.day;
+    }
+    runAuto();
+    if (farmLevel() < 22) runFarm(Number.POSITIVE_INFINITY);
+    advance(18);
+    ensureWorkerSeeds();
+    if (S.day % sideActivityEvery === 0) runSideActivities();
+    ensureWorkerSeeds();
+    buyNextRequirement();
+    serviceDebt();
+    if (S.day % 28 === 1 || S.story.postgame) rows.push({ day: S.day, coins: Math.round(S.coins), level: farmLevel(), note: S.debt?.noteIdx, remaining: Math.round(S.debt?.remaining ?? 0), land: S.lv.land, quest: S.story.chapter, realMinutes: Math.round(usage.realSeconds / 6) / 10 });
+    if (!S.story.postgame) {
+      usage.realSeconds += 2;
+      sleepToMorning();
+    }
+  }
+  const result = {
+    postgame: S.story.postgame, day: S.day, coins: Math.round(S.coins), earned: Math.round(S.earned), level: farmLevel(),
+    noteDays, debtPaid: Math.round(S.debt?.paidTotal ?? 0), remaining: Math.round(S.debt?.remaining ?? 0), beatings: S.debt?.beatings,
+    land: S.lv.land, nextLandPrice: landPrice(S.lv.land),
+    stats: { harv: S.stats.harv, mine: S.stats.mineNodes, fish: S.stats.fish },
+    realHours: Math.round(usage.realSeconds / 360) / 10, rows,
+  };
+  console.log(sideActivityEvery === 1 ? 'PACING_REPLAY' : 'PACING_REPLAY_SPARSE', JSON.stringify(result));
+  expect(S.story.postgame).toBe(true);
+  expect(S.debt?.remaining).toBe(0);
+  expect(S.lv.land).toBe(4);
+  expect(S.day).toBeLessThanOrEqual(maxDays);
+  expect(result.realHours).toBeLessThanOrEqual(8);
+  expect(noteDays[4]).toBeDefined();
+  expect(noteDays[5]).toBeDefined();
+  // در هر دو سبک بازی، دم فصل پنجم و فصل آخر محدود و قابل‌اتکا باقی می‌ماند.
+  expect(noteDays[5] - noteDays[4]).toBeLessThanOrEqual(100);
+  expect(S.day - noteDays[5]).toBeLessThanOrEqual(60);
+}
+
 describe('full pacing replay through the real core', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('reaches the finale without injected coins or XP', { timeout: 40000 }, () => {
-    stubStorage();
-    resetScenario(0x51f15e);
-    const rows: unknown[] = [];
-    const noteDays: Record<number, number> = {};
-    let previousNote = 0;
-    // Conservative fixed-crop policy, shared with the clean-slate audit. The
-    // campaign must leave time for chapter purchases and must not grow another
-    // multi-hundred-day tail after the final debt is ready to settle.
-    const maxDays = Number(process.env.PACING_MAX_DAYS ?? 500);
-    for (let day = 1; day <= maxDays && !S.story.postgame; day++) {
-      if (S.debt && S.debt.noteIdx !== previousNote) {
-        previousNote = S.debt.noteIdx;
-        noteDays[previousNote] = S.day;
-      }
-      runAuto();
-      if (farmLevel() < 22) runFarm(Number.POSITIVE_INFINITY);
-      advance(18);
-      ensureWorkerSeeds();
-      runSideActivities();
-      ensureWorkerSeeds();
-      buyNextRequirement();
-      serviceDebt();
-      if (S.day % 28 === 1 || S.story.postgame) rows.push({ day: S.day, coins: Math.round(S.coins), level: farmLevel(), note: S.debt?.noteIdx, remaining: Math.round(S.debt?.remaining ?? 0), land: S.lv.land, quest: S.story.chapter, realMinutes: Math.round(usage.realSeconds / 6) / 10 });
-      if (!S.story.postgame) {
-        usage.realSeconds += 2;
-        sleepToMorning();
-      }
-    }
-    const result = { postgame: S.story.postgame, day: S.day, coins: Math.round(S.coins), earned: Math.round(S.earned), level: farmLevel(), noteDays, debtPaid: Math.round(S.debt?.paidTotal ?? 0), remaining: Math.round(S.debt?.remaining ?? 0), beatings: S.debt?.beatings, land: S.lv.land, nextLandPrice: landPrice(S.lv.land), machines: S.machines, workers: S.workers, buildings: { ponds: S.ponds.length, hives: S.hives, gh: S.gh, silo: S.silo, well: S.wellLv, soil: S.lv.soil, tools: toolUps() }, stats: { plants: S.stats.plants, harv: S.stats.harv, cropHarv: S.stats.cropHarv, farm: S.stats['cropHarv:farm'], north: S.stats['cropHarv:north'], valley: S.stats['cropHarv:valley'], market: S.stats.marketEarned, mine: S.stats.mineNodes, fish: S.stats.fish }, seeds: S.seeds, farmSeeds: S.farmSeeds, northPlots: { planted: S.northPlots.filter((p) => p.st === 2).length, ripe: S.northPlots.filter((p) => p.ripe).length, sample: S.northPlots.slice(0, 4) }, valleyPlots: { planted: S.valleyPlots.filter((p) => p.st === 2).length, ripe: S.valleyPlots.filter((p) => p.ripe).length, sample: S.valleyPlots.slice(0, 4) }, realHours: Math.round(usage.realSeconds / 360) / 10, rows };
-    console.log('PACING_REPLAY', JSON.stringify(result));
-    expect(S.story.postgame).toBe(true);
-    expect(S.debt?.remaining).toBe(0);
-    expect(S.day).toBeLessThanOrEqual(maxDays);
-    expect(result.realHours).toBeLessThanOrEqual(14);
-    expect(S.day - (noteDays[5] ?? S.day)).toBeLessThanOrEqual(28);
+    runVerifiedReplay(1);
+  });
+  it('also finishes within budget with half as many side-activity days', { timeout: 40000 }, () => {
+    runVerifiedReplay(2);
   });
 });

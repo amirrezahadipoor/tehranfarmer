@@ -7,7 +7,7 @@ import { QUESTS } from './quests';
 import { faDigits } from '../strings/fa';
 
 describe('short prologue regression', () => {
-  it('plays six immediate-reading cards and keeps the final choice/effects intact', () => {
+  it('keeps all six prologue beats and their final effects intact', () => {
     const script = compileSceneScript('p1');
     expect(script).not.toBeNull();
     expect(script!.beats).toHaveLength(6);
@@ -21,6 +21,16 @@ describe('short prologue regression', () => {
     }
     const text = script!.beats.map((beat) => NODES[beat.nodeId].lines[beat.lineIdx].text).join(' ');
     expect(text).not.toContain('شش میلیون');
+  });
+});
+
+describe('late-chapter reward timing', () => {
+  it('moves funding earlier without increasing the combined q4–q6 reward', () => {
+    const late = QUESTS.filter((quest) => quest.chapter >= 4 && quest.chapter <= 6);
+    expect(late.reduce((sum, quest) => sum + quest.reward, 0)).toBe(1890000);
+    expect(QUESTS.find((quest) => quest.id === 'q4')!.reward).toBe(240000);
+    expect(QUESTS.find((quest) => quest.id === 'q5')!.reward).toBe(600000);
+    expect(QUESTS.find((quest) => quest.id === 'q6')!.reward).toBe(1050000);
   });
 });
 

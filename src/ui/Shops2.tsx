@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import {
   ANIMALS, BARN_CAP, CAN_CAP, fa, faDec, GH_LV, GH_PRICE, GH_SPEED, HIVE_LV, HIVE_MAX, hivePrice, HOE_SPEED, LAND_PRICES, PACK_CAP,
   PEN_BUILD, PEN_CAP_LV, PEN_KINDS, PEN_UP, plotsOf, POND_LV, POND_MAX, pondPrice, ROD_LV, ROD_PRICE, SILO_LV, SILO_MULT, SILO_PRICE,
-  TROUGH_CAP, WORKER_LV, WORKER_MAX, WORKER_PRICES, WORKER_WAGE,
+  SOIL_BONUS, SOIL_PRICES, TROUGH_CAP, WORKER_LV, WORKER_MAX, WORKER_PRICES, WORKER_WAGE,
   type AnimalKind,
 } from '../game/data';
 import { S, buyGh, buyHive, buyPen, buyPenUp, buyPond, buyRod, buySilo, buyWell, buyWorker, orderScarecrow, scarecrowPrice, toast, troughCap, wellLvReq, wellPrice } from '../game/state';
@@ -66,6 +66,21 @@ function PenCard({ k }: { k: AnimalKind }) {
   );
 }
 
+export function SoilUpCard() {
+  const soil = S.lv.soil;
+  return (
+    <UpCard
+      icon="fert"
+      k="soil"
+      name={UT.u158}
+      max={SOIL_PRICES.length}
+      pipsN={soil}
+      cur={`+${faDec(soil * SOIL_BONUS * 100)}${UT.u46}`}
+      next={soil < SOIL_PRICES.length ? `+${faDec((soil + 1) * SOIL_BONUS * 100)}${UT.u46}` : null}
+    />
+  );
+}
+
 export function Carpenter() {
   const l = S.lv;
   return (
@@ -92,7 +107,7 @@ export function Carpenter() {
         />
         <UpCard icon="bag" k="bag" name={UT.uPack} max={7} cur={fa(PACK_CAP[l.bag])} next={l.bag < 6 ? fa(PACK_CAP[l.bag + 1]) : null} />
         <UpCard icon="house" k="barn" name={UT.u133} max={7} cur={fa(BARN_CAP[l.barn])} next={l.barn < 6 ? fa(BARN_CAP[l.barn + 1]) : null} />
-        <UpCard icon="fert" k="soil" name={UT.u158} max={4} cur={("+" + (fa(l.soil * 12)) + UT.u46)} next={l.soil < 3 ? ("+" + (fa((l.soil + 1) * 12)) + UT.u46) : null} />
+        <SoilUpCard />
         <div className="paper flex flex-col items-center gap-1 p-2">
           <Ic n="rod" s={4.4} />
           <div className="text-sm font-extrabold">{UT.u159}</div>

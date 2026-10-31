@@ -6,7 +6,7 @@ import { tutToolBlocked, tutToolHi } from '../game/tutorial';
 import { requestSleep } from '../game/sleep';
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, season, skillPointsAvailable, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
+import { S, UI, activeFarm, canCap, dismissMorningReport, effectivePlotDailyRate, farmLevel, ghCoversFarm, isNight, notify, ownedFarms, packCap, packCount, plotInfo, plotsForFarm, readyQuestCount, saveGame, season, skillPointsAvailable, stamCap, unreadMailCount, xpProgress, type Tool } from '../game/state';
 import { MAIL_UI } from '../strings/mailText';
 import { questOf } from '../story/quests';
 import { Bar, Ic } from './parts';
@@ -443,7 +443,7 @@ function Toolbar() {
               sfx.tap();
               if (t.k === 'plant') UI.seedTray = UI.tool === 'plant' ? !UI.seedTray : true;
               else UI.seedTray = false;
-              UI.tool = t.k; UI.info = null; notify();
+              UI.tool = t.k; UI.info = null; saveGame(); notify();
             }}
             className={'press relative flex min-h-[48px] min-w-[48px] flex-col items-center justify-center rounded-xl border-[.18rem] px-1 pb-0.5 '
               + (UI.portrait ? 'w-[3.2rem] ' : 'w-[3.45rem] md:w-[4.15rem] ')
