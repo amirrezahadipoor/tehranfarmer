@@ -408,7 +408,7 @@ html[data-reduce-motion="1"] .bar > i { transition: none !important; }
     border-radius: .35rem;
     background: #fff4d8;
     padding: 0 .12rem;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.15;
   }
   .hud-build-card { grid-column: auto; width: 100%; flex: 0 0 auto; }
@@ -432,30 +432,32 @@ html[data-reduce-motion="1"] .bar > i { transition: none !important; }
   .hud-wallet > div { min-width: 0; gap: .2rem; }
   .hud-wallet svg { width: 1.25rem; height: 1.25rem; }
   .hud-wallet .bar { width: 2rem !important; }
-  .hud-coin-value { font-size: .95rem; }
+  .hud-coin-value { font-size: max(12px, .95rem); }
   .hud-level { flex-shrink: 0; gap: .2rem; padding-inline: .3rem; }
   .hud-level .bar { width: 1.8rem !important; }
   .hud-level [dir="ltr"] { display: none !important; }
   .hud-debt-row { flex-wrap: nowrap; gap: 8px; }
+  .hud-level .ft, .hud-debt .ft { font-size: max(12px, 1rem); }
   .hud-controls { flex: 0 0 auto; flex-wrap: nowrap; gap: 8px; }
   .hud-clock { gap: .25rem; padding-inline: .3rem; }
   .hud-clock > svg { width: 1.3rem; height: 1.3rem; }
   .hud-season-icon { display: none; }
-  .hud-season-label { font-size: .62rem; }
-  .hud-clock .ft { font-size: .85rem; }
+  .hud-season-label { font-size: max(12px, .62rem); }
+  .hud-clock .ft { font-size: max(12px, .85rem); }
   .hud-actions { flex-wrap: nowrap; gap: 8px; }
   .hud-actions .hud-action { flex-shrink: 0; }
-  .hud-inventory-count { font-size: .62rem; }
+  .hud-inventory-count { font-size: max(12px, .62rem); }
 }
-.tutorial-coach .text-\[\.85rem\] { font-size: max(11px, .85rem); }
+.tutorial-coach .text-\[\.85rem\] { font-size: max(12px, .85rem); }
 .tutorial-coach .text-\[\.92rem\] { font-size: max(12px, .92rem); }
+.tutorial-coach [data-tutorial-title="1"] { font-size: max(12px, 1rem); }
 @media (max-width: 430px) and (max-height: 640px) {
   .tutorial-coach {
     bottom: calc(var(--safe-bottom) + 120px);
     padding: .45rem;
     gap: .25rem;
   }
-  .tutorial-coach .text-\[\.85rem\] { font-size: 11px; line-height: 1.55; }
+  .tutorial-coach .text-\[\.85rem\] { font-size: 12px; line-height: 1.55; }
   .tutorial-coach .text-\[\.92rem\] { font-size: 12px; line-height: 1.55; }
 }
 
@@ -496,13 +498,13 @@ html[data-reduce-motion="1"] .finale-legacy-card { animation: none !important; }
   .finale-estates { display: none; }
   .finale-trophy { width: 2.35rem; height: 2.35rem; }
   .finale-legacy-card > .ft { margin-top: 0; font-size: 1.15rem; line-height: 1.25; }
-  .finale-legacy-copy { margin-top: .1rem; font-size: .65rem; line-height: 1.35; }
+  .finale-legacy-copy { margin-top: .1rem; font-size: max(12px, .65rem); line-height: 1.35; }
   .finale-stats { margin-top: .4rem; gap: .3rem; }
   .finale-stat { padding: .25rem .3rem; border-radius: .55rem; }
   .finale-stat > svg { width: 1.1rem; height: 1.1rem; margin-bottom: 0; }
-  .finale-stat .ft { font-size: .9rem; line-height: 1; }
-  .finale-stat-label { margin-top: .12rem; font-size: .56rem; line-height: 1.15; }
-  .finale-side-stats { margin-top: .3rem; font-size: .62rem; line-height: 1.2; }
+  .finale-stat .ft { font-size: max(12px, .9rem); line-height: 1; }
+  .finale-stat-label { margin-top: .12rem; font-size: max(12px, .56rem); line-height: 1.15; }
+  .finale-side-stats { margin-top: .3rem; font-size: max(12px, .62rem); line-height: 1.2; }
   .finale-side-stats svg { width: 1rem; height: 1rem; }
 }
 .museum-legacy-hero {
