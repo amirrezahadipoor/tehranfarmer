@@ -17,6 +17,7 @@ import {
 import { checkStoryQuests, isQuestDone, questOf } from '../../story/quests';
 import type { NoteDef } from '../../story/debtData';
 import { charterInterestMult, charterRaidMult, charterStashMult } from './frontier';
+import { startMastery } from './mastery';
 import { fa } from '../../strings/fa';
 import { GT } from '../../strings/gameText';
 
@@ -221,6 +222,7 @@ function finishGame() {
   S.story.postgame = true;
   S.story.chapter = POSTGAME_CHAPTER;
   d.chapter = POSTGAME_CHAPTER;
+  startMastery();
   const refund = Math.round(d.extorted * REFUND_BONUS);
   if (refund > 0) {
     S.coins += refund;

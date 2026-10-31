@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { SAVE_VERSION } from '../src/game/core/saveMigrations';
 
 const SAVE_KEY = 'mazrae-rangi-save-v1';
 
@@ -123,7 +124,7 @@ test('production real journey: start, tutorial skip, fishing, market sale and sl
   expect(saved.day).toBe(2);
   expect(saved.scene).toBe('farm');
   expect(saved.coins).toBeGreaterThan(700);
-  expect(saved.v).toBe(12);
+  expect(saved.v).toBe(SAVE_VERSION);
   expect(errors).toEqual([]);
 });
 
@@ -132,7 +133,7 @@ test('production selected tool survives a real save and reload', async ({ page }
   await page.locator('[data-tool="till"]').tap();
   await expect(page.locator('[data-tool="till"]')).toHaveAttribute('aria-pressed', 'true');
   const saved = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), SAVE_KEY);
-  expect(saved.v).toBe(12);
+  expect(saved.v).toBe(SAVE_VERSION);
   expect(saved.tool).toBe('till');
 
   await page.reload({ waitUntil: 'networkidle' });

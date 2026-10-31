@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap, shouldAdaptRenderQuality } from './renderQuality';
+import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap, shouldAdaptRenderQuality, type RenderQualityCap } from './renderQuality';
 
 describe('adaptive render quality', () => {
   it('moves one DPR step at a time in both directions', () => {
     expect(lowerQualityCap(2)).toBe(1.5);
     expect(lowerQualityCap(1.5)).toBe(1);
-    expect(lowerQualityCap(1)).toBe(0.75);
-    expect(lowerQualityCap(0.75)).toBe(0.75);
-    expect(raiseQualityCap(0.75)).toBe(1);
+    expect(lowerQualityCap(1)).toBe(1);
     expect(raiseQualityCap(1)).toBe(1.5);
     expect(raiseQualityCap(1.5)).toBe(2);
     expect(raiseQualityCap(2)).toBe(2);
+  });
+
+  it('never blurs the canvas below native CSS resolution', () => {
+    let cap: RenderQualityCap = 2;
+    cap = lowerQualityCap(cap);
+    cap = lowerQualityCap(cap);
+    cap = lowerQualityCap(cap);
+    expect(cap).toBe(1);
   });
 
   it('caps touch devices at DPR 1.5 without restricting desktop', () => {

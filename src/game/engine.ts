@@ -626,7 +626,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
           if (qualitySamples.length === 120) {
             const avg = qualitySamples.reduce((sum, q) => sum + q.ms, 0) / qualitySamples.length;
             const mostlyActive = qualitySamples.filter((q) => q.active).length >= 60;
-            if (frameIsSlow(avg, mostlyActive) && qualityCap > 0.75) {
+            if (frameIsSlow(avg, mostlyActive) && qualityCap > 1) {
               if (qualityRaisedAt > 0 && now - qualityRaisedAt < 30000) qualityUpscaleBlocked = true;
               qualityCap = lowerQualityCap(qualityCap);
               qualitySamples = []; qualityStableMs = 0; qualityCooldownUntil = now + 10000;

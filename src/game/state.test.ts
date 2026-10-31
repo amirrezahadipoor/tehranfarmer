@@ -91,7 +91,7 @@ describe('save snapshots and backup recovery', () => {
     expect(loadGame()).toBe(true);
     expect(S.tool).toBe('water');
     expect(UI.tool).toBe('water');
-    expect(S.v).toBe(12);
+    expect(S.v).toBe(SAVE_VERSION);
   });
 
   it('migrates v11 saves to a safe hand tool and rejects invalid persisted tools', () => {
@@ -100,7 +100,7 @@ describe('save snapshots and backup recovery', () => {
     localStorage.setItem(KEY, JSON.stringify(old));
     UI.tool = 'harvest';
     expect(loadGame()).toBe(true);
-    expect(S.v).toBe(12);
+    expect(S.v).toBe(SAVE_VERSION);
     expect(S.tool).toBe('hand');
     expect(UI.tool).toBe('hand');
 

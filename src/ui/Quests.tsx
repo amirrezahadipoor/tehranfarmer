@@ -17,6 +17,11 @@ import { ESTATE_UI, NPC_ROLES } from '../strings/estateStoryText';
 import { UT } from '../strings/uiText';
 import { WX } from '../strings/worldExpansionText';
 import { journeyCopy } from '../strings/journeyText';
+import {
+  MASTERY_DEFS, claimMastery, ensureMastery, masteryClaimedCount, masteryGoalLabel,
+  masteryGoalProgress, masteryProgress, masteryStatus, masteryXpReward,
+} from '../game/core/mastery';
+import { masteryCopy, masteryMilestoneText } from '../strings/masteryText';
 
 function Card({ g, week }: { g: QuestGoal; week?: boolean }) {
   const p = questProgress(g, !!week);
@@ -120,6 +125,83 @@ function JourneyJournal({ chapter, postgame }: { chapter: number; postgame: bool
   );
 }
 
+function MasteryPanel() {
+  const state = ensureMastery();
+  if (!state) return null;
+  const T = masteryCopy();
+  const claimedCount = masteryClaimedCount();
+  const complete = claimedCount === MASTERY_DEFS.length;
+  return (
+    <section className="paper mb-3 flex flex-col gap-2 border-2 border-[#9275b5] p-2.5" data-mastery-panel="1" aria-label={T.title}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Ic n="trophy" s={1.9} />
+          <span className="ft text-base text-[#543d70]">{T.title}</span>
+        </div>
+        <span className="rounded-full bg-[#eee5fa] px-2.5 py-0.5 text-sm font-black text-[#543d70]" dir="ltr">
+          {fa(claimedCount)} / {fa(MASTERY_DEFS.length)}
+        </span>
+      </div>
+      <p className="text-[.72rem] font-bold leading-relaxed text-[#635475]">{T.subtitle}</p>
+      <p className="rounded-lg bg-[#f6f0fc] px-2 py-1 text-[.66rem] font-bold leading-relaxed text-[#71627f]">{T.startNote}</p>
+      {complete && <div className="rounded-xl bg-[#e2f6d5] px-2.5 py-2 text-xs font-black text-green-800" data-mastery-complete="1">{T.pathDone}</div>}
+      <div className="grid gap-2 sm:grid-cols-2">
+        {MASTERY_DEFS.map((def) => {
+          const status = masteryStatus(def);
+          const progress = status.claimed ? 1 : masteryProgress(def);
+          const title = masteryMilestoneText(def.id);
+          const statusText = status.claimed ? T.claimed : status.ready ? T.ready : !status.levelOk ? `${T.level} ${fa(def.level)}` : status.goalsOk ? T.ready : T.inProgress;
+          return (
+            <article
+              key={def.id}
+              data-mastery-id={def.id}
+              data-status={status.claimed ? 'claimed' : status.ready ? 'ready' : status.levelOk ? 'progress' : 'locked'}
+              className={'flex flex-col gap-1.5 rounded-xl border p-2 ' + (status.claimed ? 'border-[#77b95d] bg-[#eff9e9]' : status.ready ? 'border-[#c58ae8] bg-[#fbf5ff]' : 'border-black/10 bg-white/60')}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <Ic n={status.claimed ? 'check' : def.icon} s={1.55} />
+                  <span className="text-xs font-black">{title}</span>
+                </div>
+                <span className="shrink-0 rounded bg-black/5 px-1.5 py-0.5 text-[.64rem] font-black">{T.level} {fa(def.level)}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                {def.goals.map((goal) => {
+                  const current = masteryGoalProgress(goal);
+                  return (
+                    <div key={goal.key} className="flex items-center justify-between gap-2 text-[.67rem] font-bold opacity-80" data-mastery-goal={goal.key}>
+                      <span>{masteryGoalLabel(goal)}</span>
+                      <span dir="ltr">{fa(Math.min(current, goal.target))}/{fa(goal.target)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <Bar v={progress} col={status.claimed ? '#6ebb50' : '#a574c7'} />
+              <div className="mt-auto flex items-center justify-between gap-1.5">
+                <div className="flex flex-col gap-0.5 text-[.66rem] font-black">
+                  <Coin v={def.coins} s={1.1} cls="text-[.68rem]" />
+                  <span dir="ltr">+{fa(masteryXpReward(def))} {T.xp}</span>
+                </div>
+                <button
+                  type="button"
+                  data-mastery-claim={def.id}
+                  aria-label={`${title}: ${statusText}`}
+                  title={!status.levelOk ? T.locked : statusText}
+                  disabled={!status.ready}
+                  className={'btn press !px-2 !py-1 text-[.67rem] font-black ' + (status.claimed ? 'b' : status.ready ? 'g' : 'y')}
+                  onClick={() => claimMastery(def.id)}
+                >
+                  {statusText}
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function Quests() {
   ensureQuests();
   const q = S.quests;
@@ -143,6 +225,7 @@ export function Quests() {
         </button>
       )}
       <JourneyJournal chapter={S.story.chapter} postgame={S.story.postgame} />
+      {S.story.postgame && <MasteryPanel />}
       {/* کارت هدف اصلی و پیش‌نیازهای توسعهٔ فصل جاری */}
       {mainQ && (
         <div className="paper mb-3 flex flex-col gap-1.5 border-2 border-[#c88d32] p-2.5" data-chapter-quest={mainQ.id}>

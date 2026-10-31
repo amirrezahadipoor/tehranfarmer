@@ -99,10 +99,15 @@ export function applyEffects(node: StoryNode) {
   const skipDupReward = Boolean(S.story.seen[node.id]) && !node.id.startsWith('visit-');
   for (const e of node.effects ?? []) {
     switch (e.k) {
-      case 'chapter':
-        S.story.chapter = e.v;
-        if (S.debt) S.debt.chapter = e.v;
+      case 'chapter': {
+        // صحنهٔ قدیمیِ صف یا بازپخش کارگردان نباید پیشرفت فصل را به عقب برگرداند.
+        // از بیشترین فصلِ ثبت‌شده در story/debt استفاده می‌کنیم تا سیوهای ناسازگار هم ترمیم شوند.
+        const current = Math.max(S.story.chapter, S.debt?.chapter ?? 0);
+        const next = Math.max(current, e.v);
+        S.story.chapter = next;
+        if (S.debt) S.debt.chapter = next;
         break;
+      }
       case 'flag':
         if (S.debt) S.debt.flags[e.v] = e.on ?? true;
         S.story.seen[e.v] = true;
@@ -125,6 +130,7 @@ export function applyEffects(node: StoryNode) {
       case 'end':
         S.story.postgame = true;
         S.story.chapter = 7;
+        if (S.debt) S.debt.chapter = Math.max(S.debt.chapter, 7);
         break;
     }
   }

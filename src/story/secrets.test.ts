@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fresh, S, UI } from '../game/state';
+import { startDebt } from '../game/core/debt';
 import { CFG } from '../game/settings';
 import { SECRETS, TRUE_ENDING_MIN_SECRETS, checkSecretTriggers, isSecretListed, revealSecretHint, secretHintLevel } from './secrets';
 
@@ -61,6 +62,34 @@ describe('staged secret journal', () => {
     expect(S.secrets['secret-true-epilogue']).toBe(true);
     expect(S.coins).toBe(coins + 150000);
     expect(S.story.pending).toBe('secret-true-epilogue');
+  });
+
+  it('allows a fully upgraded Scarecrow secret to recover after the finale', () => {
+    UI.started = true;
+    UI.scene = 'farm';
+    S.story.prologueSeen = true;
+    startDebt(5);
+    S.story.postgame = true;
+    S.story.chapter = 7;
+    S.debt!.chapter = 7;
+    S.debt!.scarecrow = 3;
+    S.story.pending = null;
+    const coins = S.coins;
+    expect(checkSecretTriggers('farm-step')).toBe(true);
+    expect(S.secrets?.['secret-scarecrow-duel']).toBe(true);
+    expect(S.coins).toBe(coins + 12000);
+    expect(S.story.pending).toBe('secret-scarecrow-duel');
+    expect(checkSecretTriggers('farm-step')).toBe(false);
+  });
+
+  it('describes the Scarecrow recovery path honestly in both languages', () => {
+    const def = SECRETS.find((secret) => secret.id === 'secret-scarecrow-duel')!;
+    CFG.locale = 'fa';
+    expect(def.clueFa).toContain('پس از پایان داستان');
+    expect(def.clueFa).not.toContain('پیش از پایان داستان');
+    CFG.locale = 'en';
+    expect(def.clueFa).toContain('remains discoverable after the story');
+    expect(def.clueStagesFa[0]).not.toContain('before the story ends');
   });
 
   it('builds the localized clue from the same secret-count gate', () => {

@@ -257,12 +257,12 @@ export function renderMailTemplate(entry: MailEntry, itemLabel: (id: string) => 
       return en ? {
         subject: 'Golden Charter of Full Homestead Freedom!',
         greeting: 'Hero of Sunlit Valley & Northern Meadow,',
-        body: 'Every single debt note is cleared forever! The entire village has erected a tribute statue in the Town Square to celebrate your triumph. Unseal our collective gift basket inside!',
+        body: 'Every single debt note is cleared forever! The village has erected a tribute statue in the Town Square. Your Quest Journal now also holds a seven-step Farm Mastery Path: varied goals and large XP rewards on the road to Level 30. Unseal our collective gift basket inside!',
         ps: 'With endless pride — Grandma Nosrat, Sara, Uncle Morad, Engineer Kaveh & Jahangir.',
       } : {
         subject: 'منشور زرین آزادی کامل مزرعهٔ پدربزرگ!',
         greeting: 'افتخار تمام اهالی دهکده، سلام بر تو!',
-        body: 'تمام اسناد بدهی برای همیشه تسویه شد و نام تو به نیکی بر تندیس میدان شهر نقش بست. این سبد هدیهٔ ویژه پیشکش همهٔ اهالی دهکده به پاس همت بی‌نظیر توست!',
+        body: 'تمام اسناد بدهی برای همیشه تسویه شد و نام تو بر تندیس میدان شهر نقش بست. در دفتر کوئست‌ها حالا «مسیر استادی مزرعه» با هفت هدف متنوع و پاداش‌های بزرگ تجربه برای رسیدن به سطح ۳۰ باز شده است. این سبد هدیه هم پیشکش همهٔ اهالی به پاس همت توست!',
         ps: 'با عشق و افتخار — مادربزرگ نصرت، سارا، عمو مراد، مهندس کاوه و جهانگیر.',
       };
 

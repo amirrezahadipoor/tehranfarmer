@@ -12,9 +12,8 @@ import {
 import { sfx } from './sound';
 import { rnd } from './rng';
 import { addGood, addPack, goodPrice, invCap, invCount, packCap, packCount } from './core/economy';
-import { addStat, addXp, farmLevel } from './core/progress';
+import { addStat, addXp, checkAch, farmLevel, resetLvCache } from './core/progress';
 import { bindSeason } from './core/economy';
-import { resetLvCache } from './core/progress';
 import { SAVE_VERSION, migrateSave } from './core/saveMigrations';
 import type { DebtState } from './core/debt';
 import type { StoryState } from '../story/types';
@@ -30,6 +29,7 @@ import {
 import type { SceneKey } from './scenes';
 import { ensureFrontier, type FrontierState } from './core/frontier';
 import type { ShopId } from './shops';
+import type { MasteryState } from './core/mastery';
 
 import { GT } from '../strings/gameText';
 
@@ -80,6 +80,8 @@ export interface Save {
   contract: MarketContract | null; tut?: { step: number; active: boolean; done: boolean }; // راهنمای تعاملی و غیرمسدودکنندهٔ روز اول
   /** آیا تندیس/موزهٔ پایان‌بازی دیده شده */
   museumVisited: boolean;
+  /** مبنا و پاداش‌های یک‌بارهٔ مسیر استادی؛ در آغاز postgame یا نخستین دفتر سیو قدیمی ساخته می‌شود. */
+  mastery?: MasteryState;
   /** رازهای پنهان کشف‌شده و شمار سرنخ‌هایی که بازیکن خودش خواسته است */
   secrets?: Record<string, boolean>;
   secretHints?: Record<string, number>;
@@ -320,6 +322,9 @@ function applyParsedSave(rawObj: unknown): boolean {
   S.valleyPlots = (S.valleyPlots && S.valleyPlots.length === VALLEY_PLOTS_COUNT ? S.valleyPlots : Array.from({ length: VALLEY_PLOTS_COUNT }, newPlot));
   resetLvCache();
   ensureFrontier();
+  // آستانه‌های اصلاح‌شده و آمار تاریخی باید هنگام لود نیز پله‌های ازدست‌رفته را برگردانند.
+  // checkAch وضعیت پله‌ها را ماندگار می‌کند و در لودهای بعدی پاداش تکراری نمی‌دهد.
+  checkAch();
   syncMailboxState(false);
   return true;
 }

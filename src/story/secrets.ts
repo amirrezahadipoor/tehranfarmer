@@ -65,8 +65,8 @@ const RAW_SECRETS: RawSecret[] = [
     icon: 'scarecrow',
     titleFa: 'دوئل شبانهٔ مترسک و جهانگیر',
     titleEn: 'Scarecrow vs. Jahangir Showdown',
-    clueFa: 'پیش از پایان داستان، مترسک ضدشرخر را تا سطح ۳ کامل کن و در مزرعه قدم بزن.',
-    clueEn: 'Upgrade the Guard Scarecrow to Level 3 before finishing the story and walk on your farm.',
+    clueFa: 'مترسک ضدشرخر را تا سطح ۳ کامل کن و در مزرعه قدم بزن؛ این راز پس از پایان داستان هم قابل کشف است.',
+    clueEn: 'Upgrade the Guard Scarecrow to Level 3 and walk on your farm. This secret remains discoverable after the story.',
     rewardFa: '+۱۲٬۰۰۰ سکه و +۱۰ اعتبار خوش‌حسابی',
     rewardEn: '+12,000 coins & +10 Credit Standing',
   },
@@ -126,8 +126,8 @@ const STAGED_HINTS: Record<string, { fa: readonly [string, string]; en: readonly
     en: ['The apiary rewards abundant hives and honey during blooming seasons.', 'Return in Spring or Summer with more hives and a history of honey harvests.'],
   },
   'secret-scarecrow-duel': {
-    fa: ['مترسک قوی‌تر، پیش از پایان داستان ماجرایی در مزرعه می‌سازد.', 'مترسک ضدشرخر را به آخرین سطح برسان و در مزرعه قدم بزن.'],
-    en: ['A stronger scarecrow creates a farm adventure before the story ends.', 'Fully upgrade the Guard Scarecrow, then walk around the farm.'],
+    fa: ['مترسک کامل، در مزرعه و حتی پس از آزادی سندها ماجرایی می‌سازد.', 'مترسک ضدشرخر را به آخرین سطح برسان و در مزرعه قدم بزن.'],
+    en: ['A complete scarecrow creates a farm adventure, even after the deeds are settled.', 'Fully upgrade the Guard Scarecrow, then walk around the farm.'],
   },
   'secret-yalda-lanterns': {
     fa: ['شب‌های سرد زمستان با میوه‌های شیرین مزرعه گرم می‌شوند.', 'بعد از غروب زمستان، انار یا هندوانه در انبار داشته باش.'],
@@ -302,7 +302,7 @@ export function checkSecretTriggers(kind: SecretCheckTrigger): boolean {
     }, 'راز مخفی کشف شد: ملکهٔ زنبورستان! (+۲۰٬۰۰۰ سکه)', 'Secret Discovered: Golden Queen Bee! (+20,000 coins)');
   }
 
-  if (!S.secrets['secret-scarecrow-duel'] && kind === 'farm-step' && UI.scene === 'farm' && (S.debt?.scarecrow ?? 0) >= 3 && !S.story.postgame) {
+  if (!S.secrets['secret-scarecrow-duel'] && kind === 'farm-step' && UI.scene === 'farm' && (S.debt?.scarecrow ?? 0) >= 3) {
     return grantSecret('secret-scarecrow-duel', () => {
       S.coins += 12000;
       addStanding(10);
