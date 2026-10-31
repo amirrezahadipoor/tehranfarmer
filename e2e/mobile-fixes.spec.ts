@@ -78,6 +78,16 @@ test('mobile choice, fishing, seed filter, DPR and scene targets stay usable', a
     await panel.locator('[data-settings-group="display"] summary').tap();
     await expect(panel.locator('[data-settings-group="display"]')).toHaveAttribute('open', '');
     await expect(panel.locator('[data-action-speed-control="1"]')).toBeVisible();
+    const fontScales = panel.locator('[data-font-scale]');
+    await expect(fontScales).toHaveCount(3);
+    for (const scale of ['1.2', '1.1', '1']) {
+      const selected = panel.locator(`[data-font-scale="${scale}"]`);
+      await selected.tap();
+      await expect(selected).toHaveAttribute('aria-pressed', 'true');
+      for (const other of ['1', '1.1', '1.2'].filter((value) => value !== scale)) {
+        await expect(panel.locator(`[data-font-scale="${other}"]`)).toHaveAttribute('aria-pressed', 'false');
+      }
+    }
     const bodyOverflow = await page.evaluate(() => document.body.scrollWidth - window.innerWidth);
     expect(bodyOverflow).toBeLessThanOrEqual(0);
   });

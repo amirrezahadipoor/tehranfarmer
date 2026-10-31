@@ -7,6 +7,10 @@ import { EXTRA_STORY_NODES } from './newTriggers';
 import { SECRET_NODES } from './secrets';
 import { ESTATE_AND_NPC_STORY_NODES } from './npcQuests';
 import { SEASONAL_NPC_NODES } from './socialVillagers';
+import { NOTES } from './debtData';
+import { faDigits } from '../strings/fa';
+
+const noteAmountFa = (noteIdx: number) => faDigits(NOTES[noteIdx].amount.toLocaleString('en-US')).replace(/,/g, '٬');
 
 const n = (id: string, lines: StoryNode['lines'], next: string | null = null, extra: Partial<StoryNode> = {}): StoryNode =>
   ({ id, lines, next, ...extra });
@@ -89,7 +93,7 @@ export const NODES: Record<string, StoryNode> = Object.fromEntries(
       { who: 'jahangir', text: 'آفرین مهندس، فقط حواست باشد سر موقع قسط بدهی وارث که حساب بانک شوخی ندارد!' },
     ]),
     n('note-open-5', [
-      { who: 'jahangir', text: 'سند ششم و آخر: سه میلیون و سیصد و شصت‌وپنج هزار سکه برای آزادی کامل سند اصلی مزرعه.' },
+      { who: 'jahangir', text: `سند ششم و آخر: ${noteAmountFa(5)} سکه برای آزادی کامل سند اصلی مزرعه.` },
       { who: 'jahangir', text: 'خوان آخر است پسر؛ این یکی را هم صاف کنی جشن کل روستا با من!' },
     ]),
 

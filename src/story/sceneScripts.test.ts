@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { compileSceneScript, objectiveKeyFor } from './sceneScripts';
 import { NODES, nodeById } from './story';
 import { EN_LINES, OBJECTIVES } from '../strings/cinemaLocales';
+import { NOTES } from './debtData';
+import { QUESTS } from './quests';
+import { faDigits } from '../strings/fa';
 
 describe('short prologue regression', () => {
   it('plays six immediate-reading cards and keeps the final choice/effects intact', () => {
@@ -48,5 +51,22 @@ describe('finale copy and postgame objectives', () => {
     expect(OBJECTIVES.fa[key]).not.toContain('قسط');
     expect(OBJECTIVES.en[key]).toContain('all eight secrets');
     expect(OBJECTIVES.en[key]).not.toContain('installment');
+  });
+
+  it('derives the final-deed dialogue and objective from the real note and quest', () => {
+    const amount = NOTES.find((note) => note.chapter === 6)!.amount;
+    const target = QUESTS.find((quest) => quest.id === 'q6')!.target;
+    const enAmount = amount.toLocaleString('en-US');
+    const faAmount = faDigits(enAmount).replace(/,/g, '٬');
+    const faTarget = faDigits(String(target));
+
+    expect(NODES['note-open-5'].lines[0].text).toContain(faAmount);
+    expect(EN_LINES['note-open-5'][0]).toContain(enAmount);
+    expect(OBJECTIVES.fa.ch5).toContain(faAmount);
+    expect(OBJECTIVES.fa.ch5).toContain(`سطح ${faTarget}`);
+    expect(OBJECTIVES.en.ch5).toContain(enAmount);
+    expect(OBJECTIVES.en.ch5).toContain(`Level ${target}`);
+    expect(OBJECTIVES.fa.ch5).not.toContain('۳٬۳۶۵٬۰۰۰');
+    expect(OBJECTIVES.en.ch5).not.toContain('2,400,000');
   });
 });

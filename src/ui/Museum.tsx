@@ -1,7 +1,7 @@
 // ===== موزهٔ میراث مزرعه، تندیس طلایی جهانگیر و تالار رازهای کهن دره =====
 import { S, visitMuseum } from '../game/state';
 import { MUSEUM_GIFT_COINS } from '../game/data';
-import { SECRETS, checkSecretTriggers, discoveredSecretCount } from '../story/secrets';
+import { SECRETS, TRUE_ENDING_MIN_SECRETS, checkSecretTriggers, discoveredSecretCount } from '../story/secrets';
 import { fa } from '../strings/fa';
 import { Coin, Ic, Modal } from './parts';
 import { close } from './shopKit';
@@ -55,7 +55,7 @@ export function Museum() {
             {S.museumVisited && !S.secrets?.['secret-true-epilogue'] && (
               <div className="mt-1 text-[.7rem] opacity-80">{SECRETS[7].clueFa}</div>
             )}
-            {S.museumVisited && !S.secrets?.['secret-true-epilogue'] && foundCount >= 5 && (
+            {S.museumVisited && !S.secrets?.['secret-true-epilogue'] && foundCount >= TRUE_ENDING_MIN_SECRETS && (
               <button
                 className="btn y press mt-1.5 !px-3 !py-1"
                 onClick={() => { if (checkSecretTriggers('museum-open')) close(); }}

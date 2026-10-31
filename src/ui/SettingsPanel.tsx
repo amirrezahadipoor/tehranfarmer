@@ -144,6 +144,8 @@ export function SettingsPanel() {
             <button
               key={sc}
               type="button"
+              data-font-scale={sc}
+              aria-pressed={CFG.fontScale === sc}
               aria-label={`${UT.setFont} ${fa(Math.round(sc * 100))}${UT.u46}`}
               className={'btn press !min-h-[48px] !px-2.5 !py-0.5 text-xs ' + (CFG.fontScale === sc ? 'y' : 'b')}
               onClick={() => { updateSetting('fontScale', sc); sfx.tap(); notify(); }}

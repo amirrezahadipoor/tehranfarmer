@@ -1,6 +1,16 @@
 // Complete English (EN) & Persian (FA) localization files for ALL 79 cinematic scenes,
 // UI controls, character names, scene titles, and closing Next-Objective banners (zero hardcoded strings).
 import type { CharId } from '../story/types';
+import { NOTES } from '../story/debtData';
+import { QUESTS } from '../story/quests';
+import { faDigits } from './fa';
+
+const campaignNumber = (value: number, locale: 'fa' | 'en') => {
+  const grouped = value.toLocaleString('en-US');
+  return locale === 'fa' ? faDigits(grouped).replace(/,/g, '٬') : grouped;
+};
+const finalNoteAmount = () => NOTES.find((note) => note.chapter === 6)!.amount;
+const finalQuestTarget = () => QUESTS.find((quest) => quest.id === 'q6')!.target;
 
 export interface CinemaUiStrings {
   skip: string;
@@ -203,10 +213,12 @@ export const EN_LINES: Record<string, string[]> = {
     'City speculators tried to buy up your debt, so I stepped in first and registered one million six hundred thousand under clear legal terms.',
     'Good catch, Engineer—just pay on schedule, son, because official bank clauses never blink!',
   ],
-  'note-open-5': [
-    'Deed Six—the Final Deed: three million three hundred sixty-five thousand coins to release the full farm title forever.',
-    'This is the final stretch, son; clear this last paper and the whole village feast is on me!',
-  ],
+  get 'note-open-5'() {
+    return [
+      `Deed Six—the Final Deed: ${campaignNumber(finalNoteAmount(), 'en')} coins to release the full farm title forever.`,
+      'This is the final stretch, son; clear this last paper and the whole village feast is on me!',
+    ];
+  },
   'visit-due-paid': [
     'Hello, neighbor! Just stopped by for tea—you already paid this cycle’s installment right on schedule.',
     'Punctual farmers make my job easy. Keep up the great work!',
@@ -369,7 +381,9 @@ export const OBJECTIVES: Record<'fa' | 'en', Record<string, string>> = {
     ch2: '۲ استخر ماهی و ۲ کندو بساز، به سطح ۱۰ برس و سند سوم (۲۵۰٬۰۰۰ سکه) را بپرداز',
     ch3: 'گلخانه بساز، قنات دشت شمالی را احیا کن، به سطح ۱۴ برس و سند چهارم (۷۰۰٬۰۰۰ سکه) را صاف کن',
     ch4: '۳ کارگر استخدام کن، باغ‌درهٔ آفتاب را باز کن، به سطح ۱۸ برس و سند پنجم (۱٬۶۰۰٬۰۰۰ سکه) را بپرداز',
-    ch5: 'منشور هر ۳ مزرعه (۱۵۴ کرت) را کامل کن، به سطح ۲۲ برس و آخرین سند (۳٬۳۶۵٬۰۰۰ سکه) را تسویه کن',
+    get ch5() {
+      return `منشور هر ۳ مزرعه (۱۵۴ کرت) را کامل کن، به سطح ${campaignNumber(finalQuestTarget(), 'fa')} برس و آخرین سند (${campaignNumber(finalNoteAmount(), 'fa')} سکه) را تسویه کن`;
+    },
     q1done: 'کوئست فصل ۱ کامل شد! به «دفتر کل» برو و باقی‌ماندهٔ سند اول را تسویه کن',
     q2done: 'کوئست فصل ۲ کامل شد! به «دفتر کل» برو و باقی‌ماندهٔ سند دوم را تسویه کن',
     q3done: 'کوئست فصل ۳ کامل شد! به «دفتر کل» برو و باقی‌ماندهٔ سند سوم را بپرداز',
@@ -391,7 +405,9 @@ export const OBJECTIVES: Record<'fa' | 'en', Record<string, string>> = {
     ch2: 'Build 2 ponds & 2 hives, reach Level 10, and pay off Deed #3 (250,000 coins)',
     ch3: 'Build a Greenhouse, restore Northern Qanat, reach Level 14, and clear Deed #4 (700,000 coins)',
     ch4: 'Hire 3 farmhands, claim Sunlit Valley, reach Level 18, and pay Deed #5 (1,600,000 coins)',
-    ch5: 'Complete All 3 Estates (154 plots), reach Level 18, and clear Final Deed (2,400,000 coins)',
+    get ch5() {
+      return `Complete All 3 Estates (154 plots), reach Level ${campaignNumber(finalQuestTarget(), 'en')}, and clear Final Deed (${campaignNumber(finalNoteAmount(), 'en')} coins)`;
+    },
     q1done: 'Chapter 1 quest complete! Open the Ledger and finish paying Deed #1',
     q2done: 'Chapter 2 quest complete! Open the Ledger and finish paying Deed #2',
     q3done: 'Chapter 3 quest complete! Open the Ledger and finish paying Deed #3',

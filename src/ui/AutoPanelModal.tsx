@@ -47,6 +47,68 @@ export function AutoPanelModal() {
         <div className="mt-0.5 font-bold opacity-85 leading-relaxed">{WX.pillarDesc}</div>
       </div>
 
+      {/* 7 Industrial Machines */}
+      <div className={grid}>
+        {keys.map((k) => {
+          const m = machineForAuto(k);
+          const mk = m ? mkOf(m as MachineId) : 0;
+          const on = !!S.auto[k] && !!m;
+          return (
+            <div key={k} className={'paper flex flex-col items-center gap-1.5 p-2.5 ' + (on ? 'ring-2 ring-[#6cc84c]' : 'opacity-80')}>
+              <Ic n={m ? MACHINES[m].icon : 'lock'} s={3.8} cls={on ? 'bob' : 'grayscale'} />
+              <div className="text-sm font-extrabold">{AUTO_FA[k]}</div>
+              {m && (
+                <>
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3].map((i) => <Ic key={i} n="star" s={1.1} cls={i <= mk ? '' : 'grayscale opacity-40'} />)}
+                  </div>
+                  <div className="rounded bg-emerald-50 px-1.5 py-0.5 text-center text-[.68rem] font-black text-emerald-900">
+                    {liveMachineStat(m as MachineId, mk)}
+                  </div>
+                </>
+              )}
+              <button
+                className={'press min-h-[48px] w-full rounded-xl border-[.18rem] border-[#503426] px-2 py-1 text-sm font-black ' + (on ? 'bg-[#8fd35a]' : 'bg-[#e8d9b8]')}
+                disabled={!m}
+                aria-pressed={on}
+                onClick={() => toggleAuto(k)}
+              >
+                {on ? UT.u105 : UT.u106}
+              </button>
+              {!m && <div className="text-[.7rem] font-bold opacity-70">{UT.u107}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Crew Priority Focus & Machine Synergy */}
+      <div className="paper mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2">
+        <div className="flex items-center gap-2">
+          <Ic n="worker" s={2.6} />
+          <div className="text-xs">
+            <div className="font-black">{WX.crewFocusTitle} <span dir="ltr">({fa(S.workers)}/{fa(WORKER_MAX)})</span></div>
+            <div className="font-extrabold text-emerald-800">{WX.synergyLabel} {faPct(synPct)}</div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {([
+            ['balanced', WX.crewBalanced],
+            ['crops', WX.crewCrops],
+            ['ranch', WX.crewRanch],
+          ] as const).map(([rk, label]) => (
+            <button
+              key={rk}
+              type="button"
+              className={'btn press !px-2.5 !py-0.5 text-xs font-black ' + (role === rk ? 'g' : '')}
+              aria-pressed={role === rk}
+              onClick={() => setCrewRole(rk)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Per-Farm Independent Crop Assignment & Specialty */}
       <div className="paper mb-2.5 p-2.5">
         <div className="ft text-base text-[#5a3518]">{WX.seedPlanTitle}</div>
@@ -66,6 +128,7 @@ export function AutoPanelModal() {
                     <button
                       type="button"
                       className={'btn press !px-2 !py-0.5 text-[.68rem] font-black ' + (cur === 'auto' ? 'g' : '')}
+                      aria-pressed={cur === 'auto'}
                       onClick={() => setFarmSeedLock(fid, 'auto')}
                     >
                       {WX.seedAutoBest}
@@ -77,6 +140,7 @@ export function AutoPanelModal() {
                         key={c.id}
                         type="button"
                         className={'btn press !px-1.5 !py-0.5 text-[.68rem] font-black ' + (cur === c.id ? 'y' : '')}
+                        aria-pressed={cur === c.id}
                         onClick={() => setFarmSeedLock(fid, c.id as CropId)}
                         title={c.fa}
                       >
@@ -104,65 +168,6 @@ export function AutoPanelModal() {
         })()}
       </div>
 
-      {/* Crew Priority Focus & Machine Synergy */}
-      <div className="paper mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2">
-        <div className="flex items-center gap-2">
-          <Ic n="worker" s={2.6} />
-          <div className="text-xs">
-            <div className="font-black">{WX.crewFocusTitle} <span dir="ltr">({fa(S.workers)}/{fa(WORKER_MAX)})</span></div>
-            <div className="font-extrabold text-emerald-800">{WX.synergyLabel} {faPct(synPct)}</div>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {([
-            ['balanced', WX.crewBalanced],
-            ['crops', WX.crewCrops],
-            ['ranch', WX.crewRanch],
-          ] as const).map(([rk, label]) => (
-            <button
-              key={rk}
-              type="button"
-              className={'btn press !px-2.5 !py-0.5 text-xs font-black ' + (role === rk ? 'g' : '')}
-              onClick={() => setCrewRole(rk)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 7 Industrial Machines */}
-      <div className={grid}>
-        {keys.map((k) => {
-          const m = machineForAuto(k);
-          const mk = m ? mkOf(m as MachineId) : 0;
-          const on = !!S.auto[k] && !!m;
-          return (
-            <div key={k} className={'paper flex flex-col items-center gap-1.5 p-2.5 ' + (on ? 'ring-2 ring-[#6cc84c]' : 'opacity-80')}>
-              <Ic n={m ? MACHINES[m].icon : 'lock'} s={3.8} cls={on ? 'bob' : 'grayscale'} />
-              <div className="text-sm font-extrabold">{AUTO_FA[k]}</div>
-              {m && (
-                <>
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3].map((i) => <Ic key={i} n="star" s={1.1} cls={i <= mk ? '' : 'grayscale opacity-40'} />)}
-                  </div>
-                  <div className="rounded bg-emerald-50 px-1.5 py-0.5 text-center text-[.68rem] font-black text-emerald-900">
-                    {liveMachineStat(m as MachineId, mk)}
-                  </div>
-                </>
-              )}
-              <button
-                className={'press min-h-[48px] w-full rounded-xl border-[.18rem] border-[#503426] px-2 py-1 text-sm font-black ' + (on ? 'bg-[#8fd35a]' : 'bg-[#e8d9b8]')}
-                disabled={!m}
-                onClick={() => toggleAuto(k)}
-              >
-                {on ? UT.u105 : UT.u106}
-              </button>
-              {!m && <div className="text-[.7rem] font-bold opacity-70">{UT.u107}</div>}
-            </div>
-          );
-        })}
-      </div>
     </Modal>
   );
 }

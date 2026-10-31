@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
 import { hasSkill } from '../game/core/rpgSystems';
@@ -22,8 +22,13 @@ import { WX } from '../strings/worldExpansionText';
 import { FT } from '../strings/frontierText';
 import { MineStatusChip } from './MinePanels';
 import { WorldNavBar } from './WorldNavBar';
+import { setToastsPaused } from '../game/toasts';
 
 const WEATHER = ['sun', 'cloud', 'rain', 'snow'];
+
+const isMorningReportVisible = () => Boolean(
+  S.morning && !S.morning.shown && S.hour >= 5.5 && S.hour < 19 && (S.custom?.morningCard ?? true) && !UI.modal,
+);
 
 export function Hud() {
   const topBarRef = useRef<HTMLDivElement>(null);
@@ -47,6 +52,11 @@ export function Hud() {
   const nightNow = isNight();
   // یک محاسبه در هر رندر: آیکن و badge همیشه از یک وضعیت پستی یکسان استفاده می‌کنند.
   const mailAttention = unreadMailCount();
+  const morningVisible = isMorningReportVisible();
+  useEffect(() => {
+    setToastsPaused(morningVisible);
+    return () => setToastsPaused(false);
+  }, [morningVisible]);
   return (
     <>
       {/* نوار یکپارچهٔ بالای صفحه: چیدمان انعطاف‌پذیر، کم‌ارتفاع (آزاد بودن کامل سقف خانه و مزرعه) و صفر برخورد در هر عرض صفحه */}
@@ -160,7 +170,7 @@ export function Hud() {
               title={MAIL_UI.title}
             >
               <Ic n={mailAttention > 0 ? 'mail' : 'mailopen'} s={UI.portrait ? 1.7 : 1.9} />
-              {mailAttention > 0 && (
+              {mailAttention > 0 && !morningVisible && (
                 <span data-mail-badge="1" className="absolute -left-1.5 -top-1.5 rounded-full border-2 border-[#503426] bg-[#e63935] px-1 text-[.68rem] font-black leading-none text-white">
                   {fa(mailAttention)}
                 </span>
@@ -261,7 +271,8 @@ export function Hud() {
       {farm && UI.seedTray && UI.tool === 'plant' && <SeedTray />}
       {farm && UI.info && <Info />}
       <div data-hud-notifications="1" className="pointer-events-none fixed inset-x-0 z-30 flex flex-col items-center gap-1" style={{ top: hudBottom }}>
-      {S.morning && !S.morning.shown && S.hour >= 5.5 && S.hour < 19 && (S.custom?.morningCard ?? true) && !UI.modal && (() => {
+      {morningVisible && (() => {
+        const morning = S.morning!;
         const almostRipe = ownedFarms().reduce((acc, f) => acc + plotsForFarm(f).filter((p) => p.st === 2 && !p.dead && !p.ripe && p.prog >= 0.7).length, 0);
         const spReady = skillPointsAvailable() > 0;
         const chQ = questOf(S.story.chapter);
@@ -287,11 +298,11 @@ export function Hud() {
             className="paper popin flex w-[min(92vw,26rem)] items-center justify-between gap-2 px-3 py-1.5 text-xs font-extrabold shadow-lg"
           >
             <div className="min-w-0 flex-1">
-              <div className="ft text-sm text-[#5a3518]">{WX.morningTitle}{fa(S.morning.day)}</div>
+              <div className="ft text-sm text-[#5a3518]">{WX.morningTitle}{fa(morning.day)}</div>
               <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[.7rem] font-black">
-                <span>{WX.morningEarned}: +{fa(S.morning.earned)}</span>
-                <span>{WX.morningHarv}: +{fa(S.morning.gathered)}</span>
-                <span className="text-emerald-800">{WX.morningRipe}: {fa(S.morning.ripe)}</span>
+                <span>{WX.morningEarned}: +{fa(morning.earned)}</span>
+                <span>{WX.morningHarv}: +{fa(morning.gathered)}</span>
+                <span className="text-emerald-800">{WX.morningRipe}: {fa(morning.ripe)}</span>
                 {almostRipe > 0 && <span className="text-amber-800">{WX.morningAlmostRipe}: {fa(almostRipe)}</span>}
               </div>
               <div className="mt-0.5 truncate text-[.68rem] font-black text-[#6c3d16]">
@@ -562,13 +573,14 @@ function Info() {
 }
 
 function Toasts() {
+  const current = isMorningReportVisible() ? null : UI.toasts.find((t) => !t.locale || t.locale === CFG.locale);
   return (
-    <div data-toast-stack="1" className="pointer-events-none flex w-[min(92vw,25rem)] flex-col items-center gap-1" aria-live="polite">
-      {UI.toasts.filter((t) => !t.locale || t.locale === CFG.locale).map((t) => (
-        <div key={t.id} className="paper toast flex max-w-full items-center gap-2 px-3 py-1 text-sm font-extrabold">
-          <Ic n={t.icon} s={2} /><span className="min-w-0 break-words leading-snug">{t.text}</span>
+    <div data-toast-stack="1" className="pointer-events-none flex w-[min(92vw,25rem)] flex-col items-center gap-1" aria-live="polite" aria-atomic="true">
+      {current && (
+        <div key={current.id} data-toast-id={current.id} className="paper toast flex max-w-full items-center gap-2 px-3 py-1 text-sm font-extrabold">
+          <Ic n={current.icon} s={2} /><span className="min-w-0 break-words leading-snug">{current.text}</span>
         </div>
-      ))}
+      )}
     </div>
   );
 }

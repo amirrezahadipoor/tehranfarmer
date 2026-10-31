@@ -108,7 +108,7 @@ export const STASH_CAP_MULT = 12;
 export const STASH_CAP_MIN = 500;
 export const SCARECROW_RAID_MULT = [1, 0.8, 0.6, 0.4];   // ضریب مبلغ باج بر اساس سطح مترسک
 export const SCARECROW_GAP_MULT = [1, 1.15, 1.3, 1.45];  // ضریب فاصلهٔ باج‌گیری
-export const SCARECROW_PRICE_MULT = [4, 12, 30];         // قیمت = ضریب × minPay
+export const SCARECROW_PRICE_MULT = [1, 2, 3];           // قیمت = ضریب × minPay؛ راز دفاعی، grind دوم نمی‌سازد
 export const SCARECROW_PRICE_MIN = 300;
 export const SCARECROW_PRICE_MAX = 900000;
 

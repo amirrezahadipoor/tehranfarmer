@@ -1,10 +1,13 @@
 // ===== ۸ رویداد و صحنهٔ مخفی عمیق مزرعه با شرایط روشن، طبیعی و پاداش‌های واقعی (دوزبانه FA/EN) =====
-import { S, UI, addXp, farmLevel, grantGoodWithMailOverflow, honeyCap, notify, saveGame, season, stamCap, toast } from '../game/state';
+import { S, UI, addXp, grantGoodWithMailOverflow, honeyCap, notify, saveGame, season, stamCap, toast } from '../game/state';
 import { isFarmScene } from '../game/estates';
 import { CFG } from '../game/settings';
 import { addStanding } from '../game/core/debt';
 import { triggerCutscene } from './engine';
 import type { StoryNode } from './types';
+import { faDigits } from '../strings/fa';
+
+export const TRUE_ENDING_MIN_SECRETS = 5;
 
 export interface SecretDef {
   id: string;
@@ -102,8 +105,8 @@ const RAW_SECRETS: RawSecret[] = [
     icon: 'trophy',
     titleFa: 'پایان مخفی واقعی: نگهبان جاویدان دره',
     titleEn: 'True Secret Ending: Eternal Guardian',
-    clueFa: 'پس از تسویهٔ هر ۶ سند، رسیدن به سطح ۳۰ و کشف ۵ راز دیگر، وارد موزهٔ میراث در شهر شو.',
-    clueEn: 'Clear all 6 deeds, reach Level 30, discover at least 5 secrets, then enter the Heritage Museum.',
+    clueFa: `پس از تسویهٔ هر ۶ سند و کشف ${faDigits(String(TRUE_ENDING_MIN_SECRETS))} راز دیگر، وارد موزهٔ میراث در شهر شو.`,
+    clueEn: `Clear all 6 deeds, discover at least ${TRUE_ENDING_MIN_SECRETS} other secrets, then enter the Heritage Museum.`,
     rewardFa: '+۱۵۰٬۰۰۰ سکه و نشان جاویدان مزرعه',
     rewardEn: '+150,000 coins & Eternal Valley Guardian honor',
   },
@@ -329,7 +332,7 @@ export function checkSecretTriggers(kind: SecretCheckTrigger): boolean {
     }, 'راز مخفی کشف شد: کاروان ابریشم! (+۶۰٬۰۰۰ سکه)', 'Secret Discovered: Silk Road Caravan! (+60,000 coins)');
   }
 
-  if (!S.secrets['secret-true-epilogue'] && kind === 'museum-open' && S.story.postgame && farmLevel() >= 30 && discoveredSecretCount() >= 5) {
+  if (!S.secrets['secret-true-epilogue'] && kind === 'museum-open' && S.story.postgame && discoveredSecretCount() >= TRUE_ENDING_MIN_SECRETS) {
     return grantSecret('secret-true-epilogue', () => {
       S.coins += 150000;
     }, 'پایان مخفی واقعی باز شد: نگهبان جاویدان دره! (+۱۵۰٬۰۰۰ سکه)', 'True Secret Ending Unlocked: Eternal Valley Guardian! (+150,000 coins)');
