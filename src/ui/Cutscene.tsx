@@ -42,6 +42,38 @@ export function BeatStage({ variant }: { variant: 0 | 1 | 2 }) {
   );
 }
 
+function FinaleTableau() {
+  const stats = [
+    { icon: 'wheat', value: fa(S.stats.cropHarv), label: UT.finaleHarvests, key: 'harvests' },
+    { icon: 'land', value: fa(S.lv.land), label: UT.finaleEstates, key: 'estates' },
+    { icon: 'note', value: fa(S.debt?.paidTotal ?? 0), label: UT.finaleDebtPaid, key: 'debt' },
+  ];
+  return (
+    <div data-finale-tableau="1" className="finale-tableau pointer-events-none fixed inset-0 z-[5] flex items-center justify-center overflow-hidden px-3 py-20" role="status" aria-label={UT.finaleLegacyTitle}>
+      <div className="finale-tableau-rays" aria-hidden="true" />
+      <div className="finale-legacy-card paper relative w-[min(92vw,42rem)] px-4 py-4 text-center shadow-2xl sm:px-7 sm:py-5">
+        <div className="mb-1 flex items-end justify-center gap-3" aria-label={UT.museumEstateSeal}>
+          <Ic n="house" s={3.1} cls="finale-estate" />
+          <Ic n="greenhouse" s={3.8} cls="finale-estate" />
+          <Ic n="valley" s={3.1} cls="finale-estate" />
+        </div>
+        <Ic n="trophy" s={4.2} cls="finale-trophy mx-auto" />
+        <div className="ft mt-1 text-2xl text-[#4b2b18] sm:text-3xl">{UT.finaleLegacyTitle}</div>
+        <div className="mx-auto mt-1 max-w-xl text-xs font-extrabold leading-relaxed opacity-80 sm:text-sm">{UT.finaleLegacyText}</div>
+        <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+          {stats.map((item) => (
+            <div key={item.key} data-finale-stat={item.key} className="rounded-xl border-2 border-[#c89b53] bg-[#fff4d8]/85 px-1.5 py-2">
+              <Ic n={item.icon} s={1.8} cls="mx-auto mb-0.5" />
+              <div className="ft text-lg leading-none text-[#5a3518] sm:text-xl">{item.value}</div>
+              <div className="mt-1 text-[.65rem] font-black leading-tight opacity-75 sm:text-xs">{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Cutscene() {
   const activePending = pendingNode();
   const [script, setScript] = useState<SceneScript | null>(null);
@@ -69,6 +101,7 @@ export function Cutscene() {
   const beatings = d?.beatings ?? 0;
   const effectiveScript: SceneScript | null = script ?? (activePending ? compileSceneScript(activePending.id) : null);
   const rootId = effectiveScript?.id ?? activePending?.id ?? '';
+  const finaleScene = effectiveScript?.beats.some((step) => step.nodeId === 'finale') ?? false;
   const beating = isBeatingNode(rootId);
   const queuedScenes = S.story.queue?.length ?? 0;
 
@@ -232,14 +265,18 @@ export function Cutscene() {
       sfx.tap();
       return;
     }
-    // Strong closing shot + Next Objective ribbon before returning control smoothly
-    if (script.durationKind === 'major' && !isReducedMotion()) {
+    // Strong closing shot + Next Objective ribbon before returning control smoothly.
+    // The campaign finale remains until explicit confirmation so its personalized
+    // legacy tableau is readable; reduced motion gets the same content statically.
+    if (script.durationKind === 'major' && (!isReducedMotion() || finaleScene)) {
       setClosing(true);
-      enterClosingShot();
-      closingTimer.current = window.setTimeout(() => {
-        closingTimer.current = null;
-        finishSceneCompletely(rootId.startsWith('visit-'));
-      }, 1650);
+      if (!isReducedMotion()) enterClosingShot();
+      if (!finaleScene) {
+        closingTimer.current = window.setTimeout(() => {
+          closingTimer.current = null;
+          finishSceneCompletely(rootId.startsWith('visit-'));
+        }, 1650);
+      }
     } else {
       sfx.tap();
       finishSceneCompletely(rootId.startsWith('visit-'));
@@ -431,6 +468,8 @@ export function Cutscene() {
           )}
         </div>
       </div>
+
+      {closing && finaleScene && <FinaleTableau />}
 
       {/* Live world-anchored comic speech bubble OR narrator cinema caption */}
       {!closing && !holding && (() => {

@@ -41,19 +41,17 @@ const mkNote = (idx: number, amount: number, rate: number, monthsTarget: number,
   get why() { return CFG.locale === 'en' ? NOTES_EN[idx].why : NOTES_FA[idx].why; },
 });
 
-/** شش سند با سند پایانیِ کوتاه‌تر؛ TOTAL_DEBT از همین مقادیر محاسبه می‌شود. */
+/** شش سند با اقساط هم‌راستا با هزینه‌های همان فصل؛ TOTAL_DEBT از همین مقادیر محاسبه می‌شود. */
 export const NOTES: NoteDef[] = [
   mkNote(0, 15000, 0, 4, 0, 1),
   mkNote(1, 70000, 0.01, 7, 26, 2),
-  mkNote(2, 250000, 0.014, 9, 34, 3),
-  mkNote(3, 700000, 0.016, 11, 40, 4),
-  // Late notes were calibrated by nine no-injection replays. At 1.6M/1.2M,
-  // balanced play reached the finale around day 806, but the crop-first policy
-  // could not finish by day 1200 even with three workers and all 154 plots.
-  // A smaller late principal preserves installments/interest and both standing
-  // paths while making farming a viable alternative to mandatory mining.
-  mkNote(4, 960000, 0.015, 10, 45, 5),
-  mkNote(5, 720000, 0.008, 8, 50, 6),
+  mkNote(2, 180000, 0.014, 9, 34, 3),
+  mkNote(3, 360000, 0.016, 11, 40, 4),
+  // Late installments must leave room for the buildings and estate charter
+  // required by the same chapters. Larger principals forced players to finish
+  // the debt first and then repeat the same economy for another 200+ days.
+  mkNote(4, 420000, 0.015, 10, 45, 5),
+  mkNote(5, 280000, 0.008, 8, 50, 6),
 ];
 
 export const TOTAL_DEBT = NOTES.reduce((a, n) => a + n.amount, 0);

@@ -381,7 +381,8 @@ export function harvestFrontierNode(scene: 'forest', idx: number): { good: strin
   S.stamina = Math.max(0, S.stamina - spot.stam);
   f.nodesDone[key] = true;
   const qty = activeCharter('frontier') === 'sanctuary' ? 2 : 1;
-  grantGoodWithMailOverflow(spot.good, qty, 'grandma', scene);
+  const stored = grantGoodWithMailOverflow(spot.good, qty, 'grandma', scene);
+  toast(spot.good, FT.mineLoot(GOOD[spot.good]?.fa ?? spot.good, qty, stored));
   addStat('harv', qty);
   addXp(11 * layer);
   sfx.pop();

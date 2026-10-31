@@ -36,7 +36,17 @@ function effectiveDemandDecay(): number {
   return (S.affinity?.sara ?? 0) >= HEART_BOND_5 ? SARA5_DEMAND_DECAY : DEMAND_DECAY;
 }
 
-export const goodPrice = (id: string) => Math.max(1, Math.round((GOOD[id]?.base ?? 1) * seasonMult(id) * (S.dem[id] ?? 1) * skillGoodMult(id)));
+/** ضریب تقاضای پس از فروش n واحد، بدون تغییر وضعیت بازی؛ برای پیش‌نمایش شفاف بازار. */
+export function demandAfterSale(id: string, n = 1): number {
+  const count = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+  return Math.max(DEMAND_FLOOR, (S.dem[id] ?? 1) * effectiveDemandDecay() ** count);
+}
+export const marketDemandDecay = (): number => effectiveDemandDecay();
+function priceWithDemand(id: string, demand: number): number {
+  return Math.max(1, Math.round((GOOD[id]?.base ?? 1) * seasonMult(id) * demand * skillGoodMult(id)));
+}
+export const goodPrice = (id: string) => priceWithDemand(id, S.dem[id] ?? 1);
+export const goodPriceAfterSale = (id: string, n = 1) => priceWithDemand(id, demandAfterSale(id, n));
 export const goodRatio = (id: string) => goodPrice(id) / GOOD[id].base;
 export const seedPrice = (id: CropId) => Math.max(1, Math.round(CROP[id].seed * (S.sdem[id] ?? 1)));
 /** ارزش واقعی و دقیق فروش n واحد کالا با احتساب افت تدریجی تقاضا (بدون تغییر وضعیت) */

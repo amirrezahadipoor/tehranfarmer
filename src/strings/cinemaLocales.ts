@@ -202,17 +202,21 @@ export const EN_LINES: Record<string, string[]> = {
     'Seventy thousand coins just for boundary trees?!',
     'Empty orchards cost money, brother! Start raising livestock and you will cover it smoothly.',
   ],
-  'note-open-2': [
-    'Deed Three: two hundred and fifty thousand coins—your grandfather’s drought loan that saved the village orchards. Pay steadily.',
-  ],
-  'note-open-3': [
-    'Deed Four: seven hundred thousand coins to dredge and rebuild the village’s main underground qanat.',
-    'Do not stress over the figure—build a glass greenhouse too and year-round harvests will cover every installment.',
-  ],
-  'note-open-4': [
-    'City speculators tried to buy up your debt, so I stepped in first and registered one million six hundred thousand under clear legal terms.',
-    'Good catch, Engineer—just pay on schedule, son, because official bank clauses never blink!',
-  ],
+  get 'note-open-2'() {
+    return [`Deed Three: ${campaignNumber(NOTES[2].amount, 'en')} coins—your grandfather’s drought loan that saved the village orchards. Pay steadily.`];
+  },
+  get 'note-open-3'() {
+    return [
+      `Deed Four: ${campaignNumber(NOTES[3].amount, 'en')} coins to dredge and rebuild the village’s main underground qanat.`,
+      'Do not stress over the figure—build a glass greenhouse too and year-round harvests will cover every installment.',
+    ];
+  },
+  get 'note-open-4'() {
+    return [
+      `City speculators tried to buy up your debt, so I stepped in first and registered ${campaignNumber(NOTES[4].amount, 'en')} coins under clear legal terms.`,
+      'Good catch, Engineer—just pay on schedule, son, because official bank clauses never blink!',
+    ];
+  },
   get 'note-open-5'() {
     return [
       `Deed Six—the Final Deed: ${campaignNumber(finalNoteAmount(), 'en')} coins to release the full farm title forever.`,

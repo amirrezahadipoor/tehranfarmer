@@ -552,6 +552,10 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
         }
         if (trans.t > 0.62) {
           const arrived = trans.to; trans = null;
+          // در نمای باریک موبایل، دوربینِ ورود فقط دهانهٔ جاده را نشان ندهد.
+          // قاب اول روی محتوای قابل‌تعامل می‌ماند و با اولین لمس/پیمایش آزاد می‌شود.
+          const arrivalFocus = arrived === 'apiary' ? 480 : arrived === 'river' ? 850 : arrived === 'cave' || arrived === 'forest' ? 480 : null;
+          if (arrivalFocus !== null) cameraFocus = { x: arrivalFocus, until: Number.POSITIVE_INFINITY };
           notePlayerAction(1);
           if (arrived === 'apiary') checkSecretTriggers('apiary');
           if (UI.afterTalkNpc !== null && !S.story.pending) {

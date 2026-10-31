@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   ACHS, ACH_OUTFIT_REWARDS, CROPS, CROP, FEED_PRICE, FINGER_PRICE, GOOD, GOODS, HIVE_MAX,
   FERT_PRICE, HONEY_CAP_PER_HIVE, MACHINES, MACHINE_LIST, MK_FA, POND_GROW_DAYS, POND_MAX, STAM_CAP,
-  DAY_RATE, fa, machineMkLv,
+  DAY_RATE, fa, faDec, faPct, machineMkLv,
   type MachineId,
 } from '../game/data';
 import {
-  S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract,
-  effectiveMachinePrice, feedPond, goodPrice, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, mkOf, notify,
+  S, UI, achValue, addStat, buyFeed, buyFert, buyFingerling, buyMachine, buySeed, deliverContract, demandAfterSale,
+  effectiveMachinePrice, feedPond, goodPrice, goodPriceAfterSale, goodRatio, harvestHoney, harvestPond, honeyCap, manageAllPonds, marketDemandDecay, mkOf, notify,
   OUTFIT_THEMES, resetGame, saleValueSel, saveGame, season, seedPackPrice, seedPrice, sellAll, sellGood, srcHave, stockPond, holdCount,
 } from '../game/state';
 import { sfx, snd, syncAudioSettings } from '../game/sound';
@@ -247,6 +247,7 @@ function Market() {
   const monoWarn = hasMonocultureSaturation();
   const boardOffers = offerContractBoard();
   const active = S.contract;
+  const demandDrop = `${faDec((1 - marketDemandDecay()) * 100)}${CFG.locale === 'en' ? '%' : '٪'}`;
   return (
     <Modal title={UT.u84} icon="market" onClose={close} coins={<Wallet />}>
       {/* انتخاب منبع فروش: کولهٔ پشتی یا انبار یا هر دو */}
@@ -265,6 +266,10 @@ function Market() {
             </button>
           ))}
         </div>
+      </div>
+      <div className="paper mb-2 flex items-start gap-2 px-2.5 py-1.5 text-xs font-extrabold leading-relaxed" data-market-demand-guide="1">
+        <Ic n="ledger" s={1.45} />
+        <span>{UT.marketDemandPrefix}{demandDrop}{UT.marketDemandSuffix}</span>
       </div>
       <button data-market-sell-all="1" className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { if (sellAll() > 0) tutOnSale(); }}>
         <Ic n="cart" s={2.4} /><span className="ft text-xl">{UT.u85}</span><Coin v={total} s={1.8} cls="text-xl" />
@@ -299,9 +304,15 @@ function Market() {
               <div className="text-sm font-extrabold leading-none">{g.fa}</div>
               {offSeason && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.66rem] font-black text-amber-900">{UT.outSeasonBonus}</span>}
               <div className="flex min-w-0 flex-wrap items-center justify-center gap-1"><Coin v={goodPrice(g.id)} s={1.4} cls="text-base" /><Trend r={goodRatio(g.id)} /></div>
+              <div className="flex flex-wrap items-center justify-center gap-x-1.5 text-[.68rem] font-black opacity-75" data-market-next-unit={g.id}>
+                <span className="inline-flex items-center gap-1">{UT.marketNextUnit}<Coin v={goodPriceAfterSale(g.id)} s={1} /></span>
+                <span data-market-demand-preview={g.id}>
+                  {UT.marketDemandLabel} <bdi dir="ltr">{faPct((S.dem[g.id] ?? 1) * 100)} → {faPct(demandAfterSale(g.id) * 100)}</bdi>
+                </span>
+              </div>
               <div className="flex w-full flex-wrap gap-1">
-                <button data-sell-one={g.id} className={'btn y press min-w-0 flex-1 !px-1 text-[.75rem] ' + (S.tut?.active && S.tut.step === 4 && g.id === 'wheat' && q > 0 ? 'ring-4 ring-amber-300 ' : '')} disabled={q < 1} onClick={() => { if (sellGood(g.id, 1) > 0) tutOnSale(); }}><span className="font-black">{UT.u77}</span><Ic n="coin" s={1.1} /></button>
-                <button className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, q) > 0) tutOnSale(); }}><span className="font-black">{UT.sellAllStack}</span><Ic n="coin" s={1.1} /></button>
+                <button data-sell-one={g.id} aria-label={`${g.fa} — ${UT.u77} — ${saleValueSel(g.id, 1)}`} className={'btn y press min-w-0 flex-1 !px-1 text-[.75rem] ' + (S.tut?.active && S.tut.step === 4 && g.id === 'wheat' && q > 0 ? 'ring-4 ring-amber-300 ' : '')} disabled={q < 1} onClick={() => { if (sellGood(g.id, 1) > 0) tutOnSale(); }}><span className="font-black">{UT.u77}</span><Coin v={saleValueSel(g.id, 1)} s={1.1} /></button>
+                <button data-sell-stack={g.id} aria-label={`${g.fa} — ${UT.sellAllStack} — ${saleValueSel(g.id, q)}`} className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, q) > 0) tutOnSale(); }}><span className="font-black">{UT.sellAllStack}</span><Coin v={saleValueSel(g.id, q)} s={1.1} /></button>
               </div>
             </div>
           );

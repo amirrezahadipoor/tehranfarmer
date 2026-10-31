@@ -303,11 +303,10 @@ describe('full pacing replay through the real core', () => {
     const rows: unknown[] = [];
     const noteDays: Record<number, number> = {};
     let previousNote = 0;
-    // This deliberately conservative fixed-crop policy reached day 849 after
-    // the late-debt rebalance (diagnostic: m4-pacing-diagnostic-1200.log).
-    // Keep a finite deadlock guard; optimized before/after pacing is measured
-    // by the same-harness strategy matrix, not inferred from this bound.
-    const maxDays = Number(process.env.PACING_MAX_DAYS ?? 900);
+    // Conservative fixed-crop policy, shared with the clean-slate audit. The
+    // campaign must leave time for chapter purchases and must not grow another
+    // multi-hundred-day tail after the final debt is ready to settle.
+    const maxDays = Number(process.env.PACING_MAX_DAYS ?? 500);
     for (let day = 1; day <= maxDays && !S.story.postgame; day++) {
       if (S.debt && S.debt.noteIdx !== previousNote) {
         previousNote = S.debt.noteIdx;
@@ -332,5 +331,7 @@ describe('full pacing replay through the real core', () => {
     expect(S.story.postgame).toBe(true);
     expect(S.debt?.remaining).toBe(0);
     expect(S.day).toBeLessThanOrEqual(maxDays);
+    expect(result.realHours).toBeLessThanOrEqual(14);
+    expect(S.day - (noteDays[5] ?? S.day)).toBeLessThanOrEqual(28);
   });
 });

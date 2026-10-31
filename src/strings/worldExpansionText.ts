@@ -26,6 +26,11 @@ export const WX = {
       ? 'Crew works one plot at a time. Machines boost yield, save seeds, and speed crops and Crew work.'
       : 'کارگران تک‌کرت کار می‌کنند؛ ماشین‌ها برداشت را بیشتر، بذر را صرفه‌جویی و رشد و سرعت کارگر را بالا می‌برند.';
   },
+  get autoTabMachines() { return en() ? 'Machines' : 'ماشین‌ها'; },
+  get autoTabCrew() { return en() ? 'Crew' : 'کارگران'; },
+  get autoTabSeeds() { return en() ? 'Seed plans' : 'برنامهٔ بذر'; },
+  get crewRemove() { return en() ? 'Remove one worker' : 'کاهش یک کارگر'; },
+  get crewAdd() { return en() ? 'Hire one worker' : 'افزایش یک کارگر'; },
   get synergyLabel() { return en() ? 'Machine × Crew Speed Boost: ' : 'جهش سرعت کارگران با ماشین‌آلات: '; },
   get crewFocusTitle() { return en() ? 'Worker Crew Priority Focus' : 'تخصیص اولویت کاری کارگران'; },
   get crewBalanced() { return en() ? 'All-Round' : 'همه‌جانبه'; },
@@ -183,7 +188,7 @@ export const WX = {
   get morningRipe() { return en() ? 'Plots Ready to Harvest' : 'کرت‌های رسیدهٔ آماده'; },
   get morningToggleOff() { return en() ? 'Auto-show at dawn' : 'نمایش خودکار سپیده‌دم'; },
   get storyCompact() { return en() ? 'Compact story pacing' : 'داستانِ فشرده (سند بعدی زودتر)'; },
-  get storyCompactHint() { return en() ? 'Halves the anti-rush wait before the next installment/chapter opens' : 'فاصلهٔ ضدِّرشِ باز شدنِ سند و فصل بعدی را نصف می‌کند'; },
+  get storyCompactHint() { return en() ? 'Shortens the story pause between deeds to at most 3 days (normally 7); playable chapter goals still apply' : 'مکث روایی میان سندها را حداکثر به ۳ روز می‌رساند (در حالت عادی ۷ روز)؛ اهداف قابل‌بازیِ فصل همچنان لازم‌اند'; },
   get morningOk() { return en() ? 'Great!' : 'عالی!'; },
   get morningThirsty() { return en() ? ' thirsty plots — death in ' : ' زمین تشنه — تا مرگ '; },
   get morningThirstyEta() { return en() ? 'h' : ' ساعت'; },

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fresh, S, startDebt } from '../state';
-import { maybeOpenNextNote } from './debt';
+import { maybeOpenNextNote, noteWaitDays } from './debt';
 import { NOTES } from '../../story/debtData';
 
 class MemoryStorage {
@@ -26,20 +26,30 @@ describe('compact story pacing', () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it('halves only the anti-rush wait at the real chapter-opening boundary', () => {
+  it('shortens only the calendar wait at the real chapter-opening boundary', () => {
     const wait = NOTES[1].minDays;
-    const compactWait = Math.ceil(wait / 2);
     S.custom = { farmerName: '', farmName: '', outfit: 0, morningCard: true, compactStory: false };
-    S.debt!.chapterStartDay = S.day - compactWait;
+    const normalWait = noteWaitDays(wait);
+    S.debt!.chapterStartDay = S.day - (normalWait - 1);
     expect(maybeOpenNextNote()).toBe(false);
     expect(S.debt!.noteIdx).toBe(0);
 
     S.custom.compactStory = true;
+    const compactWait = noteWaitDays(wait);
     S.debt!.chapterStartDay = S.day - (compactWait - 1);
     expect(maybeOpenNextNote()).toBe(false);
     S.debt!.chapterStartDay = S.day - compactWait;
     expect(maybeOpenNextNote()).toBe(true);
     expect(S.debt!.noteIdx).toBe(1);
     expect(S.debt!.remaining).toBe(NOTES[1].amount);
+  });
+
+  it('caps late-story calendar waits at seven days, or three in compact mode', () => {
+    S.custom = { farmerName: '', farmName: '', outfit: 0, morningCard: true, compactStory: false };
+    expect(noteWaitDays(50)).toBe(7);
+    expect(noteWaitDays(4)).toBe(4);
+    S.custom.compactStory = true;
+    expect(noteWaitDays(50)).toBe(3);
+    expect(noteWaitDays(4)).toBe(2);
   });
 });

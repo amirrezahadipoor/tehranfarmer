@@ -87,9 +87,34 @@ export function toast(icon: string, text: string) {
     host.notify();
     return;
   }
-  const next = [...host.toasts, t];
+  const routine = (q: Toast) => q.icon === 'mail';
+  const preemptedId = !routine(t) && host.toasts[0] && routine(host.toasts[0]) ? host.toasts[0].id : null;
+  let next: Toast[];
+  if (preemptedId !== null) {
+    // نتیجهٔ واقعی فعالیت نباید چند ثانیه پشت اعلان عادی نامه پنهان بماند.
+    // نامه فقط به نوبت بعد می‌رود؛ متن و تایمر آن حذف نمی‌شود.
+    stopActiveTimer(false);
+    activeId = null;
+    remainingMs = TOAST_MS;
+    next = [t, ...host.toasts];
+  } else if (!routine(t)) {
+    // نتایج تازه پیش از نامه‌های در انتظار قرار می‌گیرند، ولی اعلان فعالیتِ
+    // در حال نمایش قطع نمی‌شود.
+    const firstRoutine = host.toasts.findIndex((q, index) => index > 0 && routine(q));
+    next = firstRoutine < 0
+      ? [...host.toasts, t]
+      : [...host.toasts.slice(0, firstRoutine), t, ...host.toasts.slice(firstRoutine)];
+  } else {
+    next = [...host.toasts, t];
+  }
   while (next.length > MAX_TOASTS) {
-    const dropped = next.shift();
+    // در پرشدن صف، ابتدا پیام‌های غیرضروریِ غیرفعال حذف می‌شوند؛ نامه‌ای که
+    // همین حالا برای نمایش loot عقب رفته تا حد امکان حفظ می‌شود.
+    let dropIndex = next.findIndex((q) => q.id !== activeId && q.id !== preemptedId && routine(q));
+    if (dropIndex < 0) dropIndex = next.findIndex((q) => q.id !== activeId && q.id !== preemptedId);
+    if (dropIndex < 0) dropIndex = next.findIndex((q) => q.id !== activeId);
+    if (dropIndex < 0) dropIndex = 0;
+    const [dropped] = next.splice(dropIndex, 1);
     if (dropped?.id === activeId) {
       stopActiveTimer(false);
       activeId = null;

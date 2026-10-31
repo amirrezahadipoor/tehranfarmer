@@ -415,7 +415,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {UI.started && UI.portrait && portraitAcknowledged() && !inCinema && !UI.modal && !portraitHintDone && (
+      {UI.started && UI.portrait && portraitAcknowledged() && !inCinema && !UI.modal && !S.tut?.active && !portraitHintDone && (
         <button
           data-portrait-hint="1"
           aria-label={UT.u7}

@@ -20,6 +20,8 @@ const money = (n: number) => fa(Math.max(0, Math.round(n)));
 
 export function Ledger() {
   const [custom, setCustom] = useState('');
+  const [showManagement, setShowManagement] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const d = debt();
   const note = activeNote();
   const band = standingBand();
@@ -142,6 +144,11 @@ export function Ledger() {
             </div>
           </div>
 
+          <button className="btn b press w-full !py-1 text-xs" aria-expanded={showManagement} data-ledger-management-toggle="1" onClick={() => setShowManagement((v) => !v)}>
+            <Ic n={showManagement ? 'up' : 'down'} s={1.2} />
+            <span>{UT.u55}، {UT.u61}، {UT.u64}</span>
+          </button>
+          {showManagement && (<>
           {/* اعتبار و قلک */}
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="paper p-3">
@@ -180,6 +187,7 @@ export function Ledger() {
               </button>
             )}
           </div>
+          </>)}
 
           {/* کوئست فصل */}
           {questOf(S.story.chapter) && (
@@ -191,8 +199,12 @@ export function Ledger() {
             </div>
           )}
 
-          {/* تاریخچه */}
-          <div className="paper p-3">
+          <button className="btn b press w-full !py-1 text-xs" aria-expanded={showHistory} data-ledger-history-toggle="1" onClick={() => setShowHistory((v) => !v)}>
+            <Ic n={showHistory ? 'up' : 'down'} s={1.2} />
+            <span>{UT.u70}</span>
+          </button>
+          {showHistory && (
+          <div className="paper p-3" data-ledger-history-panel="1">
             <div className="mb-1 flex items-center gap-2"><Ic n="history" s={2} /><span className="ft text-xl">{UT.u70}</span></div>
             <div className="scroll max-h-40 space-y-1 pr-1">
               {d.history.length === 0 && <div className="text-xs font-bold opacity-50">{UT.u71}</div>}
@@ -205,6 +217,7 @@ export function Ledger() {
               ))}
             </div>
           </div>
+          )}
 
           {d.extorted > 0 && (
             <div className="paper-dark p-3 text-[#fff4d8]">

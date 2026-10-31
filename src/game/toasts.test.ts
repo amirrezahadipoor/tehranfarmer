@@ -38,6 +38,16 @@ describe('sequential toast queue', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('shows a fresh activity reward before routine mail without dropping the mail', () => {
+    toast('mail', 'نامه');
+    toast('turquoise', 'گوهر به انبار رفت');
+    expect(host.toasts.map((t) => t.text)).toEqual(['گوهر به انبار رفت', 'نامه']);
+    vi.advanceTimersByTime(TOAST_MS);
+    expect(host.toasts.map((t) => t.text)).toEqual(['نامه']);
+    vi.advanceTimersByTime(TOAST_MS);
+    expect(host.toasts).toEqual([]);
+  });
+
   it('pauses the active remaining lifetime and messages queued behind the morning report', () => {
     toast('star', 'فعال');
     vi.advanceTimersByTime(1000);

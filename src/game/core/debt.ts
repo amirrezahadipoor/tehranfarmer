@@ -177,9 +177,13 @@ function onNotePaid() {
 }
 
 /** اگر سند فعلی تمام شده و کوئست فصل تمام است، سند بعدی باز می‌شود */
-/** فاصلهٔ ضدِّرشِ سند بعدی — در حالت داستانِ فشرده نصف می‌شود */
-function noteWaitDays(minDays: number): number {
-  return S.custom?.compactStory ? Math.ceil(minDays / 2) : minDays;
+/**
+ * فاصلهٔ کوتاه روایی میان سندها، نه توقف چندهفته‌ای بازیکنِ آماده.
+ * قفل زمانی هرگز بیش از یک فصلِ هفت‌روزه نیست؛ حالت فشرده آن را به سه روز
+ * می‌رساند. پیش‌نیازهای قابل‌بازیِ فصل همچنان باید کامل شوند.
+ */
+export function noteWaitDays(minDays: number): number {
+  return Math.min(S.custom?.compactStory ? 3 : 7, S.custom?.compactStory ? Math.ceil(minDays / 2) : minDays);
 }
 
 export function maybeOpenNextNote(): boolean {

@@ -16,6 +16,33 @@ export function Museum() {
         <div className="paper p-4 text-center text-sm font-extrabold">{UT.museumLocked}</div>
       ) : (
         <div className="flex flex-col items-center gap-3 pb-3" data-museum-hall="1">
+          <div className="museum-legacy-hero paper relative w-full max-w-md overflow-hidden p-3" data-museum-legacy-hero="1">
+            <div className="museum-hero-glow" aria-hidden="true" />
+            <div className="relative flex items-center gap-3">
+              <div className="museum-legacy-seal"><Ic n="trophy" s={3.4} /></div>
+              <div className="min-w-0 flex-1">
+                <div className="ft text-xl text-[#5a3518] sm:text-2xl">{UT.museumLegacyTitle}</div>
+                <div className="mt-0.5 text-xs font-extrabold leading-relaxed opacity-75">{UT.museumLegacyText}</div>
+              </div>
+            </div>
+            <div className="relative mt-2 flex items-end justify-center gap-3" aria-label={UT.museumEstateSeal}>
+              <Ic n="house" s={2.3} /><Ic n="greenhouse" s={2.8} /><Ic n="valley" s={2.3} />
+            </div>
+            <div className="relative mt-2 grid grid-cols-3 gap-1.5">
+              {[
+                { id: 'freedom', icon: 'note', value: fa(S.debt?.paidTotal ?? 0), label: UT.museumDebtSeal },
+                { id: 'harvest', icon: 'wheat', value: fa(S.stats.cropHarv), label: UT.museumHarvestSeal },
+                { id: 'estates', icon: 'land', value: fa(S.lv.land), label: UT.museumEstateSeal },
+              ].map((exhibit) => (
+                <div key={exhibit.id} data-museum-exhibit={exhibit.id} className="rounded-lg border-2 border-[#c89b53] bg-[#fff4d8]/80 px-1.5 py-1.5 text-center">
+                  <Ic n={exhibit.icon} s={1.55} cls="mx-auto" />
+                  <div className="ft text-base leading-tight">{exhibit.value}</div>
+                  <div className="text-[.65rem] font-black leading-tight opacity-70">{exhibit.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="paper flex w-full max-w-md flex-col items-center p-3">
             <svg viewBox="0 0 220 130" className="h-32 w-52" aria-hidden="true">
               <rect x="46" y="96" width="128" height="24" rx="5" fill="#b6b0a6" stroke="#503426" strokeWidth="3" />

@@ -199,7 +199,9 @@ export const WAGE_WARN_HOUR = 20;
 export const COLS = 8;
 export const ROWS = 5;
 /** اسناد توسعهٔ مزارع بزرگ (دشت شمالی ۵۴ کرت، قنات شمالی، باغ‌دره ۶۰ کرت، منشور سه‌مزرعه) */
-export const LAND_PRICES = [3500, 18000, 90000, 426000];
+// The final charter is a story milestone, not a second late-game debt. Its
+// fixed price leaves room for the final note and the remaining machines.
+export const LAND_PRICES = [3500, 18000, 90000, 240000];
 
 // ===== ارتقاهای ابزار — هرکدام ۵ مرحله =====
 export const HOE_PRICES = [300, 800, 2400, 9000, 40000];

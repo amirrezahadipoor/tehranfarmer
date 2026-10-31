@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AUTO_FA, CROPS, MACHINES, MK_COLLECT, MK_EAT, MK_FERTSAVE, MK_GROW, MK_HARVEST, MK_SEEDSAVE, MK_THIRST, WORKER_MAX, type AutoKey, type CropId, type MachineId } from '../game/data';
 import { isEstateOwned, bestEstateForCrop, type FarmSceneId } from '../game/estates';
 import { ESTATE_UI } from '../strings/estateStoryText';
@@ -39,6 +40,7 @@ export function AutoPanelModal() {
   const L = farmLevel();
   const unlockedSeeds = CROPS.filter((c) => c.lv <= L);
   const role = S.crewRole ?? 'balanced';
+  const [tab, setTab] = useState<'machines' | 'crew' | 'seeds'>('machines');
 
   return (
     <Modal title={UT.u103} icon="tractor" onClose={close} coins={<Wallet />}>
@@ -47,8 +49,28 @@ export function AutoPanelModal() {
         <div className="mt-0.5 font-bold opacity-85 leading-relaxed">{WX.pillarDesc}</div>
       </div>
 
+      <div className="mb-2 grid grid-cols-3 gap-1" role="tablist" aria-label={UT.u103} data-auto-tabs="1">
+        {([
+          ['machines', WX.autoTabMachines, 'tractor'],
+          ['crew', WX.autoTabCrew, 'worker'],
+          ['seeds', WX.autoTabSeeds, 'seedbag'],
+        ] as const).map(([id, label, icon]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            data-auto-tab={id}
+            className={'btn press min-w-0 !px-1.5 !py-1 text-xs font-black ' + (tab === id ? 'g' : 'y opacity-75')}
+            onClick={() => setTab(id)}
+          >
+            <Ic n={icon} s={1.35} /><span className="whitespace-normal">{label}</span>
+          </button>
+        ))}
+      </div>
+
       {/* 7 Industrial Machines */}
-      <div className={grid}>
+      <div className={grid} hidden={tab !== 'machines'} role="tabpanel" aria-label={WX.autoTabMachines} data-auto-panel="machines">
         {keys.map((k) => {
           const m = machineForAuto(k);
           const mk = m ? mkOf(m as MachineId) : 0;
@@ -71,6 +93,8 @@ export function AutoPanelModal() {
                 className={'press min-h-[48px] w-full rounded-xl border-[.18rem] border-[#503426] px-2 py-1 text-sm font-black ' + (on ? 'bg-[#8fd35a]' : 'bg-[#e8d9b8]')}
                 disabled={!m}
                 aria-pressed={on}
+                aria-label={`${AUTO_FA[k]}: ${on ? UT.u105 : UT.u106}`}
+                data-auto-toggle={k}
                 onClick={() => toggleAuto(k)}
               >
                 {on ? UT.u105 : UT.u106}
@@ -82,7 +106,7 @@ export function AutoPanelModal() {
       </div>
 
       {/* Crew Priority Focus & Machine Synergy */}
-      <div className="paper mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2">
+      <div className="paper mb-2.5 flex flex-wrap items-center justify-between gap-2 p-2" hidden={tab !== 'crew'} role="tabpanel" aria-label={WX.autoTabCrew} data-auto-panel="crew">
         <div className="flex items-center gap-2">
           <Ic n="worker" s={2.6} />
           <div className="text-xs">
@@ -110,7 +134,7 @@ export function AutoPanelModal() {
       </div>
 
       {/* Per-Farm Independent Crop Assignment & Specialty */}
-      <div className="paper mb-2.5 p-2.5">
+      <div className="paper mb-2.5 p-2.5" hidden={tab !== 'seeds'} role="tabpanel" aria-label={WX.autoTabSeeds} data-auto-panel="seeds">
         <div className="ft text-base text-[#5a3518]">{WX.seedPlanTitle}</div>
         <div className="mt-1.5 grid gap-2 sm:grid-cols-3">
           {(['farm', 'north', 'valley'] as FarmSceneId[]).map((fid) => {
@@ -141,6 +165,8 @@ export function AutoPanelModal() {
                         type="button"
                         className={'btn press !px-1.5 !py-0.5 text-[.68rem] font-black ' + (cur === c.id ? 'y' : '')}
                         aria-pressed={cur === c.id}
+                        aria-label={`${farmName}: ${c.fa}${bestEstateForCrop(c.id) === fid ? ` — ${specLabel}` : ''}`}
+                        data-seed-lock={`${fid}:${c.id}`}
                         onClick={() => setFarmSeedLock(fid, c.id as CropId)}
                         title={c.fa}
                       >
