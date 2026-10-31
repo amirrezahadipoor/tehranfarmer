@@ -172,14 +172,16 @@ export function createSceneTapRouter(d: SceneInputDeps) {
         }
       }
     }
+    // تابلوی موزه پیش از hitbox بزرگ نجاری بررسی شود؛ مرکز تابلو (872,430) داخل حاشیهٔ نجاری هم قرار دارد.
+    // hitbox باریک و مرکزی نجاری بالاتر باقی می‌ماند، پس کلیک مستقیم روی درب نجاری هم همچنان کار می‌کند.
+    if (S.story.postgame && ((Math.abs(x - 872) < 55 && y > 390 && y < 480) || (Math.abs(x - 825) < 70 && y > 580 && y < 705))) {
+      d.moveTo(d.farmer, 872, 500); d.farmer.tasks.push(d.mkTask('open', 872, 500, { to: 'museum' })); return;
+    }
     for (const s of SHOPS) {
       if (Math.abs(x - s.cx) < 92 && y > 210 && y < 448) { d.moveTo(d.farmer, s.cx, 488); d.farmer.tasks.push(d.mkTask('open', s.cx, 488, { to: s.id })); return; }
     }
     if ((Math.abs(x - JAHANGIR_HUT.cx) < 92 && y > 510 && y < 680) || (Math.abs(x - 1035) < 105 && y >= 575 && y < 710)) {
       d.moveTo(d.farmer, 1042, 634); d.farmer.tasks.push(d.mkTask('open', 1042, 634, { to: 'ledger' })); return;
-    }
-    if (S.story.postgame && ((Math.abs(x - 872) < 55 && y > 390 && y < 480) || (Math.abs(x - 825) < 70 && y > 580 && y < 705))) {
-      d.moveTo(d.farmer, 872, 500); d.farmer.tasks.push(d.mkTask('open', 872, 500, { to: 'museum' })); return;
     }
     d.moveTo(d.farmer, Math.max(46, Math.min(1240, x)), Math.max(442, Math.min(648, y)));
   }

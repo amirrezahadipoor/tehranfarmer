@@ -373,7 +373,8 @@ export function processDebtDay() {
   if (!d) return;
   // رفع C-5: پایان هر روز بازی = یک نقطهٔ چرخش پشتیبان قطعی (نه وابسته به ساعت دیوار)
   forceBackupRotation();
-  checkStoryQuests();
+  // بررسی کوئست فقط داخل maybeOpenNextNote انجام می‌شود تا silentScene پیش از ساختن صحنه مشخص باشد.
+  // بررسی جداگانه در اینجا، q6 را پیش از فینال در صف می‌گذاشت و پس از آزادی مزرعه نمایش می‌داد.
   if (S.story.postgame) {
     d.pendingVisit = null;
     notify();

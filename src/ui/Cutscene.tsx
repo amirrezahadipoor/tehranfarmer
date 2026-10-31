@@ -339,7 +339,7 @@ export function Cutscene() {
   const who = closing ? 'narrator' : beat!.who;
   const speakerName = CHAR_NAMES[locale][who];
   const isNarrator = who === 'narrator';
-  const objText = OBJECTIVES[locale][objectiveKeyFor(effectiveScript.id)] ?? OBJECTIVES[locale].default;
+  const objText = OBJECTIVES[locale][objectiveKeyFor(effectiveScript.id, S.story.postgame)] ?? OBJECTIVES[locale].default;
   const isLastBeat = beatIdx + 1 >= effectiveScript.beats.length, choiceNodeId = beat?.nodeId ?? effectiveScript.id;
   const sceneChoices = (!closing && done && isLastBeat && !UI.directorReplay && !S.story.seen['choice:' + choiceNodeId])
     ? SCENE_CHOICES[choiceNodeId]

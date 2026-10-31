@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AR } from './engineRender';
 import type { Task, Walker } from './engineRender';
 import { createSceneTapRouter, type SceneInputDeps } from './engineInput';
-import { UI } from './state';
+import { S, UI } from './state';
 import { TOWN_ACTORS } from '../story/townNpc';
 
 const { talkToTownNpc } = vi.hoisted(() => ({ talkToTownNpc: vi.fn() }));
@@ -48,6 +48,7 @@ describe('walking town NPC pointer routing', () => {
     UI.scene = 'town';
     UI.modal = null;
     UI.confirm = null;
+    S.story.postgame = false;
   });
 
   it('opens the same conversation from a direct tap on every walking NPC body', () => {
@@ -65,5 +66,33 @@ describe('walking town NPC pointer routing', () => {
     expect(talkToTownNpc).not.toHaveBeenCalled();
     expect(mkTask).toHaveBeenCalledWith('open', 350, 488, { to: 'market' });
     expect(farmer.tasks).toHaveLength(1);
+  });
+});
+
+describe('postgame museum pointer routing', () => {
+  beforeEach(() => {
+    UI.scene = 'town';
+    UI.modal = null;
+    UI.confirm = null;
+    S.story.postgame = true;
+  });
+
+  it('opens the museum from its semantic target instead of the overlapping carpentry hitbox', () => {
+    const { router, farmer, mkTask } = setup();
+    expect(router.activateTarget('museum')).toBe(true);
+    expect(mkTask).toHaveBeenCalledWith('open', 872, 500, { to: 'museum' });
+    expect(farmer.tasks).toHaveLength(1);
+    expect(farmer.tasks[0]).toMatchObject({ kind: 'open', to: 'museum' });
+  });
+
+  it('keeps direct museum-door and carpentry-door taps distinct', () => {
+    const museum = setup();
+    museum.npcs.forEach((npc) => { npc.x = 100; npc.y = 200; });
+    museum.router.dispatchTap(825, 620, { clientX: 0, clientY: 0 });
+    expect(museum.mkTask).toHaveBeenCalledWith('open', 872, 500, { to: 'museum' });
+
+    const carpentry = setup();
+    carpentry.router.dispatchTap(950, 320, { clientX: 0, clientY: 0 });
+    expect(carpentry.mkTask).toHaveBeenCalledWith('open', 950, 488, { to: 'carp' });
   });
 });

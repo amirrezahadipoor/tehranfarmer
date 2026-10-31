@@ -387,7 +387,10 @@ function shopXOr(id: string, fallback: number): number {
   return SHOP_META[id]?.cx ?? fallback;
 }
 
-export function objectiveKeyFor(id: string): string {
+export function objectiveKeyFor(id: string, postgame = false): string {
+  if (id === 'secret-true-epilogue') return 'epilogue';
+  // پس از آزادی مزرعه هیچ صحنه‌ای نباید بازیکن را به پرداخت یا پس‌انداز قسط بفرستد.
+  if (postgame) return 'postgame';
   if (id.startsWith('p')) return 'prologue';
   if (id === 'quest-done-q1') return 'q1done';
   if (id === 'quest-done-q2') return 'q2done';
