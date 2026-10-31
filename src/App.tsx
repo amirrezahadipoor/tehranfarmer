@@ -118,8 +118,9 @@ function Start() {
     if (!cont) resetGameFn();
     maybeStartPrologue();
     enterFullscreen();
-    sfx.fanfare();
     notify();
+    // ساخت AudioGraph با رندر اولین HUD در یک task تجمیع نشود؛ خود fanfare حذف نمی‌شود.
+    window.setTimeout(() => { sfx.fanfare(); }, 0);
   };
 
   return (
