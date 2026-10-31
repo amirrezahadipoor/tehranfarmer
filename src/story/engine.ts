@@ -78,6 +78,7 @@ export function triggerCutscene(
     }
   }
   S.story.pending = id;
+  S.story.resumeBeat = 0;
   // در گفت‌وگوی داخل مغازه، داخل‌نما و پرترهٔ فروشنده پشت همان حباب گفت‌وگو می‌مانند؛ در بقیهٔ صحنه‌ها مودال بسته می‌شود.
   const keepShopInterior = UI.modal === 'shop' && UI.afterModal === 'shop';
   if (!keepShopInterior) UI.modal = null;
@@ -90,6 +91,15 @@ export function playNode(id: string): StoryNode | null {
   const keepDirector = UI.directorReplay;
   const res = triggerCutscene(id, { forceReplay: true, director: keepDirector });
   return res;
+}
+
+/** ذخیرهٔ موقعیت خواندن، بدون اجرای اثر؛ اثرها فقط در advanceNode اعمال می‌شوند. */
+export function confirmBeat(nodeId: string, lineIdx: number) {
+  if (!S.story || S.story.pending !== nodeId || UI.directorReplay) return;
+  const next = Math.max(0, Math.floor(lineIdx));
+  if ((S.story.resumeBeat ?? 0) === next) return;
+  S.story.resumeBeat = next;
+  saveGame();
 }
 
 /** اثرهای گره را روی سِیو اعمال می‌کند (و هرگز اجازه نمی‌دهد پرولوگِ دیده‌نشده بدون شروع سند رها شود!) */
@@ -147,6 +157,7 @@ export function advanceNode(node: StoryNode): AdvanceResult {
     UI.directorReplay = false;
     const queued = sceneQueue().shift() ?? null;
     S.story.pending = queued;
+    S.story.resumeBeat = 0;
     if (!queued && UI.afterModal) {
       UI.modal = UI.afterModal;
       UI.afterModal = null;
@@ -174,6 +185,7 @@ export function skipActiveCutscene() {
   UI.directorReplay = false;
   const queued = sceneQueue().shift() ?? null;
   S.story.pending = queued;
+  S.story.resumeBeat = 0;
   if (!queued && !S.story.prologueSeen && !sceneQueue().length) {
     S.story.prologueSeen = true;
     if (!S.debt && !S.story.postgame) startDebt(0);

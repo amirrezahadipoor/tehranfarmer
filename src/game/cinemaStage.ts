@@ -160,7 +160,8 @@ function clearPool() {
   for (let i = 0; i < POOL_SIZE; i++) pool[i].active = false;
 }
 
-export function beginSceneStage(script: SceneScript) {
+export function beginSceneStage(script: SceneScript, initialBeat = 0) {
+  const startBeat = script.beats[initialBeat] ? initialBeat : 0;
   if (!savedSnapshot && world) {
     savedSnapshot = {};
     for (const id of ACTORS) {
@@ -200,7 +201,7 @@ export function beginSceneStage(script: SceneScript) {
   cinema.posesObserved = new Set<string>();
   cinema.active = true;
   cinema.script = script;
-  cinema.beatIdx = 0;
+  cinema.beatIdx = startBeat;
   cinema.camX = script.establishingShot.x;
   cinema.camY = script.establishingShot.y;
   cinema.targetX = script.establishingShot.x;
@@ -212,7 +213,7 @@ export function beginSceneStage(script: SceneScript) {
   cinema.closingHold = 0;
   setMusicDuck(true);
   playCinemaCue('establish');
-  applyBeatToStage(0);
+  applyBeatToStage(startBeat);
   notify();
 }
 

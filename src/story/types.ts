@@ -46,6 +46,7 @@ export interface StoryState {
   prologueSeen: boolean;
   postgame: boolean;
   pending: string | null;       // گرهٔ کات‌سینی که باید اجرا شود
+  resumeBeat?: number;          // شاخص خطِ تأییدشده داخل همان گره؛ سیوهای قدیمی از صفر شروع می‌کنند
   queue?: string[];             // صف ماندگار صحنه‌های سینمایی در سِیو
   lastAutoDay?: number;         // جلوگیری از اجرای پیاپی خودکار صحنه‌ها در یک روز بدون فعالیت
   questDone: Record<number, boolean>;

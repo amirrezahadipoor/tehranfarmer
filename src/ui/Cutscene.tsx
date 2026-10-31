@@ -3,7 +3,7 @@
 // character voice blips + mouth-flap, dramatic pauses, Skip with full consequences, and Next Objective shot.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { S, UI, farmLevel, notify, ownedFarms, resetGame } from '../game/state';
-import { advanceNode, clearSceneQueue, openPendingDebtVisit, pendingNode, skipActiveCutscene } from '../story/engine';
+import { advanceNode, clearSceneQueue, confirmBeat, openPendingDebtVisit, pendingNode, skipActiveCutscene } from '../story/engine';
 import { nodeById } from '../story/story';
 import { compileSceneScript, objectiveKeyFor } from '../story/sceneScripts';
 import {
@@ -209,14 +209,17 @@ export function Cutscene() {
       skipActiveCutscene();
       return;
     }
+    const resumeLine = S.story.resumeBeat ?? 0;
+    const resumeIdx = compiled.beats.findIndex((step) => step.nodeId === pid && step.lineIdx === resumeLine);
+    const initialBeat = Math.max(0, resumeIdx);
     if (closingTimer.current !== null) { window.clearTimeout(closingTimer.current); closingTimer.current = null; }
     setSummary(false);
     setClosing(false);
     setFineAck(false);
     setScript(compiled);
-    setBeatIdx(0);
+    setBeatIdx(initialBeat);
     setTyped(0);
-    beginSceneStage(compiled);
+    beginSceneStage(compiled, initialBeat);
   }, [activePending?.id, closing]);
 
   useEffect(() => () => {
@@ -340,6 +343,7 @@ export function Cutscene() {
       if (finishedNode) advanceNode(finishedNode);
     }
     if (nextBeat) {
+      confirmBeat(nextBeat.nodeId, nextBeat.lineIdx);
       const ni = beatIdx + 1;
       setBeatIdx(ni);
       setTyped(0);
