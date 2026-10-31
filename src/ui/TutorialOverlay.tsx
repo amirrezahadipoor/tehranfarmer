@@ -85,6 +85,16 @@ export function TutorialOverlay() {
   }, [step]);
 
   useEffect(() => {
+    if (!active || step !== 6 || scene !== 'farm') return;
+    // The farmhouse is on the far west edge. On narrow phones the player can
+    // return from town with it fully offscreen, so reveal the actual objective
+    // instead of leaving a targetless coach card. The first canvas gesture
+    // cancels this focus in the engine and immediate manual pan remains free.
+    const timer = window.setTimeout(() => cmd.focusWorld(197), 80);
+    return () => window.clearTimeout(timer);
+  }, [active, step, scene]);
+
+  useEffect(() => {
     if (!active) { setTarget(null); return; }
     let raf = 0;
     const follow = () => {

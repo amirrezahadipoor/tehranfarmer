@@ -6,6 +6,7 @@ import { S, addGood, addStat, addXp, farmLevel, holdCount, invCap, invCount, not
 import { activeNote, addStanding, daysToDue } from './debt';
 import { NPC_QUEST_SPECS, npcHasQuestMarker } from '../../story/npcQuests';
 import { SOCIAL_NPC_IDS, villagerHearts } from '../../story/socialVillagers';
+import { bestEstateForCrop, isEstateOwned } from '../estates';
 import { sfx } from '../sound';
 import {
   MAIL_UI, type MailEntry, type MailItemGrant, type MailSenderId, type MailState,
@@ -223,12 +224,23 @@ export function rollMailTradeOffer(force = false): MailEntry | null {
   const lv = farmLevel();
   const sn = season();
   const inSeason = CROPS.filter((c) => c.lv <= lv && c.seasons.includes(sn));
-  const pool = inSeason.length ? inSeason : CROPS.slice(0, 2);
+  const estateOrder = S.story.chapter >= 5;
+  const ownedEstateCrops = estateOrder
+    ? inSeason.filter((c) => isEstateOwned(bestEstateForCrop(c.id), S.lv.land))
+    : inSeason;
+  const planned = new Set(Object.values(S.farmSeeds ?? {}));
+  const plannedCrops = estateOrder ? ownedEstateCrops.filter((c) => planned.has(c.id)) : [];
+  // Late orders give automated estates a short, relevant delivery goal instead
+  // of asking for a random early-game crop. The deterministic hash never touches
+  // the campaign PRNG, and early-game offers retain their original tuning.
+  const pool = plannedCrops.length ? plannedCrops : ownedEstateCrops.length ? ownedEstateCrops : inSeason.length ? inSeason : CROPS.slice(0, 2);
   const h = detHash(S.day, lv + sn * 31);
   const pick = pool[h % pool.length] ?? CROPS[0];
-  const qty = 4 + (h % 6);
+  const qty = estateOrder ? 12 + (h % 9) : 4 + (h % 6);
+  const bonusPct = estateOrder ? 45 : 32;
+  const dueDay = S.day + (estateOrder ? 7 : 5);
   const baseUnit = GOOD[pick.id]?.base ?? pick.price;
-  const reward = Math.max(24, Math.round(baseUnit * qty * 1.32));
+  const reward = Math.max(24, Math.round(baseUnit * qty * (1 + bonusPct / 100)));
   const senders: MailSenderId[] = ['sara', 'herald', 'rancher', 'engineer'];
   const sender = senders[(h >>> 4) % senders.length];
   ms.lastDealDay = S.day;
@@ -236,14 +248,14 @@ export function rollMailTradeOffer(force = false): MailEntry | null {
     category: 'trade',
     sender,
     template: 'mail-trade',
-    params: { good: pick.id, qty, amount: reward, dueDay: S.day + 5 },
+    params: { good: pick.id, qty, amount: reward, dueDay, bonusPct, estateOrder: estateOrder ? 1 : 0 },
     trade: {
       good: pick.id,
       qty,
       reward,
       xp: Math.max(8, Math.round(reward / XP.sellPer)),
-      standing: 2,
-      dueDay: S.day + 5,
+      standing: estateOrder ? 3 : 2,
+      dueDay,
       fulfilled: false,
     },
   });

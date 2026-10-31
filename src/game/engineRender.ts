@@ -5,7 +5,7 @@ import { drawBackpack, drawBackpackFront } from './backpackArt';
 import { drawThirstLeft } from './thirstWarn';
 import { FIELD_X, FIELD_Y, HIVE_SLOTS, OX, OY, PLOT_DX, PLOT_DY, RIVER_SPOTS, BW, BH, BG_RESOLUTION, getSceneSource } from './scenes';
 import { S, UI, season, unreadMailCount } from './state';
-import { isReducedMotion } from './settings';
+import { CFG, isReducedMotion } from './settings';
 import { faPct } from '../strings/fa';
 import { cinema, drawCinemaForegroundUI, drawCinemaWorldExtras, isActorStagedInScene } from './cinemaStage';
 import { drawAnimalStatusExtra, drawFieldUpgradesAndHover, drawFullScarecrow, liveAnimalScale } from './farmVisuals';
@@ -390,6 +390,7 @@ export function createSceneRenderer(
   function renderFarm() {
     blitVisibleBG();
     const vx0 = viewMinX(), vx1 = viewMaxX();
+    const animateCropSway = !CFG.lowPower && !isReducedMotion();
     // نور گرم پنجره‌های خانه قبل از رسم هر کاراکتری کشیده می‌شود تا هرگز روی صورت هیچ شخصیتی نیفتد!
     if (nightAlpha(UI.started ? S.hour : 10.5) > 0.22) {
       ctx.fillStyle = 'rgba(255,220,120,.82)';
@@ -448,7 +449,10 @@ export function createSceneRenderer(
         f: () => {
           const stage = p.ripe ? 3 : p.prog < 0.2 ? 0 : p.prog < 0.55 ? 1 : 2;
           const part = cropPart(p.crop!, stage, p.dead);
-          const sway = p.dead ? 0 : Math.sin(t * 1.6 + i) * (S.weather === 2 ? 0.05 : 0.022);
+          // Crop rotation requires a save/translate/rotate/restore per plant.
+          // Low-Power keeps the status icons and growth art, but skips this
+          // barely visible decorative sway and its per-canvas-state overhead.
+          const sway = p.dead || !animateCropSway ? 0 : Math.sin(t * 1.6 + i) * (S.weather === 2 ? 0.05 : 0.022);
           put(ctx, part, cx, cy + 16, 0.72, sway);
           if (!p.dead && p.water < 0.05) put(ctx, iconPart('drop'), cx + 26, cy - 18 + Math.sin(t * 4 + i) * 2.2, 0.44);
           if (!p.dead && p.water < 0.05 && p.dry > 0) drawThirstLeft(ctx, cx + 26, cy - 36 + Math.sin(t * 4 + i) * 2.2, p.dry);

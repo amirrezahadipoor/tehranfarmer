@@ -87,11 +87,17 @@ export function setShortBeat(on: boolean) {
   updateSetting('shortBeat', on);
 }
 
+let reducedMotionQuery: MediaQueryList | null | undefined;
+
 /** آیا حرکت کاهش‌یافته از سوی سیستم‌عامل یا تنظیم دستی بازیکن فعال است؟ */
 export function isReducedMotion(): boolean {
   if (CFG.reduceMotion) return true;
   try {
-    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    // MediaQueryList.matches is live. Reusing the query avoids constructing a
+    // native media-query object several times per canvas frame.
+    if (reducedMotionQuery === undefined) reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    return !!reducedMotionQuery?.matches;
   } catch { return false; }
 }
 

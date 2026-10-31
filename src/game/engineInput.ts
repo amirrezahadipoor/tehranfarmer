@@ -16,7 +16,6 @@ import { checkSecretTriggers } from '../story/secrets';
 import { npcOverheadLayout } from './npcLabels';
 import { tutTapOk } from './tutorial';
 import { fishCast } from './worldVisuals';
-import { GT } from '../strings/gameText';
 import { FT } from '../strings/frontierText';
 import type { CanvasPoint } from './touchBridge';
 import {
@@ -217,8 +216,11 @@ export function createSceneTapRouter(d: SceneInputDeps) {
       const standX = onDock ? 1094 : castX - 18;
       const standY = onDock ? 416 : 458;
       if (!S.rod) {
-        UI.needRodHint = Date.now() + 6000;
-        toast('fish', GT.g156);
+        // Keep the intentional no-rod practice consistent with the HUD action.
+        // The modal explains the reduced odds/rewards and the carpentry upgrade.
+        UI.needRodHint = 0;
+        UI.modal = 'fishing';
+        sfx.tap();
         notify();
         return;
       }

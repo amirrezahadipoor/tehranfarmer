@@ -45,6 +45,7 @@ export const cmd = {
   canvasKey: (_key: string): boolean => false,
   sceneAnnouncement: (): string => sceneSummary(),
   resetMotion: () => {},
+  focusWorld: (_x: number) => { void _x; },
   inspectEngine: (): EngineRigSnapshot | null => null,
 };
 const TASK_AUTO: Record<string, string> = { till: 'till', plant: 'plant', water: 'water', harvest: 'harvest', fert: 'fert', feed: 'feed', collect: 'collect', well: 'water' };
@@ -92,6 +93,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   let lastScene: SceneKey = UI.scene, dragLast = -1, dragging = false;
   let knownWorkers = S.workers;
   let camX = 640, panStartX = 0, panCamStart = 640, panMoved = 0, panActive = false;
+  let cameraFocus: { x: number; until: number } | null = null;
   bindWorldActors({ farmer, jahangir, npcs, builder });
   const renderView = createSceneRenderer(canvas, ctx, farmer, workers, builder, BSITE, jahangir, npcs, animals, fx);
   function syncViewport(dt = 1) {
@@ -101,8 +103,13 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       if (cinema.active) {
         tx = (cw - W * sc) / 2;
       } else {
-        if (!panActive && (farmer.mode === 'walk' || farmer.cur || farmer.tasks.length > 0)) {
-          camX += (farmer.x - camX) * Math.min(1, dt * 4.5);
+        if (cameraFocus && performance.now() < cameraFocus.until) {
+          camX = isReducedMotion() ? cameraFocus.x : camX + (cameraFocus.x - camX) * Math.min(1, dt * 7);
+        } else {
+          cameraFocus = null;
+          if (!panActive && (farmer.mode === 'walk' || farmer.cur || farmer.tasks.length > 0)) {
+            camX += (farmer.x - camX) * Math.min(1, dt * 4.5);
+          }
         }
         const halfView = cw / (2 * sc);
         camX = Math.max(halfView, Math.min(W - halfView, camX));
@@ -139,6 +146,12 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     if (changed) render();
   }
   resize();
+  cmd.focusWorld = (x: number) => {
+    if (!Number.isFinite(x)) return;
+    cameraFocus = { x, until: performance.now() + 1400 };
+    if (isReducedMotion()) camX = x;
+    syncViewport(1);
+  };
   const toLogical = (e: CanvasPoint) => {
     const r = canvas.getBoundingClientRect();
     return { x: (e.clientX - r.left - tx) / sc, y: (e.clientY - r.top - ty) / sc };
@@ -301,12 +314,12 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   function startTrans(to: SceneKey) {
     if (to === UI.scene) return;
     if (to === 'town') S.cityVisits++;
-    fishCast.active = false; fishCast.armed = false;
+    fishCast.active = false; fishCast.armed = false; cameraFocus = null;
     trans = { t: 0, to, from: UI.scene, done: false }; farmer.tasks = []; farmer.cur = null;
   }
   cmd.travelTo = startTrans;
   cmd.resetMotion = () => {
-    trans = null; farmer.tasks = []; farmer.cur = null; farmer.mode = 'idle';
+    trans = null; cameraFocus = null; farmer.tasks = []; farmer.cur = null; farmer.mode = 'idle';
     fishCast.active = false; fishCast.armed = false;
   };
   onNewDay.cb = () => { for (const w of workers) { w.tasks = []; w.cur = null; } };
@@ -376,7 +389,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     onDown: (e) => {
       lastInputAt = performance.now(); lastPaint = 0;
       if (!UI.started || UI.modal || UI.confirm || (trans && !trans.done) || cinema.active) return;
-      dragging = true; dragLast = -1; panMoved = 0; panActive = false;
+      dragging = true; dragLast = -1; panMoved = 0; panActive = false; cameraFocus = null;
       panStartX = e.clientX; panCamStart = camX;
       const { x, y } = toLogical(e);
       const curSpec = isFarmScene(UI.scene) ? ESTATES[UI.scene] : null;
@@ -577,8 +590,12 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       if (bph !== 'off') {
         poseFarmer(builder.rig, { mode: builder.mode, ph: builder.ph, t, kind: builder.kind, p: builder.p });
       }
-      workers.forEach((w, wi) => { if (wi < S.workers) poseFarmer(w.rig, { mode: w.mode, ph: w.ph, t, kind: w.kind, p: w.p }); });
-      for (const n of npcs) poseFarmer(n.rig, { mode: n.mode, ph: n.ph, t, kind: n.kind, p: n.p });
+      // Simulation above still advances every worker, including other estates.
+      // Only visible rigs need a fresh skeletal pose for the current canvas.
+      workers.forEach((w, wi) => {
+        if (wi < S.workers && w.post === UI.scene) poseFarmer(w.rig, { mode: w.mode, ph: w.ph, t, kind: w.kind, p: w.p });
+      });
+      if (UI.scene === 'town') for (const n of npcs) poseFarmer(n.rig, { mode: n.mode, ph: n.ph, t, kind: n.kind, p: n.p });
     }
     syncViewport(dt);
     render();
@@ -594,7 +611,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
           if (qualitySamples.length === 120) {
             const avg = qualitySamples.reduce((sum, q) => sum + q.ms, 0) / qualitySamples.length;
             const mostlyActive = qualitySamples.filter((q) => q.active).length >= 60;
-            if (frameIsSlow(avg, mostlyActive) && qualityCap > 1) {
+            if (frameIsSlow(avg, mostlyActive) && qualityCap > 0.75) {
               if (qualityRaisedAt > 0 && now - qualityRaisedAt < 30000) qualityUpscaleBlocked = true;
               qualityCap = lowerQualityCap(qualityCap);
               qualitySamples = []; qualityStableMs = 0; qualityCooldownUntil = now + 10000;

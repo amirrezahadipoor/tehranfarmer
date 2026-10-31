@@ -197,6 +197,8 @@ export function renderMailTemplate(entry: MailEntry, itemLabel: (id: string) => 
   const ch = Number(p.chapter ?? 1);
   const amt = num(p.amount ?? 0);
   const qty = num(p.qty ?? 1);
+  const bonusPct = num(p.bonusPct ?? 32);
+  const estateOrder = Number(p.estateOrder ?? 0) === 1;
 
   switch (entry.template) {
     case 'welcome-homestead':
@@ -369,14 +371,18 @@ export function renderMailTemplate(entry: MailEntry, itemLabel: (id: string) => 
 
     case 'mail-trade':
       return en ? {
-        subject: `Wholesale Courier Order: ${qty}× ${goodName}`,
+        subject: `${estateOrder ? 'Estate Seed-Plan Order' : 'Wholesale Courier Order'}: ${qty}× ${goodName}`,
         greeting: 'Greetings from the Regional Trade Guild,',
-        body: `A regional caravan has placed a guaranteed wholesale mail order for ${qty} units of ${goodName}, paying ${amt} gold coins (32% above base value, zero deposit required!). Pack and dispatch right from this letter before Day ${num(p.dueDay ?? 1)}.`,
+        body: estateOrder
+          ? `A three-estate caravan has matched this guaranteed order to your current seed plan: ${qty} units of ${goodName}, paying ${amt} gold coins (${bonusPct}% above base value, with no deposit). Your crew can grow it while you dispatch the finished shipment directly from this letter before Day ${num(p.dueDay ?? 1)}.`
+          : `A regional caravan has placed a guaranteed wholesale mail order for ${qty} units of ${goodName}, paying ${amt} gold coins (${bonusPct}% above base value, zero deposit required!). Pack and dispatch right from this letter before Day ${num(p.dueDay ?? 1)}.`,
         ps: 'P.S. Unlike town board contracts, mail orders need zero upfront deposit — ship anytime before expiry!',
       } : {
-        subject: `سفارش خرید عمدهٔ پستی: ${qty} واحد «${goodName}»`,
+        subject: `${estateOrder ? 'سفارش متناسب با برنامهٔ بذر مزارع' : 'سفارش خرید عمدهٔ پستی'}: ${qty} واحد «${goodName}»`,
         greeting: 'درود از کاروان بازرگانان ولایت،',
-        body: `یک خریدار عمده سفارش قطعی برای خرید ${qty} واحد «${goodName}» با پرداخت نقدی ${amt} سکهٔ طلا (۳۲٪ بالاتر از نرخ پایه و بدون هیچ بیعانه‌ای!) ثبت کرده است. تا پایان روز ${num(p.dueDay ?? 1)} می‌توانی محموله را مستقیم از همین نامه تحویل پیک بدهی.`,
+        body: estateOrder
+          ? `کاروان سه مزرعه این سفارش قطعی را با برنامهٔ فعلی بذر تو هماهنگ کرده است: ${qty} واحد «${goodName}» در برابر ${amt} سکهٔ طلا (${bonusPct}٪ بالاتر از نرخ پایه و بدون بیعانه). کارگران می‌توانند محصول را تولید کنند و تو محمولهٔ آماده را تا پایان روز ${num(p.dueDay ?? 1)} مستقیم از همین نامه تحویل پیک بدهی.`
+          : `یک خریدار عمده سفارش قطعی برای خرید ${qty} واحد «${goodName}» با پرداخت نقدی ${amt} سکهٔ طلا (${bonusPct}٪ بالاتر از نرخ پایه و بدون هیچ بیعانه‌ای!) ثبت کرده است. تا پایان روز ${num(p.dueDay ?? 1)} می‌توانی محموله را مستقیم از همین نامه تحویل پیک بدهی.`,
         ps: 'پی‌نوشت: سفارش‌های پستی هیچ جریمه یا بیعانه‌ای ندارند؛ هر زمان موجودی‌ات کامل شد دکمهٔ ارسال را بزن!',
       };
 

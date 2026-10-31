@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fresh, S, startDebt } from '../state';
 import { minPay, scarecrowPrice } from './debt';
-import { SCARECROW_PRICE_MULT, TOTAL_DEBT } from '../../story/debtData';
+import { NOTES, SCARECROW_PRICE_MULT, TOTAL_DEBT } from '../../story/debtData';
 
 describe('guard scarecrow late-game pricing', () => {
   beforeEach(() => {
@@ -20,14 +20,15 @@ describe('guard scarecrow late-game pricing', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('keeps all three levels useful without a second final-deed-sized grind', () => {
-    expect(minPay()).toBe(150000);
+    const expectedMin = Math.ceil(NOTES[5].amount / NOTES[5].monthsTarget);
+    expect(minPay()).toBe(expectedMin);
     expect(SCARECROW_PRICE_MULT).toEqual([1, 2, 3]);
     const prices = [0, 1, 2].map((level) => {
       S.debt!.scarecrow = level as 0 | 1 | 2;
       return scarecrowPrice();
     });
-    expect(prices).toEqual([150000, 300000, 450000]);
-    expect(prices.reduce((sum, price) => sum + price, 0)).toBe(900000);
+    expect(prices).toEqual([expectedMin, expectedMin * 2, expectedMin * 3]);
+    expect(prices.reduce((sum, price) => sum + price, 0)).toBe(expectedMin * 6);
     expect(prices.reduce((sum, price) => sum + price, 0) / TOTAL_DEBT).toBeLessThan(0.25);
   });
 });

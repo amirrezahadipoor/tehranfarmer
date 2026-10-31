@@ -128,7 +128,7 @@ export function landPrice(i: number): number {
   const recent = (S.earn30 ?? []).reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
   // The final heritage charter must not become more expensive merely because
   // the player improved their income; other estate tiers retain the existing curve.
-  const wealthCap = i === LAND_PRICES.length - 1 ? 0.5 : WEALTH_MULT_CAP;
+  const wealthCap = i === LAND_PRICES.length - 1 ? 0 : WEALTH_MULT_CAP;
   const richMult = 1 + Math.min(wealthCap, recent / WEALTH_DIVISOR);
   return Math.round(base * richMult);
 }
@@ -228,7 +228,7 @@ export function buyFeed(n: number) {
   }
   saveGame(); notify();
 }
-/** خرید حضوری چوب ماهیگیری از نجاری — بدون آن صید از رودخانه ممکن نیست */
+/** خرید حضوری چوب از نجاری؛ practice بدون چوب باقی می‌ماند و چوب شانس/جایزهٔ کامل را باز می‌کند */
 export function buyRod() {
   if (S.rod > 0) { toast('fish', GT.g44); return; }
   if (farmLevel() < ROD_LV) { sfx.err(); toast('lock', GT.g45 + fa(ROD_LV) + GT.g46); return; }

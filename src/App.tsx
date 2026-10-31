@@ -356,6 +356,7 @@ export default function App() {
     document.addEventListener('visibilitychange', onVis);
     return () => { stop(); stopBack(); window.removeEventListener('pagehide', onHide); document.removeEventListener('visibilitychange', onVis); };
   }, [bootReady]);
+
   const inCinema = Boolean(pendingNode()) || cinema.active;
   useEffect(() => {
     if (!UI.started || !UI.portrait || inCinema || portraitHintDone || !portraitAcknowledged()) return;

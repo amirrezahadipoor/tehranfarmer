@@ -211,6 +211,7 @@ export const FT = {
   get fishModalTitle() { return en() ? 'River Tension Reel — Skill Angling' : 'مینی‌گیم مهارتی کشش قلاب رودخانه'; },
   get fishReadyHint() { return en() ? 'Keep the fish inside the green frame. Hold touch, mouse, Space or Up Arrow to lift it; the clock starts on your first hold.' : 'ماهی را داخل کادر سبز نگه دار؛ با نگه‌داشتن لمس، کلیک، Space یا کلید بالا کادر را بالا ببر. زمان با اولین نگه‌داشتن شروع می‌شود.'; },
   get fishPracticeLabel() { return en() ? 'Practice fish: slow movement and a larger green frame' : 'ماهی تمرینی: حرکت آرام و کادر سبز بزرگ‌تر'; },
+  get fishNoRodHint() { return en() ? 'No rod: limited practice catch with lower odds and rewards. A carpentry rod unlocks full rewards and treasure chests.' : 'بدون چوب: صید تمرینی با شانس و جایزهٔ کمتر است؛ چوب نجاری جایزهٔ کامل و صندوقچه را باز می‌کند.'; },
   get fishFirstFailFree() { return en() ? 'Your first missed attempt costs no stamina.' : 'اولین تلاش ناموفق نیرو مصرف نکرد.'; },
   get fishResultClose() { return en() ? 'Continue' : 'ادامه'; },
   get fishStartBtn() { return en() ? 'HOLD TO START' : 'برای شروع نگه دار'; },

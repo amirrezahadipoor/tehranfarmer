@@ -323,3 +323,20 @@ test('production service worker serves a cold offline reload and startup does no
   await expect(page.locator('html')).toHaveAttribute('lang', 'fa');
   expect(musicRequests).toEqual([]);
 });
+
+test('production river canvas and HUD expose the same guided no-rod practice', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await startFresh(page);
+  await travel(page, 'river');
+
+  await activateSceneTarget(page, 'fish:0');
+  await expect(page.locator('[data-fishing-minigame="1"]')).toBeVisible();
+  await expect(page.locator('[data-fish-no-rod="1"]')).toBeVisible();
+  await page.getByRole('button', { name: 'بستن پنجره', exact: true }).tap();
+
+  await page.locator('[data-open-fishing="1"]').tap();
+  await expect(page.locator('[data-fishing-minigame="1"]')).toBeVisible();
+  await expect(page.locator('[data-fish-no-rod="1"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});

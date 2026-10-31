@@ -47,8 +47,13 @@ export const NOTES: NoteDef[] = [
   mkNote(1, 70000, 0.01, 7, 26, 2),
   mkNote(2, 250000, 0.014, 9, 34, 3),
   mkNote(3, 700000, 0.016, 11, 40, 4),
-  mkNote(4, 1600000, 0.015, 10, 45, 5),
-  mkNote(5, 1200000, 0.008, 8, 50, 6),
+  // Late notes were calibrated by nine no-injection replays. At 1.6M/1.2M,
+  // balanced play reached the finale around day 806, but the crop-first policy
+  // could not finish by day 1200 even with three workers and all 154 plots.
+  // A smaller late principal preserves installments/interest and both standing
+  // paths while making farming a viable alternative to mandatory mining.
+  mkNote(4, 960000, 0.015, 10, 45, 5),
+  mkNote(5, 720000, 0.008, 8, 50, 6),
 ];
 
 export const TOTAL_DEBT = NOTES.reduce((a, n) => a + n.amount, 0);

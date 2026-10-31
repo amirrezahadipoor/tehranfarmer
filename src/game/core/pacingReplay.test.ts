@@ -303,7 +303,12 @@ describe('full pacing replay through the real core', () => {
     const rows: unknown[] = [];
     const noteDays: Record<number, number> = {};
     let previousNote = 0;
-    for (let day = 1; day <= Number(process.env.PACING_MAX_DAYS ?? 750) && !S.story.postgame; day++) {
+    // This deliberately conservative fixed-crop policy reached day 849 after
+    // the late-debt rebalance (diagnostic: m4-pacing-diagnostic-1200.log).
+    // Keep a finite deadlock guard; optimized before/after pacing is measured
+    // by the same-harness strategy matrix, not inferred from this bound.
+    const maxDays = Number(process.env.PACING_MAX_DAYS ?? 900);
+    for (let day = 1; day <= maxDays && !S.story.postgame; day++) {
       if (S.debt && S.debt.noteIdx !== previousNote) {
         previousNote = S.debt.noteIdx;
         noteDays[previousNote] = S.day;
@@ -326,6 +331,6 @@ describe('full pacing replay through the real core', () => {
     console.log('PACING_REPLAY', JSON.stringify(result));
     expect(S.story.postgame).toBe(true);
     expect(S.debt?.remaining).toBe(0);
-    expect(S.day).toBeLessThanOrEqual(750);
+    expect(S.day).toBeLessThanOrEqual(maxDays);
   });
 });

@@ -242,6 +242,7 @@ export function FishingModal() {
         <div data-fish-hint="1" className="rounded-xl bg-[#f7edd2] px-3 py-1.5 text-center text-xs font-extrabold text-[#503426]">
           <div>{practice ? FT.fishPracticeLabel : FT.fishMotionLabel(prof.behavior)}</div>
           <div id="fish-hold-hint" className="mt-0.5 text-[.7rem]">{phase === 'ready' ? FT.fishReadyHint : FT.fishHoldHint}</div>
+          {!S.rod && <div data-fish-no-rod="1" className="mt-1 border-t border-[#d8c498] pt-1 text-[.7rem] text-[#765337]">{FT.fishNoRodHint}</div>}
         </div>
 
         {/* Interactive Water Column + Tension Progress Gauge */}

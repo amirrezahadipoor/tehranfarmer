@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mazrae-rangi-offline-v18';
+const CACHE_NAME = 'mazrae-rangi-offline-v19';
 const BUILD_ASSETS = /*__TF_BUILD_ASSETS__*/null;
 const CORE_ASSETS = [
   './', './index.html', './manifest.webmanifest', './icon.svg',
@@ -7,7 +7,7 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting()),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)),
   );
 });
 
@@ -28,7 +28,7 @@ self.addEventListener('message', (event) => {
   const work = caches.open(CACHE_NAME).then((cache) => Promise.allSettled(
     urls.map(async (url) => {
       const request = new Request(new URL(url, self.registration.scope).href);
-      if (await cache.match(request)) return;
+      if (await cache.match(request, { ignoreVary: true })) return;
       await cache.add(request);
     }),
   ));
@@ -42,12 +42,18 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const isMusic = url.origin === self.location.origin && url.pathname.includes('/music/') && url.pathname.endsWith('.mp3');
+  const sameOrigin = url.origin === self.location.origin;
+  const isMusic = sameOrigin && url.pathname.includes('/music/') && url.pathname.endsWith('.mp3');
+  const isImmutableAsset = sameOrigin && url.pathname.includes('/assets/')
+    && /\.(?:js|css|woff2?)$/.test(url.pathname);
 
-  // موسیقی cache-first است تا پخش آفلاین به شبکه یا fallback صفحهٔ HTML وابسته نباشد.
-  if (isMusic) {
+  // Static hosts commonly send `Vary: Origin`. A module/stylesheet request can
+  // therefore miss a precached response even though the URL is identical.
+  // Hashed assets and local music are immutable, so ignoring Vary only for these
+  // same-origin resources is safe and keeps the first-load offline path alive.
+  if (isMusic || isImmutableAsset) {
     event.respondWith(
-      caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+      caches.match(req, { ignoreVary: true }).then((hit) => hit || fetch(req).then((res) => {
         if (res && res.status === 200 && res.type === 'basic') {
           const copy = res.clone();
           event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)));
@@ -68,7 +74,7 @@ self.addEventListener('fetch', (event) => {
         return res;
       })
       .catch(async () => {
-        const hit = await caches.match(req);
+        const hit = await caches.match(req, sameOrigin ? { ignoreVary: true } : undefined);
         if (hit) return hit;
         if (req.mode === 'navigate') return (await caches.match('./index.html')) || (await caches.match('./'));
         return Response.error();
