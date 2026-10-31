@@ -182,8 +182,8 @@ export function TutorialOverlay() {
         </button>
       ) : (
         <section ref={coachRef} className="tutorial-coach paper popin pointer-events-auto p-2.5" aria-label={copy.region} data-tutorial-card="1">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#503426] bg-[#ffd93b]">
+<div className="flex items-center gap-[8px]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-[#503426] bg-[#ffd93b]">
               <Ic n={current.icon} s={2.15} cls="tutorial-step-icon" />
             </div>
             <div className="min-w-0 flex-1">

@@ -24,7 +24,7 @@ export function WorldNavBar() {
   const desktopPlaces = S.tut?.active ? places.filter((pl) => pl.id === 'farm' || pl.id === 'town') : places;
   return (
     <>
-      <div className="paper pointer-events-auto hidden flex-wrap items-center justify-center gap-0.5 p-0.5 min-[901px]:flex xl:gap-1 xl:p-1" data-world-nav="desktop">
+      <div className="paper pointer-events-auto hidden flex-wrap items-center justify-center gap-[8px] p-0.5 min-[901px]:flex xl:p-1" data-world-nav="desktop">
         {desktopPlaces.map((pl) => {
           const active = cur === pl.id;
           return (

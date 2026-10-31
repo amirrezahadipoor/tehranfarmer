@@ -254,7 +254,7 @@ function Market() {
       {/* انتخاب منبع فروش: کولهٔ پشتی یا انبار یا هر دو */}
       <div className="mb-2 flex items-center gap-1.5" data-market-sellfrom="1">
         <span className="whitespace-nowrap text-xs font-black opacity-75">{UT.uSellFrom}</span>
-        <div className="flex flex-1 gap-1">
+        <div className="flex flex-1 gap-[8px]">
           {(['pack', 'barn', 'both'] as const).map((k) => (
             <button
               key={k}
@@ -271,7 +271,7 @@ function Market() {
       <button data-market-sell-all="1" className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { if (sellAll() > 0) tutOnSale(); }}>
         <Ic n="cart" s={2.4} /><span className="ft text-xl">{UT.u85}</span><Coin v={total} s={1.8} cls="text-xl" />
       </button>
-      <div className="mb-2 grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2">
+      <div className="mb-2 grid grid-cols-1 gap-[8px] min-[420px]:grid-cols-2">
         <button type="button" data-market-guide-toggle="1" aria-expanded={showGuide} aria-controls="market-advanced-guide" className="btn b press !min-h-[48px] !px-3 !py-1 text-xs font-black" onClick={() => setShowGuide((v) => !v)}>
           <Ic n="ledger" s={1.25} />{showGuide ? UT.marketGuideHide : UT.marketGuideShow}
         </button>

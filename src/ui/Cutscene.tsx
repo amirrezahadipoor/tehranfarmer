@@ -134,7 +134,7 @@ function FinaleTableau() {
           <Portrait id={cheers[greeted - 1].who} size={3.2} />
           <span className="text-xs font-extrabold leading-6">{cheers[greeted - 1].text}</span>
         </div>}
-        <div className="mt-2 grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2">
+        <div className="mt-2 grid grid-cols-2 gap-[8px]">
           <button type="button" data-finale-celebrate="1" disabled={greeted >= cheers.length} className="btn g press !min-h-[48px] !whitespace-normal !px-2 !py-1 text-xs font-black" onClick={celebrate}>
             <Ic n="star" s={1.4} />{greeted >= cheers.length ? UT.finaleCelebrationDone : celebrated ? UT.finaleVillagerBtn : UT.finaleCelebrateBtn}
           </button>

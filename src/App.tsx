@@ -197,7 +197,7 @@ function Start() {
         )}
         <div
           className={
-            'flex w-full items-center justify-center gap-2.5 ' +
+            'flex w-full items-center justify-center gap-[8px] ' +
             (compactLand ? 'mt-2 flex-row' : isPortrait ? 'mt-4 flex-col' : 'mt-4 flex-row')
           }
         >
@@ -244,7 +244,7 @@ function Start() {
           paddingRight: 'max(0.85rem, var(--safe-right))',
         }}
       >
-        <div className="pointer-events-auto flex items-center gap-2">
+        <div className="pointer-events-auto flex items-center gap-[8px]">
           <button
             type="button"
             data-lang-toggle="1"

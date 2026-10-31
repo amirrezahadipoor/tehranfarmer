@@ -79,7 +79,7 @@ export function Hud() {
       <div
         ref={topBarRef}
         data-hud-topbar="1"
-        className="hud-topbar pointer-events-none fixed z-20 flex items-start justify-between gap-1.5"
+        className="hud-topbar pointer-events-none fixed z-20 flex items-start justify-between gap-[8px]"
         style={{
           left: 'calc(var(--safe-left) + .5rem)',
           right: 'calc(var(--safe-right) + .5rem)',
@@ -87,8 +87,8 @@ export function Hud() {
         }}
       >
         {/* خوشهٔ وضعیت بازیکن (چپ در RTL / راست در LTR در جریان طبیعی): فقط دو ردیف فشرده به جای ستون بلند ۴ کارتی */}
-        <div className="hud-status flex flex-col items-start gap-1">
-          <div className="hud-wallet-row flex flex-wrap items-center gap-1">
+        <div className="hud-status flex flex-col items-start gap-[8px]">
+          <div className="hud-wallet-row flex flex-wrap items-center gap-[8px]">
             <div className="hud-wallet paper pointer-events-auto flex items-center gap-2 px-2.5 py-0.5">
               <div className="flex items-center gap-1">
                 <Ic n="coin" s={1.75} />
@@ -103,7 +103,7 @@ export function Hud() {
             </div>
             <LevelChip />
           </div>
-          <div className="hud-debt-row flex flex-wrap items-center gap-1">
+          <div className="hud-debt-row flex flex-wrap items-center gap-[8px]">
             {UI.scene === 'cave' ? <MineStatusChip /> : <DebtChip />}
             {S.builds.slice(0, 2).map((b) => (
               <div key={b.id} data-build-card={b.id} role="group" aria-label={buildJobLabel(b)} className="hud-build-card paper flex w-44 shrink-0 items-center gap-1.5 px-2 py-0.5">
@@ -119,7 +119,7 @@ export function Hud() {
         </div>
 
         {/* خوشهٔ ساعت، فصل و دکمه‌های کنترلی در یک گروه انعطاف‌پذیر بدون امکان هم‌پوشانی در هیچ ابعادی */}
-        <div className="hud-controls flex flex-wrap-reverse items-start justify-end gap-1.5">
+        <div className="hud-controls flex flex-wrap-reverse items-start justify-end gap-[8px]">
           <div className="hud-clock-wrap flex flex-col items-end">
             <div className="hud-clock paper flex items-center gap-2 px-2 py-0.5">
               <Ic n={UI.scene === 'cave' ? 'cave' : nightNow && sn === 1 ? 'star' : ['spring', 'summer', 'autumn', 'winter'][sn]} s={1.85} cls="hud-season-icon" />
@@ -137,7 +137,7 @@ export function Hud() {
               </div>
             )}
           </div>
-          <div className="hud-actions pointer-events-auto flex flex-wrap items-start justify-end gap-1">
+          <div className="hud-actions pointer-events-auto flex flex-wrap items-start justify-end gap-[8px]">
             {(!tutorialFocus || (S.tut?.step ?? 0) >= 5) && <button aria-label={UT.restAnytime} data-rest-anytime="1" className="hud-action btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={UT.restSub} onClick={() => requestSleep('quick')}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
             </button>}
@@ -425,7 +425,7 @@ function DebtChip() {
       >
         <Ic n="ledger" s={1.8} />
         <span className="flex flex-1 flex-col leading-none">
-          <span className="whitespace-nowrap text-[.72rem] font-black opacity-70">{UT.u37} {faNum(d.noteIdx + 1)}</span>
+          <span className="whitespace-normal break-words text-[.72rem] font-black opacity-70">{UT.u37} {faNum(d.noteIdx + 1)}</span>
           <span className="ft text-base">{faNum(Math.max(0, Math.round(d.remaining)))}</span>
           {/* نوارِ اعتبار (پیشنهاد گزارش ۳۰۰X): مرزها و اثرش بر سود با تولتیپ */}
           <span className="mt-1 block h-1.5 w-full overflow-hidden rounded-full bg-black/15" title={standingBadgeText()}>
@@ -476,7 +476,7 @@ function Toolbar() {
     { k: 'fert', ic: 'fert', fa: UT.u31 },
   ];
   return (
-    <div className="paper pointer-events-auto flex items-end gap-1 px-1.5 pb-1 pt-1">
+    <div className="paper pointer-events-auto flex max-w-full flex-wrap items-end justify-center gap-[8px] px-1.5 pb-1 pt-1">
       {tools.map((t) => {
         const on = UI.tool === t.k;
         return (
