@@ -3,7 +3,7 @@
 // 2) Sunlit Valley ('valley' — 10x6 = 60 plots, Waterfall Spring + Cypresses + Granary + 3 Roads)
 import { INK, box, cached, circ, cropPart, dot, ell, iconPart, ln, oval, put, rng, shape, type Ctx } from './art';
 import { ESTATES, isEstateOwned, estatePlotCenter, type EstatePlot, type FarmSceneId } from './estates';
-import { S, UI, playerToolPlots } from './state';
+import { S, UI, playerToolPlots, plotsForFarm } from './state';
 import { isReducedMotion } from './settings';
 import { drawFullScarecrow } from './farmVisuals';
 import { isCropDormantNow } from './worldVisuals';
@@ -326,4 +326,22 @@ export function renderEstateFieldScene(
     ctx.fillText(hint, bx, by + 16);
     ctx.restore();
   }
+}
+
+/** Bright harvest badges are repeated above the night tint, never buried with the crop art. */
+export function drawEstateRipeNightMarkers(ctx: Ctx, farm: Exclude<FarmSceneId, 'farm'>, t: number, viewMinX = -Infinity, viewMaxX = Infinity) {
+  if (!isEstateOwned(farm, S.lv.land)) return;
+  const plots = plotsForFarm(farm);
+  ctx.save();
+  ctx.globalAlpha = 0.96;
+  for (let i = 0; i < plots.length; i++) {
+    const p = plots[i];
+    if (!p?.ripe || p.dead) continue;
+    const { cx, cy } = estatePlotCenter(farm, i);
+    if (cx < viewMinX || cx > viewMaxX) continue;
+    const x = cx + 25, y = cy - 16 + Math.sin(t * 3 + i) * 2;
+    shape(ctx, ell(x, y, 11.5, 11.5, 12), { fill: '#fff3a6', line: 2.2 });
+    put(ctx, iconPart('star'), x, y, (p.fert ?? 1) > 1.05 ? 0.4 : 0.34);
+  }
+  ctx.restore();
 }

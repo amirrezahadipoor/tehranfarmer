@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CROPS, CROP, LEVEL_CAP, SEASONS, WORKER_WAGE, fa, faClock } from '../game/data';
+import { CROPS, CROP, LEVEL_CAP, seasonName, WORKER_WAGE, fa, faClock } from '../game/data';
 import { estateSpecialtyMult, isEstateOwned, isFarmScene } from '../game/estates';
 import { hasSkill } from '../game/core/rpgSystems';
 import { tutToolBlocked, tutToolHi } from '../game/tutorial';
@@ -23,12 +23,10 @@ import { FT } from '../strings/frontierText';
 import { MineStatusChip } from './MinePanels';
 import { WorldNavBar } from './WorldNavBar';
 import { setToastsPaused } from '../game/toasts';
+import { isMorningReportVisible } from '../game/morning';
+import { chooseWeeklyPlan, weeklyPlanStatus, WEEKLY_PLAN_FIELD_COST, WEEKLY_PLAN_MARKET_COST } from '../game/core/weeklyPlan';
 
 const WEATHER = ['sun', 'cloud', 'rain', 'snow'];
-
-const isMorningReportVisible = () => Boolean(
-  S.morning && !S.morning.shown && S.hour >= 5.5 && S.hour < 19 && (S.custom?.morningCard ?? true) && !UI.modal,
-);
 
 export function Hud() {
   const topBarRef = useRef<HTMLDivElement>(null);
@@ -47,15 +45,33 @@ export function Hud() {
   const farmId = isFarmScene(UI.scene) ? UI.scene : null;
   const farm = !!farmId;
   const ownedFarm = farmId ? isEstateOwned(farmId, S.lv.land) : false;
+  const tutorialFocus = !!S.tut?.active;
   const eu = ESTATE_UI[CFG.locale === 'en' ? 'en' : 'fa'];
   // منبع واحد شب: همان isNight موتور بازی (NIGHT_START_H=19.5 / NIGHT_END_H=5.5) تا آیکون HUD هرگز از منطق بازی جلو نزند
   const nightNow = isNight();
   // یک محاسبه در هر رندر: آیکن و badge همیشه از یک وضعیت پستی یکسان استفاده می‌کنند.
   const mailAttention = unreadMailCount();
   const morningVisible = isMorningReportVisible();
+  const morningRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     setToastsPaused(morningVisible);
     return () => setToastsPaused(false);
+  }, [morningVisible]);
+  useEffect(() => {
+    if (!morningVisible) return;
+    const previous = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+      ? document.activeElement
+      : null;
+    morningRef.current?.querySelector<HTMLElement>('[data-morning-close="1"]')?.focus({ preventScroll: true });
+    return () => {
+      globalThis.setTimeout(() => {
+        if (document.querySelector('[aria-modal="true"]')) return;
+        const target = previous?.isConnected && !previous.closest('[inert]')
+          ? previous
+          : document.getElementById('game-canvas');
+        target?.focus({ preventScroll: true });
+      }, 0);
+    };
   }, [morningVisible]);
   return (
     <>
@@ -108,7 +124,7 @@ export function Hud() {
             <div className="hud-clock paper flex items-center gap-2 px-2 py-0.5">
               <Ic n={UI.scene === 'cave' ? 'cave' : nightNow && sn === 1 ? 'star' : ['spring', 'summer', 'autumn', 'winter'][sn]} s={1.85} cls="hud-season-icon" />
               <div className="leading-tight">
-                <div className="hud-season-label text-[.72rem] font-extrabold whitespace-nowrap">{SEASONS[sn]}{UT.u32}{fa(((S.day - 1) % 7) + 1)}</div>
+                <div className="hud-season-label text-[.72rem] font-extrabold whitespace-nowrap">{seasonName(sn)}{UT.u32}{fa(((S.day - 1) % 7) + 1)}</div>
                 <div className="ft text-base leading-none">{faClock(S.hour)}</div>
               </div>
               <Ic n={UI.scene === 'cave' ? 'cave' : nightNow ? 'moon' : WEATHER[S.weather]} s={1.85} />
@@ -122,9 +138,9 @@ export function Hud() {
             )}
           </div>
           <div className="hud-actions pointer-events-auto flex flex-wrap items-start justify-end gap-1">
-            <button aria-label={UT.restAnytime} data-rest-anytime="1" className="hud-action btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={UT.restSub} onClick={() => requestSleep('quick')}>
+            {(!tutorialFocus || (S.tut?.step ?? 0) >= 5) && <button aria-label={UT.restAnytime} data-rest-anytime="1" className="hud-action btn b press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" title={UT.restSub} onClick={() => requestSleep('quick')}>
               <Ic n="moon" s={UI.portrait ? 1.7 : 1.9} />
-            </button>
+            </button>}
             <button aria-label={UT.u133} data-open-inventory="1" className="hud-inventory hud-action btn y press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !px-1.5 !py-0.5" onClick={() => { UI.modal = 'inv'; notify(); }}>
               <Ic n="bag" s={UI.portrait ? 1.65 : 1.9} />
               <span className="hud-inventory-count text-xs font-black" dir="ltr">{fa(packCount())}/{fa(packCap())}</span>
@@ -151,7 +167,7 @@ export function Hud() {
                 <Ic n="crown" s={UI.portrait ? 1.7 : 1.9} />
               </button>
             )}
-            <button
+            {!tutorialFocus && <button
               aria-label={FT.atlasTitle}
               data-open-atlas="1"
               className="hud-action btn g press max-[900px]:!hidden !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1 min-[901px]:inline-flex"
@@ -159,8 +175,8 @@ export function Hud() {
               title={FT.atlasTitle}
             >
               <Ic n="atlas" s={UI.portrait ? 1.7 : 1.9} />
-            </button>
-            <button
+            </button>}
+            {!tutorialFocus && <button
               aria-label={MAIL_UI.title}
               data-open-mail="1"
               data-mail-attention={mailAttention}
@@ -175,15 +191,15 @@ export function Hud() {
                   {fa(mailAttention)}
                 </span>
               )}
-            </button>
-            <button data-open-quests="1" aria-label={UT.u34} className="hud-action btn p press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'quests'; notify(); }} title={UT.u34}>
+            </button>}
+            {!tutorialFocus && <button data-open-quests="1" aria-label={UT.u34} className="hud-action btn p press relative !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'quests'; notify(); }} title={UT.u34}>
               <Ic n="scroll" s={UI.portrait ? 1.7 : 1.9} />
               {readyQuestCount() > 0 && (
                 <span className="absolute -left-1.5 -top-1.5 rounded-full border-2 border-[#503426] bg-[#ffd93b] px-1 text-[.68rem] font-black leading-none text-[#503426]">
                   {fa(readyQuestCount())}
                 </span>
               )}
-            </button>
+            </button>}
             <button data-open-settings="1" aria-label={UT.u134} className="hud-action btn g press !min-h-[max(48px,2.45rem)] !min-w-[max(48px,2.45rem)] !p-1" onClick={() => { UI.modal = 'menu'; notify(); }}><Ic n="gear" s={UI.portrait ? 1.7 : 1.9} /></button>
           </div>
         </div>
@@ -201,8 +217,8 @@ export function Hud() {
         >
           <div className="flex w-full items-center justify-between gap-2">
             <div className="pointer-events-auto">
-              {ownedFarm && (
-                <button aria-label={UT.u35} className="hud-action btn b press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.3} /></button>
+              {ownedFarm && !tutorialFocus && (
+                <button aria-label={UT.u35} data-open-auto="1" className="hud-action btn b press !min-h-[max(48px,2.5rem)] !min-w-[max(48px,2.5rem)] !p-1" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.3} /></button>
               )}
             </div>
             <WorldNavBar />
@@ -227,8 +243,8 @@ export function Hud() {
           }}
         >
           <div className="pointer-events-auto">
-            {ownedFarm ? (
-              <button aria-label={UT.u35} className="hud-action btn b press !min-h-[max(48px,2.6rem)] !min-w-[max(48px,2.6rem)] !p-1.5" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.7} /></button>
+            {ownedFarm && !tutorialFocus ? (
+              <button aria-label={UT.u35} data-open-auto="1" className="hud-action btn b press !min-h-[max(48px,2.6rem)] !min-w-[max(48px,2.6rem)] !p-1.5" onClick={() => { UI.modal = 'auto'; notify(); }} title={UT.u35}><Ic n="tractor" s={2.7} /></button>
             ) : <div />}
           </div>
           {ownedFarm ? <Toolbar /> : farm ? (
@@ -270,12 +286,13 @@ export function Hud() {
       )}
       {farm && UI.seedTray && UI.tool === 'plant' && <SeedTray />}
       {farm && UI.info && <Info />}
-      <div data-hud-notifications="1" className="pointer-events-none fixed inset-x-0 z-30 flex flex-col items-center gap-1" style={{ top: hudBottom }}>
+      <div data-hud-notifications="1" className={`pointer-events-none fixed inset-x-0 ${morningVisible ? 'z-40' : 'z-30'} flex flex-col items-center gap-1`} style={{ top: hudBottom }}>
       {morningVisible && (() => {
         const morning = S.morning!;
         const almostRipe = ownedFarms().reduce((acc, f) => acc + plotsForFarm(f).filter((p) => p.st === 2 && !p.dead && !p.ripe && p.prog >= 0.7).length, 0);
         const spReady = skillPointsAvailable() > 0;
         const chQ = questOf(S.story.chapter);
+        const weekly = weeklyPlanStatus();
         const topHot = Object.entries(S.dem ?? {})
           .filter(([k]) => k !== 'feed' && k !== 'fingerling')
           .sort((a, b) => b[1] - a[1])[0];
@@ -294,16 +311,20 @@ export function Hud() {
         const raidTip = d0?.lastVisit?.kind === 'raid' && d0.lastVisit.day === S.day;
         return (
           <div
+            ref={morningRef}
             data-morning-report="1"
-            className="paper popin flex w-[min(92vw,26rem)] items-center justify-between gap-2 px-3 py-1.5 text-xs font-extrabold shadow-lg"
+            role="region"
+            aria-label={`${WX.morningTitle}${fa(morning.day)}`}
+            tabIndex={-1}
+            className="paper popin pointer-events-auto flex w-[min(92vw,26rem)] items-center justify-between gap-2 px-3 py-1.5 text-xs font-extrabold shadow-lg"
           >
             <div className="min-w-0 flex-1">
               <div className="ft text-sm text-[#5a3518]">{WX.morningTitle}{fa(morning.day)}</div>
               <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 text-[.7rem] font-black">
-                <span>{WX.morningEarned}: +{fa(morning.earned)}</span>
-                <span>{WX.morningHarv}: +{fa(morning.gathered)}</span>
-                <span className="text-emerald-800">{WX.morningRipe}: {fa(morning.ripe)}</span>
-                {almostRipe > 0 && <span className="text-amber-800">{WX.morningAlmostRipe}: {fa(almostRipe)}</span>}
+                <span>{WX.morningEarned}: +{fa(morning.earned)} {UT.coinUnit}</span>
+                <span>{WX.morningHarv}: +{fa(morning.gathered)} {UT.itemUnit}</span>
+                <span className="text-emerald-800">{WX.morningRipe}: {fa(morning.ripe)} {UT.itemUnit}</span>
+                {almostRipe > 0 && <span className="text-amber-800">{WX.morningAlmostRipe}: {fa(almostRipe)} {UT.itemUnit}</span>}
               </div>
               <div className="mt-0.5 truncate text-[.68rem] font-black text-[#6c3d16]">
                 {spReady
@@ -314,6 +335,32 @@ export function Hud() {
                       ? `${WX.hotMarketLabel} ×${faPct(Math.round(topHot[1] * 100))}`
                       : ''}
               </div>
+              {weekly.offered && <div data-weekly-plan={weekly.selected ?? 'choose'} className="mt-1 rounded-lg border border-[#c89b53] bg-[#fff4d8]/80 p-1.5">
+                <div className="text-[.66rem] font-black text-[#6c3d16]">{WX.morningWeeklyTitle}</div>
+                {weekly.selected ? (
+                  <div className="mt-0.5 text-[.68rem] font-black text-emerald-800" role="status">
+                    {weekly.selected === 'field' ? WX.morningWeeklyFieldDone : WX.morningWeeklyMarketDone}
+                  </div>
+                ) : (
+                  <div className="mt-1 grid grid-cols-1 gap-1 min-[380px]:grid-cols-2">
+                    <button
+                      type="button"
+                      data-weekly-plan-choice="field"
+                      title={weekly.fieldTargets === 0 ? WX.morningWeeklyNoCrops : undefined}
+                      disabled={weekly.fieldTargets === 0 || S.stamina < WEEKLY_PLAN_FIELD_COST}
+                      className="btn b press !min-h-[48px] !whitespace-normal !px-1.5 !py-1 text-[.65rem] font-black leading-4"
+                      onClick={() => chooseWeeklyPlan('field')}
+                    >{WX.morningWeeklyField}</button>
+                    <button
+                      type="button"
+                      data-weekly-plan-choice="market"
+                      disabled={S.stamina < WEEKLY_PLAN_MARKET_COST}
+                      className="btn y press !min-h-[48px] !whitespace-normal !px-1.5 !py-1 text-[.65rem] font-black leading-4"
+                      onClick={() => chooseWeeklyPlan('market')}
+                    >{WX.morningWeeklyMarket}</button>
+                  </div>
+                )}
+              </div>}
               {(thirsty || wageNight || (S.debt && dueIn <= 10) || raidTip) && (
                 <div className="mt-0.5 flex flex-col gap-y-0.5 text-[.68rem] font-black">
                   {thirsty && (
@@ -329,6 +376,7 @@ export function Hud() {
             </div>
             <button
               type="button"
+              data-morning-close="1"
               className="hud-action btn g press pointer-events-auto shrink-0 !min-h-[max(48px,1.9rem)] !min-w-[max(48px,3rem)] !px-2.5 !py-0.5 text-xs font-black"
               onClick={() => dismissMorningReport()}
             >
@@ -437,6 +485,7 @@ function Toolbar() {
             data-tool={t.k}
             type="button"
             aria-label={t.fa}
+            title={t.fa}
             aria-pressed={on}
             onClick={() => {
               if (tutToolBlocked(t.k)) { sfx.err(); return; } // سیاست راهنمای جدید غیرمسدودکننده است؛ ابزارها آزاد می‌مانند
@@ -451,7 +500,7 @@ function Toolbar() {
               + (on ? 'border-[#503426] bg-[#ffd93b] -translate-y-1.5 shadow-[0_.22rem_0_rgba(80,52,38,.7)]' : 'border-transparent')}
           >
             <Ic n={t.ic} s={UI.portrait ? (on ? 2.5 : 2.2) : (on ? 3 : 2.6)} />
-            <span className="text-[.78rem] font-extrabold leading-none">{t.fa}</span>
+            <span data-toolbar-label={t.k} className={CFG.fontScale === 1.2 ? 'sr-only' : 'text-[.78rem] font-extrabold leading-none'}>{t.fa}</span>
             {t.k === 'plant' && (
               <span className="absolute -right-1 -top-1 flex items-center rounded-lg border-2 border-[#503426] bg-white px-0.5">
                 <Ic n={'seed:' + UI.seed} s={1.2} />
@@ -471,6 +520,7 @@ function SeedTray() {
   const owned = CROPS.filter((c) => (S.seeds[c.id] ?? 0) > 0);
   return (
     <div
+      data-seed-tray="1"
       className="paper popin pointer-events-auto fixed left-1/2 z-30 -translate-x-1/2 p-2"
       style={{ bottom: UI.portrait ? 'calc(var(--safe-bottom) + 8.6rem)' : 'calc(var(--safe-bottom) + 6.4rem)' }}
     >

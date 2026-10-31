@@ -6,7 +6,6 @@ import { TutorialOverlay } from './ui/TutorialOverlay';
 import { SceneA11y } from './ui/SceneA11y';
 
 import { Ic, useDialogFocus } from './ui/parts';
-import { Cutscene, VisitGate } from './ui/Cutscene';
 declare const __DEV_TOOLS__: boolean;
 // رفع N-6: در بیلد production این ماژول اصلاً بارگذاری نمی‌شود (import تنبل + شرط ثابت بیلد).
 // شرط خام روی define تا در بیلد نهایی false شود و کل dynamic import حذف شود.
@@ -14,6 +13,8 @@ const SceneDebugMenu = __DEV_TOOLS__
   ? lazy(() => import('./ui/SceneDebugMenu').then((m) => ({ default: m.SceneDebugMenu })))
   : null;
 const GameModals = lazy(() => import('./ui/Modals').then((m) => ({ default: m.Modals })));
+const Cutscene = lazy(() => import('./ui/Cutscene').then((m) => ({ default: m.Cutscene })));
+const VisitGate = lazy(() => import('./ui/Cutscene').then((m) => ({ default: m.VisitGate })));
 import { clearSceneQueue, maybeStartPrologue, pendingNode, skipActiveCutscene } from './story/engine';
 import { cinema, endSceneStage } from './game/cinemaStage';
 import { fa } from './strings/fa';
@@ -358,12 +359,22 @@ export default function App() {
   }, [bootReady]);
 
   const inCinema = Boolean(pendingNode()) || cinema.active;
+  const portraitIsAcknowledged = portraitAcknowledged();
   useEffect(() => {
-    if (!UI.started || !UI.portrait || inCinema || portraitHintDone || !portraitAcknowledged()) return;
+    const onCameraPan = () => {
+      if (portraitHintDone) return;
+      portraitHintDone = true;
+      notify();
+    };
+    window.addEventListener('mazrae:camera-pan', onCameraPan);
+    return () => window.removeEventListener('mazrae:camera-pan', onCameraPan);
+  }, []);
+  useEffect(() => {
+    if (!UI.started || !UI.portrait || inCinema || UI.modal || S.tut?.active || portraitHintDone || !portraitIsAcknowledged) return;
     const t = window.setTimeout(() => { portraitHintDone = true; notify(); }, 4200);
     return () => window.clearTimeout(t);
-  }, [UI.started, UI.portrait, inCinema]);
-  const portraitGateOpen = UI.started && UI.portrait && !portraitAcknowledged();
+  }, [UI.started, UI.portrait, inCinema, UI.modal, S.tut?.active, portraitIsAcknowledged]);
+  const portraitGateOpen = UI.started && UI.portrait && !portraitIsAcknowledged;
   const portraitGateVisible = portraitGateOpen && !inCinema;
   const portraitGateRef = useDialogFocus<HTMLDivElement>('[data-portrait-continue="1"]', portraitGateVisible);
   const bgInert = Boolean(UI.modal || UI.confirm || portraitGateOpen) || undefined;
@@ -391,8 +402,10 @@ export default function App() {
           <GameModals />
         </Suspense>
       )}
-      {UI.started && <VisitGate />}
-      {UI.started && <Cutscene />}
+      {UI.started && <Suspense fallback={null}>
+        <VisitGate />
+        <Cutscene />
+      </Suspense>}
       {SceneDebugMenu && (
         <Suspense fallback={null}>
           <SceneDebugMenu />
@@ -415,7 +428,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {UI.started && UI.portrait && portraitAcknowledged() && !inCinema && !UI.modal && !S.tut?.active && !portraitHintDone && (
+      {UI.started && UI.portrait && portraitIsAcknowledged && !inCinema && !UI.modal && !S.tut?.active && !portraitHintDone && (
         <button
           data-portrait-hint="1"
           aria-label={UT.u7}

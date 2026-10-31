@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap } from './renderQuality';
+import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap, shouldAdaptRenderQuality } from './renderQuality';
 
 describe('adaptive render quality', () => {
   it('moves one DPR step at a time in both directions', () => {
@@ -25,5 +25,12 @@ describe('adaptive render quality', () => {
     expect(frameIsStable(17, true)).toBe(true);
     expect(frameIsStable(17, false)).toBe(true);
     expect(frameIsStable(35, false)).toBe(false);
+  });
+
+  it('keeps adaptive DPR active during frozen cinematic rendering', () => {
+    expect(shouldAdaptRenderQuality(false, false, false)).toBe(true);
+    expect(shouldAdaptRenderQuality(false, true, false)).toBe(false);
+    expect(shouldAdaptRenderQuality(false, true, true)).toBe(true);
+    expect(shouldAdaptRenderQuality(true, true, true)).toBe(false);
   });
 });

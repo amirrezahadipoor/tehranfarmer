@@ -25,45 +25,45 @@ export interface CropDef {
 
 // ===== جدول محصولات — بالانس: سود خالص تقریبی هر بوته در روز به‌صورت تصاعدی بالا می‌رود =====
 export const CROPS: CropDef[] = [
-  { id: 'wheat', fa: GT.g62, seasons: [0, 2, 3], days: 1.8, seed: 10, price: 7, yield: [3, 4], thirst: 0.5, lv: 1 },
-  { id: 'carrot', fa: GT.g63, seasons: [0, 2, 3], days: 1.8, seed: 13, price: 8, yield: [3, 4], thirst: 0.55, lv: 1 },
-  { id: 'potato', fa: GT.g64, seasons: [0, 2], days: 2.5, seed: 18, price: 10, yield: [4, 6], thirst: 0.6, art: 'root', lv: 2 },
-  { id: 'onion', fa: GT.g65, seasons: [0, 2, 3], days: 2.5, seed: 16, price: 9, yield: [3, 5], thirst: 0.5, art: 'root', lv: 2 },
-  { id: 'corn', fa: GT.g66, seasons: [0, 1], days: 2.5, seed: 20, price: 11, yield: [3, 4], thirst: 0.7, lv: 1 },
-  { id: 'cucumber', fa: GT.g67, seasons: [0, 1], days: 2.5, seed: 24, price: 12, yield: [4, 6], thirst: 0.8, regrow: 1, maxH: 3, art: 'vine', lv: 3 },
-  { id: 'tomato', fa: GT.g68, seasons: [0, 1], days: 3, seed: 32, price: 9, yield: [4, 5], thirst: 0.8, regrow: 1, maxH: 3, lv: 4 },
-  { id: 'strawberry', fa: GT.g69, seasons: [0], days: 2.5, seed: 45, price: 14, yield: [3, 4], thirst: 0.8, regrow: 1, maxH: 3, lv: 5 },
-  { id: 'pepper', fa: GT.g70, seasons: [1], days: 3, seed: 38, price: 19, yield: [3, 5], thirst: 0.75, regrow: 1, maxH: 3, lv: 5 },
-  { id: 'rice', fa: GT.g71, seasons: [1], days: 3.2, seed: 40, price: 26, yield: [3, 5], thirst: 1.1, art: 'tall', lv: 6 },
-  { id: 'sunflower', fa: GT.g72, seasons: [0, 1], days: 3.7, seed: 50, price: 38, yield: [2, 4], thirst: 0.6, art: 'flower', lv: 6 },
-  { id: 'watermelon', fa: GT.g73, seasons: [1], days: 3.7, seed: 55, price: 41, yield: [2, 3], thirst: 0.9, lv: 7 },
-  { id: 'pumpkin', fa: GT.g74, seasons: [1, 2], days: 3.7, seed: 42, price: 32, yield: [2, 3], thirst: 0.6, lv: 7 },
-  { id: 'grape', fa: GT.g75, seasons: [1, 2], days: 3.9, seed: 70, price: 38, yield: [3, 5], thirst: 0.7, regrow: 1.7, maxH: 3, art: 'vine', lv: 8 },
-  { id: 'olive', fa: GT.g76, seasons: [2, 3], days: 4.6, seed: 90, price: 53, yield: [2, 4], thirst: 0.4, regrow: 1.7, maxH: 3, art: 'vine', lv: 10 },
-  { id: 'saffron', fa: GT.g77, seasons: [2], days: 4.6, seed: 130, price: 229, yield: [1, 1], thirst: 0.5, lv: 12 },
-  { id: 'fig', fa: GT.g78, seasons: [1, 2], days: 5.2, seed: 260, price: 81, yield: [3, 5], thirst: 0.55, regrow: 1.7, maxH: 4, art: 'vine', lv: 14 },
-  { id: 'plum', fa: GT.g79, seasons: [1, 2], days: 5.2, seed: 300, price: 101, yield: [3, 4], thirst: 0.5, regrow: 1.7, maxH: 4, art: 'bush', lv: 16 },
-  { id: 'cherry', fa: GT.g80, seasons: [0, 1], days: 5.8, seed: 380, price: 140, yield: [3, 4], thirst: 0.55, regrow: 1.7, maxH: 4, art: 'bush', lv: 18 },
-  { id: 'peach', fa: GT.g81, seasons: [0, 1], days: 6.4, seed: 460, price: 176, yield: [2, 4], thirst: 0.6, regrow: 1.7, maxH: 5, art: 'bush', lv: 20 },
-  { id: 'orange', fa: GT.g82, seasons: [1, 2], days: 6.9, seed: 560, price: 247, yield: [3, 5], thirst: 0.65, regrow: 1.7, maxH: 5, art: 'bush', lv: 22 },
-  { id: 'pomegranate', fa: GT.g83, seasons: [1, 2], days: 7.5, seed: 720, price: 332, yield: [2, 4], thirst: 0.6, regrow: 2.3, maxH: 5, art: 'bush', lv: 24 },
-  { id: 'pistachio', fa: GT.g84, seasons: [1, 2], days: 8.6, seed: 1150, price: 639, yield: [2, 3], thirst: 0.45, regrow: 2.3, maxH: 6, art: 'tall', lv: 27 },
-  { id: 'rose', fa: GT.g85, seasons: [0, 1], days: 4.1, seed: 900, price: 498, yield: [2, 3], thirst: 0.7, regrow: 1, maxH: 4, art: 'flower', lv: 30 },
+  { id: 'wheat', get fa() { return GT.g62; }, seasons: [0, 2, 3], days: 1.8, seed: 10, price: 7, yield: [3, 4], thirst: 0.5, lv: 1 },
+  { id: 'carrot', get fa() { return GT.g63; }, seasons: [0, 2, 3], days: 1.8, seed: 13, price: 8, yield: [3, 4], thirst: 0.55, lv: 1 },
+  { id: 'potato', get fa() { return GT.g64; }, seasons: [0, 2], days: 2.5, seed: 18, price: 10, yield: [4, 6], thirst: 0.6, art: 'root', lv: 2 },
+  { id: 'onion', get fa() { return GT.g65; }, seasons: [0, 2, 3], days: 2.5, seed: 16, price: 9, yield: [3, 5], thirst: 0.5, art: 'root', lv: 2 },
+  { id: 'corn', get fa() { return GT.g66; }, seasons: [0, 1], days: 2.5, seed: 20, price: 11, yield: [3, 4], thirst: 0.7, lv: 1 },
+  { id: 'cucumber', get fa() { return GT.g67; }, seasons: [0, 1], days: 2.5, seed: 24, price: 12, yield: [4, 6], thirst: 0.8, regrow: 1, maxH: 3, art: 'vine', lv: 3 },
+  { id: 'tomato', get fa() { return GT.g68; }, seasons: [0, 1], days: 3, seed: 32, price: 9, yield: [4, 5], thirst: 0.8, regrow: 1, maxH: 3, lv: 4 },
+  { id: 'strawberry', get fa() { return GT.g69; }, seasons: [0], days: 2.5, seed: 45, price: 14, yield: [3, 4], thirst: 0.8, regrow: 1, maxH: 3, lv: 5 },
+  { id: 'pepper', get fa() { return GT.g70; }, seasons: [1], days: 3, seed: 38, price: 19, yield: [3, 5], thirst: 0.75, regrow: 1, maxH: 3, lv: 5 },
+  { id: 'rice', get fa() { return GT.g71; }, seasons: [1], days: 3.2, seed: 40, price: 26, yield: [3, 5], thirst: 1.1, art: 'tall', lv: 6 },
+  { id: 'sunflower', get fa() { return GT.g72; }, seasons: [0, 1], days: 3.7, seed: 50, price: 38, yield: [2, 4], thirst: 0.6, art: 'flower', lv: 6 },
+  { id: 'watermelon', get fa() { return GT.g73; }, seasons: [1], days: 3.7, seed: 55, price: 41, yield: [2, 3], thirst: 0.9, lv: 7 },
+  { id: 'pumpkin', get fa() { return GT.g74; }, seasons: [1, 2], days: 3.7, seed: 42, price: 32, yield: [2, 3], thirst: 0.6, lv: 7 },
+  { id: 'grape', get fa() { return GT.g75; }, seasons: [1, 2], days: 3.9, seed: 70, price: 38, yield: [3, 5], thirst: 0.7, regrow: 1.7, maxH: 3, art: 'vine', lv: 8 },
+  { id: 'olive', get fa() { return GT.g76; }, seasons: [2, 3], days: 4.6, seed: 90, price: 53, yield: [2, 4], thirst: 0.4, regrow: 1.7, maxH: 3, art: 'vine', lv: 10 },
+  { id: 'saffron', get fa() { return GT.g77; }, seasons: [2], days: 4.6, seed: 130, price: 229, yield: [1, 1], thirst: 0.5, lv: 12 },
+  { id: 'fig', get fa() { return GT.g78; }, seasons: [1, 2], days: 5.2, seed: 260, price: 81, yield: [3, 5], thirst: 0.55, regrow: 1.7, maxH: 4, art: 'vine', lv: 14 },
+  { id: 'plum', get fa() { return GT.g79; }, seasons: [1, 2], days: 5.2, seed: 300, price: 101, yield: [3, 4], thirst: 0.5, regrow: 1.7, maxH: 4, art: 'bush', lv: 16 },
+  { id: 'cherry', get fa() { return GT.g80; }, seasons: [0, 1], days: 5.8, seed: 380, price: 140, yield: [3, 4], thirst: 0.55, regrow: 1.7, maxH: 4, art: 'bush', lv: 18 },
+  { id: 'peach', get fa() { return GT.g81; }, seasons: [0, 1], days: 6.4, seed: 460, price: 176, yield: [2, 4], thirst: 0.6, regrow: 1.7, maxH: 5, art: 'bush', lv: 20 },
+  { id: 'orange', get fa() { return GT.g82; }, seasons: [1, 2], days: 6.9, seed: 560, price: 247, yield: [3, 5], thirst: 0.65, regrow: 1.7, maxH: 5, art: 'bush', lv: 22 },
+  { id: 'pomegranate', get fa() { return GT.g83; }, seasons: [1, 2], days: 7.5, seed: 720, price: 332, yield: [2, 4], thirst: 0.6, regrow: 2.3, maxH: 5, art: 'bush', lv: 24 },
+  { id: 'pistachio', get fa() { return GT.g84; }, seasons: [1, 2], days: 8.6, seed: 1150, price: 639, yield: [2, 3], thirst: 0.45, regrow: 2.3, maxH: 6, art: 'tall', lv: 27 },
+  { id: 'rose', get fa() { return GT.g85; }, seasons: [0, 1], days: 4.1, seed: 900, price: 498, yield: [2, 3], thirst: 0.7, regrow: 1, maxH: 4, art: 'flower', lv: 30 },
 ];
 
 export const CROP: Record<string, CropDef> = Object.fromEntries(CROPS.map((c) => [c.id, c]));
 
 export const GOODS: { id: GoodId; fa: string; base: number }[] = [
-  ...CROPS.map((c) => ({ id: c.id as GoodId, fa: c.fa, base: c.price })),
-  { id: 'egg', fa: GT.g86, base: 9 },
-  { id: 'milk', fa: GT.g87, base: 40 },
-  { id: 'wool', fa: GT.g88, base: 60 },
-  { id: 'cheese', fa: GT.g89, base: 85 },
-  { id: 'fish', fa: GT.g90, base: 20 },
-  { id: 'roe', fa: GT.g91, base: 160 },
-  { id: 'honey', fa: GT.g92, base: 120 },
-  { id: 'fingerling', fa: GT.g93, base: 30 },
-  { id: 'feed', fa: GT.g94, base: 6 },
+  ...CROPS.map((c) => ({ id: c.id as GoodId, get fa() { return c.fa; }, base: c.price })),
+  { id: 'egg', get fa() { return GT.g86; }, base: 9 },
+  { id: 'milk', get fa() { return GT.g87; }, base: 40 },
+  { id: 'wool', get fa() { return GT.g88; }, base: 60 },
+  { id: 'cheese', get fa() { return GT.g89; }, base: 85 },
+  { id: 'fish', get fa() { return GT.g90; }, base: 20 },
+  { id: 'roe', get fa() { return GT.g91; }, base: 160 },
+  { id: 'honey', get fa() { return GT.g92; }, base: 120 },
+  { id: 'fingerling', get fa() { return GT.g93; }, base: 30 },
+  { id: 'feed', get fa() { return GT.g94; }, base: 6 },
   { id: 'herb', get fa() { return FT.goodHerb; }, base: 48 },
   { id: 'mushroom', get fa() { return FT.goodMushroom; }, base: 95 },
   { id: 'truffle', get fa() { return FT.goodTruffle; }, base: 290 },
@@ -80,28 +80,28 @@ export const GOODS: { id: GoodId; fa: string; base: number }[] = [
 ];
 export const GOOD: Record<string, { id: GoodId; fa: string; base: number }> = Object.fromEntries(GOODS.map((g) => [g.id, g]));
 
-export const SEASONS = [GT.g95, GT.g96, GT.g97, GT.g98];
+export const seasonName = (season: number) => [GT.g95, GT.g96, GT.g97, GT.g98][season] ?? GT.g95;
 
 export interface AnimalDef { fa: string; price: number; eat: number; prod: GoodId; qty: number; cap: number; every: number; grow: number; baby: string; lv: number }
 export const ANIMALS: Record<AnimalKind, AnimalDef> = {
-  chicken: { fa: GT.g99, price: 150, eat: 0, prod: 'egg', qty: 2, cap: 8, every: 1, grow: 3, baby: GT.g100, lv: 1 },
-  rabbit: { fa: GT.g101, price: 260, eat: 0.35, prod: 'wool', qty: 1, cap: 12, every: 1, grow: 2, baby: GT.g102, lv: 4 },
-  duck: { fa: GT.g103, price: 220, eat: 0, prod: 'egg', qty: 3, cap: 10, every: 1, grow: 3, baby: GT.g104, lv: 5 },
-  sheep: { fa: GT.g105, price: 450, eat: 1, prod: 'wool', qty: 1, cap: 4, every: 2, grow: 4, baby: GT.g106, lv: 7 },
-  goat: { fa: GT.g107, price: 520, eat: 1, prod: 'cheese', qty: 1, cap: 4, every: 2, grow: 4, baby: GT.g108, lv: 9 },
-  cow: { fa: GT.g109, price: 800, eat: 1.5, prod: 'milk', qty: 1, cap: 6, every: 1, grow: 5, baby: GT.g110, lv: 11 },
+  chicken: { get fa() { return GT.g99; }, price: 150, eat: 0, prod: 'egg', qty: 2, cap: 8, every: 1, grow: 3, get baby() { return GT.g100; }, lv: 1 },
+  rabbit: { get fa() { return GT.g101; }, price: 260, eat: 0.35, prod: 'wool', qty: 1, cap: 12, every: 1, grow: 2, get baby() { return GT.g102; }, lv: 4 },
+  duck: { get fa() { return GT.g103; }, price: 220, eat: 0, prod: 'egg', qty: 3, cap: 10, every: 1, grow: 3, get baby() { return GT.g104; }, lv: 5 },
+  sheep: { get fa() { return GT.g105; }, price: 450, eat: 1, prod: 'wool', qty: 1, cap: 4, every: 2, grow: 4, get baby() { return GT.g106; }, lv: 7 },
+  goat: { get fa() { return GT.g107; }, price: 520, eat: 1, prod: 'cheese', qty: 1, cap: 4, every: 2, grow: 4, get baby() { return GT.g108; }, lv: 9 },
+  cow: { get fa() { return GT.g109; }, price: 800, eat: 1.5, prod: 'milk', qty: 1, cap: 6, every: 1, grow: 5, get baby() { return GT.g110; }, lv: 11 },
 };
 
 // ===== دستگاه‌ها: هر دستگاه ۳ مدل (MK) — مدل‌های بالاتر گران‌تر و قوی‌تر =====
 export interface MachineDef { fa: string; price: number; auto: AutoKey; icon: string; desc: string; lv: number }
 export const MACHINES: Record<MachineId, MachineDef> = {
-  feeder: { fa: GT.g111, price: 1900, auto: 'feed', icon: 'feeder', desc: GT.g112, lv: 3 },
-  sprinkler: { fa: GT.g113, price: 2400, auto: 'water', icon: 'sprinkler', desc: GT.g114, lv: 4 },
-  tractor: { fa: GT.g115, price: 3200, auto: 'till', icon: 'tractor', desc: GT.g116, lv: 5 },
-  seeder: { fa: GT.g117, price: 2800, auto: 'plant', icon: 'seeder', desc: GT.g118, lv: 6 },
-  harvester: { fa: GT.g119, price: 5200, auto: 'harvest', icon: 'harvester', desc: GT.g120, lv: 7 },
-  collector: { fa: GT.g121, price: 3600, auto: 'collect', icon: 'collector', desc: GT.g122, lv: 8 },
-  drone: { fa: GT.g123, price: 4200, auto: 'fert', icon: 'drone', desc: GT.g124, lv: 9 },
+  feeder: { get fa() { return GT.g111; }, price: 1900, auto: 'feed', icon: 'feeder', get desc() { return GT.g112; }, lv: 3 },
+  sprinkler: { get fa() { return GT.g113; }, price: 2400, auto: 'water', icon: 'sprinkler', get desc() { return GT.g114; }, lv: 4 },
+  tractor: { get fa() { return GT.g115; }, price: 3200, auto: 'till', icon: 'tractor', get desc() { return GT.g116; }, lv: 5 },
+  seeder: { get fa() { return GT.g117; }, price: 2800, auto: 'plant', icon: 'seeder', get desc() { return GT.g118; }, lv: 6 },
+  harvester: { get fa() { return GT.g119; }, price: 5200, auto: 'harvest', icon: 'harvester', get desc() { return GT.g120; }, lv: 7 },
+  collector: { get fa() { return GT.g121; }, price: 3600, auto: 'collect', icon: 'collector', get desc() { return GT.g122; }, lv: 8 },
+  drone: { get fa() { return GT.g123; }, price: 4200, auto: 'fert', icon: 'drone', get desc() { return GT.g124; }, lv: 9 },
 };
 export const MACHINE_LIST = ['feeder', 'sprinkler', 'tractor', 'seeder', 'harvester', 'collector', 'drone'] as MachineId[];
 
@@ -125,7 +125,7 @@ export const MK_EAT = [1, 1, 0.85, 0.7];                    // آخور هوشم
 export const MK_BREED = [1, 1, 1.12, 1.24];                 // آخور هوشمند: شتاب زادوولد دام با نقش دامداری
 export const MK_COLLECT = [1, 1, 1.1, 1.22];                // ربات جمع‌آور: بازده بیشتر دام با نقش دامداری یا مهارت دامپروری
 export const MK_BATCH = [0, 84, 114, 999];                 // ظرفیت پردازش مزارع اقماری در هر چرخه (مدل ۱: ۸۴، مدل ۲: ۱۱۴، مدل ۳: تمام کرت‌ها)
-export const MK_FA = ['', GT.g125, GT.g126, GT.g127];
+export const machineModelName = (mk: number) => ['', GT.g125, GT.g126, GT.g127][mk] ?? '';
 
 // ثابت‌های مهارت‌های RPG، صمیمیت اهالی و دکوراسیون حیاط
 export const HEART_BOND_2 = 40;
@@ -144,7 +144,8 @@ export const SHEEPDOG_RAID_MULT = 0.7;
 export const TILEPOOL_BONUS_CAN = 12;
 
 export const AUTO_FA: Record<AutoKey, string> = {
-  till: GT.g128, plant: GT.g129, water: GT.g130, harvest: GT.g131, fert: GT.g132, feed: GT.g133, collect: GT.g134,
+  get till() { return GT.g128; }, get plant() { return GT.g129; }, get water() { return GT.g130; },
+  get harvest() { return GT.g131; }, get fert() { return GT.g132; }, get feed() { return GT.g133; }, get collect() { return GT.g134; },
 };
 
 // ===== حصارهای اختصاصی هر گونهٔ دام (به‌جای محوطهٔ مشترک) =====
@@ -313,26 +314,26 @@ export function buildDur(price: number): number { return Math.min(32, 7 + price 
 export interface AchTier { n: number; reward: number }
 export interface AchDef { id: string; icon: string; fa: string; stat: string; tiers: AchTier[] }
 export const ACHS: AchDef[] = [
-  { id: 'plants', icon: 'plant', fa: GT.g135, stat: 'plants', tiers: [{ n: 40, reward: 120 }, { n: 250, reward: 500 }, { n: 1000, reward: 2200 }, { n: 5000, reward: 9000 }, { n: 20000, reward: 40000 }] },
-  { id: 'harv', icon: 'sickle', fa: GT.g136, stat: 'harv', tiers: [{ n: 50, reward: 150 }, { n: 300, reward: 650 }, { n: 1200, reward: 3000 }, { n: 5000, reward: 12000 }, { n: 20000, reward: 55000 }] },
-  { id: 'earned', icon: 'coin', fa: GT.g137, stat: 'earned', tiers: [{ n: 5000, reward: 250 }, { n: 50000, reward: 1500 }, { n: 300000, reward: 8000 }, { n: 2000000, reward: 40000 }, { n: 12000000, reward: 200000 }] },
-  { id: 'fish', icon: 'fish', fa: GT.g138, stat: 'fish', tiers: [{ n: 10, reward: 200 }, { n: 60, reward: 900 }, { n: 250, reward: 4000 }, { n: 1000, reward: 18000 }] },
-  { id: 'pond', icon: 'pond', fa: GT.g139, stat: 'pondH', tiers: [{ n: 3, reward: 300 }, { n: 15, reward: 1400 }, { n: 60, reward: 6500 }, { n: 200, reward: 28000 }] },
-  { id: 'honey', icon: 'honey', fa: GT.g140, stat: 'honey', tiers: [{ n: 15, reward: 250 }, { n: 100, reward: 1200 }, { n: 500, reward: 6000 }, { n: 2500, reward: 26000 }, { n: 10000, reward: 120000 }] },
-  { id: 'babies', icon: 'nest', fa: GT.g141, stat: 'babies', tiers: [{ n: 2, reward: 250 }, { n: 10, reward: 1200 }, { n: 40, reward: 5500 }, { n: 150, reward: 26000 }] },
-  { id: 'collect', icon: 'egg', fa: GT.g142, stat: 'collect', tiers: [{ n: 30, reward: 150 }, { n: 200, reward: 800 }, { n: 800, reward: 3800 }, { n: 3200, reward: 17000 }] },
-  { id: 'builds', icon: 'hammer', fa: GT.g143, stat: 'builds', tiers: [{ n: 2, reward: 300 }, { n: 8, reward: 1500 }, { n: 20, reward: 7000 }, { n: 40, reward: 32000 }] },
-  { id: 'level', icon: 'medal', fa: GT.g144, stat: 'level', tiers: [{ n: 5, reward: 500 }, { n: 10, reward: 2500 }, { n: 15, reward: 9000 }, { n: 20, reward: 30000 }, { n: 25, reward: 90000 }, { n: 30, reward: 250000 }] },
-  { id: 'animals', icon: 'cow', fa: GT.g145, stat: 'animals', tiers: [{ n: 4, reward: 250 }, { n: 8, reward: 1200 }, { n: 12, reward: 5000 }, { n: 16, reward: 18000 }] },
-  { id: 'day', icon: 'sun', fa: GT.g146, stat: 'day', tiers: [{ n: 30, reward: 400 }, { n: 90, reward: 2000 }, { n: 200, reward: 8000 }, { n: 500, reward: 30000 }, { n: 1200, reward: 120000 }] },
-  { id: 'debtPaid', icon: 'ledger', fa: GT.achDebtPaid, stat: 'debtPaid', tiers: [{ n: 15000, reward: 250 }, { n: 250000, reward: 1200 }, { n: 1500000, reward: 5000 }, { n: TOTAL_DEBT, reward: 25000 }] },
-  { id: 'chapter', icon: 'note', fa: GT.achChapter, stat: 'chapter', tiers: [{ n: 2, reward: 200 }, { n: 4, reward: 900 }, { n: 6, reward: 3500 }, { n: 7, reward: 15000 }] },
-  { id: 'scarecrow', icon: 'scarecrow', fa: GT.achScarecrow, stat: 'scarecrow', tiers: [{ n: 1, reward: 180 }, { n: 2, reward: 600 }, { n: 3, reward: 1800 }] },
-  { id: 'stash', icon: 'stash', fa: GT.achStash, stat: 'stash', tiers: [{ n: 2000, reward: 150 }, { n: 25000, reward: 700 }, { n: 150000, reward: 2800 }] },
-  { id: 'quests', icon: 'scroll', fa: GT.achQuests, stat: 'quests', tiers: [{ n: 3, reward: 180 }, { n: 15, reward: 750 }, { n: 50, reward: 2600 }, { n: 120, reward: 8000 }] },
-  { id: 'contracts', icon: 'contract', fa: GT.achContracts, stat: 'contracts', tiers: [{ n: 1, reward: 220 }, { n: 5, reward: 900 }, { n: 15, reward: 3200 }, { n: 40, reward: 10000 }] },
-  { id: 'artisan', icon: 'saffron', fa: GT.achArtisan, stat: 'artisan', tiers: [{ n: 3, reward: 300 }, { n: 15, reward: 1600 }, { n: 60, reward: 7500 }, { n: 200, reward: 32000 }] },
-  { id: 'secrets', icon: 'star', fa: GT.achSecrets, stat: 'secrets', tiers: [{ n: 1, reward: 1500 }, { n: 3, reward: 8000 }, { n: 5, reward: 30000 }, { n: 8, reward: 120000 }] },
+  { id: 'plants', icon: 'plant', get fa() { return GT.g135; }, stat: 'plants', tiers: [{ n: 40, reward: 120 }, { n: 250, reward: 500 }, { n: 1000, reward: 2200 }, { n: 5000, reward: 9000 }, { n: 20000, reward: 40000 }] },
+  { id: 'harv', icon: 'sickle', get fa() { return GT.g136; }, stat: 'harv', tiers: [{ n: 50, reward: 150 }, { n: 300, reward: 650 }, { n: 1200, reward: 3000 }, { n: 5000, reward: 12000 }, { n: 20000, reward: 55000 }] },
+  { id: 'earned', icon: 'coin', get fa() { return GT.g137; }, stat: 'earned', tiers: [{ n: 5000, reward: 250 }, { n: 50000, reward: 1500 }, { n: 300000, reward: 8000 }, { n: 2000000, reward: 40000 }, { n: 12000000, reward: 200000 }] },
+  { id: 'fish', icon: 'fish', get fa() { return GT.g138; }, stat: 'fish', tiers: [{ n: 10, reward: 200 }, { n: 60, reward: 900 }, { n: 250, reward: 4000 }, { n: 1000, reward: 18000 }] },
+  { id: 'pond', icon: 'pond', get fa() { return GT.g139; }, stat: 'pondH', tiers: [{ n: 3, reward: 300 }, { n: 15, reward: 1400 }, { n: 60, reward: 6500 }, { n: 200, reward: 28000 }] },
+  { id: 'honey', icon: 'honey', get fa() { return GT.g140; }, stat: 'honey', tiers: [{ n: 15, reward: 250 }, { n: 100, reward: 1200 }, { n: 500, reward: 6000 }, { n: 2500, reward: 26000 }, { n: 10000, reward: 120000 }] },
+  { id: 'babies', icon: 'nest', get fa() { return GT.g141; }, stat: 'babies', tiers: [{ n: 2, reward: 250 }, { n: 10, reward: 1200 }, { n: 40, reward: 5500 }, { n: 150, reward: 26000 }] },
+  { id: 'collect', icon: 'egg', get fa() { return GT.g142; }, stat: 'collect', tiers: [{ n: 30, reward: 150 }, { n: 200, reward: 800 }, { n: 800, reward: 3800 }, { n: 3200, reward: 17000 }] },
+  { id: 'builds', icon: 'hammer', get fa() { return GT.g143; }, stat: 'builds', tiers: [{ n: 2, reward: 300 }, { n: 8, reward: 1500 }, { n: 20, reward: 7000 }, { n: 40, reward: 32000 }] },
+  { id: 'level', icon: 'medal', get fa() { return GT.g144; }, stat: 'level', tiers: [{ n: 5, reward: 500 }, { n: 10, reward: 2500 }, { n: 15, reward: 9000 }, { n: 20, reward: 30000 }, { n: 25, reward: 90000 }, { n: 30, reward: 250000 }] },
+  { id: 'animals', icon: 'cow', get fa() { return GT.g145; }, stat: 'animals', tiers: [{ n: 4, reward: 250 }, { n: 8, reward: 1200 }, { n: 12, reward: 5000 }, { n: 16, reward: 18000 }] },
+  { id: 'day', icon: 'sun', get fa() { return GT.g146; }, stat: 'day', tiers: [{ n: 30, reward: 400 }, { n: 90, reward: 2000 }, { n: 200, reward: 8000 }, { n: 500, reward: 30000 }, { n: 1200, reward: 120000 }] },
+  { id: 'debtPaid', icon: 'ledger', get fa() { return GT.achDebtPaid; }, stat: 'debtPaid', tiers: [{ n: 15000, reward: 250 }, { n: 250000, reward: 1200 }, { n: 1500000, reward: 5000 }, { n: TOTAL_DEBT, reward: 25000 }] },
+  { id: 'chapter', icon: 'note', get fa() { return GT.achChapter; }, stat: 'chapter', tiers: [{ n: 2, reward: 200 }, { n: 4, reward: 900 }, { n: 6, reward: 3500 }, { n: 7, reward: 15000 }] },
+  { id: 'scarecrow', icon: 'scarecrow', get fa() { return GT.achScarecrow; }, stat: 'scarecrow', tiers: [{ n: 1, reward: 180 }, { n: 2, reward: 600 }, { n: 3, reward: 1800 }] },
+  { id: 'stash', icon: 'stash', get fa() { return GT.achStash; }, stat: 'stash', tiers: [{ n: 2000, reward: 150 }, { n: 25000, reward: 700 }, { n: 150000, reward: 2800 }] },
+  { id: 'quests', icon: 'scroll', get fa() { return GT.achQuests; }, stat: 'quests', tiers: [{ n: 3, reward: 180 }, { n: 15, reward: 750 }, { n: 50, reward: 2600 }, { n: 120, reward: 8000 }] },
+  { id: 'contracts', icon: 'contract', get fa() { return GT.achContracts; }, stat: 'contracts', tiers: [{ n: 1, reward: 220 }, { n: 5, reward: 900 }, { n: 15, reward: 3200 }, { n: 40, reward: 10000 }] },
+  { id: 'artisan', icon: 'saffron', get fa() { return GT.achArtisan; }, stat: 'artisan', tiers: [{ n: 3, reward: 300 }, { n: 15, reward: 1600 }, { n: 60, reward: 7500 }, { n: 200, reward: 32000 }] },
+  { id: 'secrets', icon: 'star', get fa() { return GT.achSecrets; }, stat: 'secrets', tiers: [{ n: 1, reward: 1500 }, { n: 3, reward: 8000 }, { n: 5, reward: 30000 }, { n: 8, reward: 120000 }] },
 ];
 
 // Cosmetic milestones derive their unlock from persistent achievement state (no extra save flag).
@@ -367,18 +368,4 @@ import { fa as faNum } from '../strings/fa';
 /** سقف/نسبت عددی فارسی برای نمودارها و برچسب‌های کوتاه */
 export const faShort = faNum;
 
-import { GT, locText } from '../strings/gameText';
-
-function bindLocProp<T extends object>(obj: T, prop: keyof T & string) {
-  if (Object.getOwnPropertyDescriptor(obj, prop)?.get) return;
-  const raw = String(obj[prop]);
-  Object.defineProperty(obj, prop, { get: () => locText(raw), enumerable: true });
-}
-for (const c of CROPS) bindLocProp(c, 'fa');
-for (const g of GOODS) bindLocProp(g, 'fa');
-for (const d of Object.values(ANIMALS)) { bindLocProp(d, 'fa'); bindLocProp(d, 'baby'); }
-for (const m of Object.values(MACHINES)) { bindLocProp(m, 'fa'); bindLocProp(m, 'desc'); }
-for (const a of ACHS) bindLocProp(a, 'fa');
-for (let i = 0; i < SEASONS.length; i++) bindLocProp(SEASONS, i as unknown as never);
-for (let i = 1; i < MK_FA.length; i++) bindLocProp(MK_FA, i as unknown as never);
-for (const k of Object.keys(AUTO_FA) as AutoKey[]) bindLocProp(AUTO_FA, k);
+import { GT } from '../strings/gameText';

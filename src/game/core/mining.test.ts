@@ -3,7 +3,7 @@ import { xpNeed } from '../data';
 import { fresh, S, UI } from '../state';
 import { resetLvCache } from './progress';
 import { freshFrontier } from './frontier';
-import { activeMineNodes, completeMineNode, minePrecisionStatus, stepMineFloor } from './mining';
+import { activeMineNodes, completeMineBatch, completeMineNode, mineBatchStatus, minePrecisionStatus, stepMineFloor } from './mining';
 
 function stubStorage() {
   const values = new Map<string, string>();
@@ -94,5 +94,36 @@ describe('early mining balance and destinations', () => {
     expect(completeMineNode(1, 0, [0.8, 0.8, 0.8])?.qty).toBe(1);
     expect(UI.toasts.some((entry) => entry.text.includes('صندوق پست') || entry.text.includes('mailbox'))).toBe(true);
     expect(S.mail?.inbox.some((entry) => entry.template === 'overflow-parcel')).toBe(true);
+  });
+
+  it('unlocks crew extraction only after the previous floor is fully cleared', () => {
+    S.xp = [1, 2, 3].reduce((sum, level) => sum + xpNeed(level), 0);
+    resetLvCache();
+    S.frontier!.maxCaveFloor = 2;
+    S.stamina = 200;
+    expect(mineBatchStatus(2).unlocked).toBe(false);
+    expect(completeMineBatch(2)).toBeNull();
+    expect(S.stamina).toBe(200);
+    for (const node of activeMineNodes(1)) S.frontier!.nodesDone[`cave:1:${node.idx}`] = true;
+    expect(mineBatchStatus(2)).toMatchObject({ unlocked: true, remaining: 6, affordable: 6 });
+    expect(completeMineBatch(2)).toEqual({ count: 6, stamina: 96 });
+    expect(S.stamina).toBe(104);
+    expect(S.stats.mineNodes).toBe(6);
+    expect(S.stats.minePerfect ?? 0).toBe(0);
+    expect(mineBatchStatus(2).remaining).toBe(0);
+  });
+
+  it('stops crew extraction at the real stamina boundary without charging a partial vein', () => {
+    S.xp = [1, 2, 3].reduce((sum, level) => sum + xpNeed(level), 0);
+    resetLvCache();
+    S.frontier!.maxCaveFloor = 2;
+    for (const node of activeMineNodes(1)) S.frontier!.nodesDone[`cave:1:${node.idx}`] = true;
+    S.stamina = 20;
+    expect(mineBatchStatus(2)).toMatchObject({ unlocked: true, affordable: 1, stamina: 16 });
+    expect(completeMineBatch(2)).toEqual({ count: 1, stamina: 16 });
+    expect(S.stamina).toBe(4);
+    expect(S.stats.mineNodes).toBe(1);
+    expect(completeMineBatch(2)).toBeNull();
+    expect(S.stamina).toBe(4);
   });
 });

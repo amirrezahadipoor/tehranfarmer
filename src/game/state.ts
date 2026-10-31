@@ -72,6 +72,8 @@ export interface Save {
   quests: QuestsState;
   /** رویداد فصلی امروز */
   event: ActiveEvent | null;
+  /** انتخاب اختیاری برنامهٔ هفتگی در فصل‌های میانی؛ اثر بلافاصله و یک‌بار اعمال می‌شود. */
+  weeklyPlan?: { week: number; day: number; kind: 'field' | 'market' };
   /** سطح چاه و آبیاری قطره‌ای ۰..۳ */
   wellLv: number;
   /** قرارداد فعال فروش در بازار */

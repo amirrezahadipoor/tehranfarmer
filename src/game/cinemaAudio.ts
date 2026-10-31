@@ -2,6 +2,7 @@
 import { ambient, audioCtx, haptic, sfx } from './sound';
 import type { CharId } from '../story/types';
 import type { CueKind } from '../story/cinemaTypes';
+import { CFG } from './settings';
 
 const VOICE_SPEC: Record<CharId, { base: number; wave: OscillatorType; spread: number; vol: number }> = {
   narrator: { base: 460, wave: 'sine', spread: 24, vol: 0.018 },
@@ -17,11 +18,15 @@ const VOICE_SPEC: Record<CharId, { base: number; wave: OscillatorType; spread: n
 
 let lastBlipAt = 0;
 
+/** Dialogue has its own gain, independent from the effects slider. */
+export const voiceBlipVolume = (base: number) => Math.max(0, base) * Math.max(0, Math.min(100, CFG.voiceVolume)) / 100;
+
 export function setMusicDuck(ducked: boolean) {
   ambient.duck = ducked ? 0.28 : 1;
 }
 
 export function playVoiceBlip(who: CharId, charIdx: number) {
+  if (CFG.voiceVolume <= 0) return;
   const a = audioCtx();
   if (!a) return;
   const now = a.currentTime;
@@ -35,7 +40,7 @@ export function playVoiceBlip(who: CharId, charIdx: number) {
   o.frequency.setValueAtTime(Math.max(95, v.base + detune), now);
   o.frequency.exponentialRampToValueAtTime(Math.max(85, (v.base + detune) * 1.07), now + 0.045);
   g.gain.setValueAtTime(0.0001, now);
-  g.gain.linearRampToValueAtTime(v.vol, now + 0.008);
+  g.gain.linearRampToValueAtTime(voiceBlipVolume(v.vol), now + 0.008);
   g.gain.exponentialRampToValueAtTime(0.0001, now + 0.052);
   o.connect(g);
   g.connect(a.destination);

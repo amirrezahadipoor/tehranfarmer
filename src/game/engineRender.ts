@@ -9,7 +9,7 @@ import { CFG, isReducedMotion } from './settings';
 import { faPct } from '../strings/fa';
 import { cinema, drawCinemaForegroundUI, drawCinemaWorldExtras, isActorStagedInScene } from './cinemaStage';
 import { drawAnimalStatusExtra, drawFieldUpgradesAndHover, drawFullScarecrow, liveAnimalScale } from './farmVisuals';
-import { renderEstateFieldScene } from './estateScenes';
+import { renderEstateFieldScene, drawEstateRipeNightMarkers } from './estateScenes';
 import { drawFrontierScenePlaques, drawTownWorldExpansions, renderFrontierScene } from './frontierScenes';
 import { drawFarmlandPlotsLayer, drawGlasshouseSpan, drawSignPlaque } from './worldRoads';
 import { FT } from '../strings/frontierText';
@@ -287,7 +287,27 @@ export function createSceneRenderer(
         }
       }
     }
-    if (na > 0.01) drawNightReadablePlaques();
+    if (na > 0.01) {
+      // Crop art sits below the night tint; repeat ripe badges above it so the
+      // next profitable action remains legible on every estate.
+      const vx0 = viewMinX(), vx1 = viewMaxX();
+      if (UI.scene === 'farm') {
+        ctx.save(); ctx.globalAlpha = 0.96;
+        for (let i = 0; i < S.plots.length; i++) {
+          const p = S.plots[i];
+          if (!p.ripe || p.dead) continue;
+          const { cx, cy } = plotC(i);
+          if (cx < vx0 || cx > vx1) continue;
+          const x = cx + 27, y = cy - 19 + Math.sin(t * 3 + i) * 2;
+          shape(ctx, ell(x, y, 11.5, 11.5, 12), { fill: '#fff3a6', line: 2.2 });
+          put(ctx, iconPart('star'), x, y, (p.fert ?? 1) > 1.05 ? 0.4 : 0.34);
+        }
+        ctx.restore();
+      } else if (UI.scene === 'north' || UI.scene === 'valley') {
+        drawEstateRipeNightMarkers(ctx, UI.scene, t, vx0, vx1);
+      }
+      drawNightReadablePlaques();
+    }
     if (S.hour >= 5.2 && S.hour <= 7.8) {
       const mistA = 0.16 * Math.sin(((S.hour - 5.2) / 2.6) * Math.PI);
       ctx.fillStyle = `rgba(244,250,255,${mistA})`;

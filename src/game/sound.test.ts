@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CFG } from './settings';
-import { ambient, musicPlaylist, sfxSampleGain, snd, syncAudioSettings } from './sound';
+import { ambient, musicPlaylist, sceneAmbienceSpec, sfxSampleGain, snd, syncAudioSettings } from './sound';
 
 class FakeAudio {
   static instances: FakeAudio[] = [];
@@ -83,5 +83,13 @@ describe('immediate audio setting reconciliation', () => {
     expect(sfxSampleGain('water')).toBeGreaterThan(2);
     expect(sfxSampleGain('nibble')).toBeGreaterThan(1);
     expect(sfxSampleGain('pop')).toBeCloseTo(1.07, 2);
+  });
+
+  it('selects sparse scene ambience without replacing the music layer', () => {
+    expect(sceneAmbienceSpec('river', 12)).toMatchObject({ id: 'water', rate: 0.72 });
+    expect(sceneAmbienceSpec('cave', 12)).toMatchObject({ id: 'dig', rate: 0.62 });
+    expect(sceneAmbienceSpec('farm', 22)).toMatchObject({ id: 'pad', rate: 0.8 });
+    expect(sceneAmbienceSpec('farm', 12)).toBeNull();
+    expect(sceneAmbienceSpec('river', 12)?.vol).toBeLessThan(0.1);
   });
 });

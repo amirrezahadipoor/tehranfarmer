@@ -3,7 +3,7 @@ import { FT } from '../strings/frontierText';
 import { S, UI, farmLevel, notify, useGame } from '../game/state';
 import { fa, faPct } from '../game/data';
 import {
-  MINE_FLOOR_COUNT, activeMineNodes, canEnterMineFloor, mineFloorProgress, mineFloorRequiredLevel, mineFloorTitle, openMineMap, travelMineFloor,
+  MINE_FLOOR_COUNT, activeMineNodes, canEnterMineFloor, completeMineBatch, mineBatchStatus, mineFloorProgress, mineFloorRequiredLevel, mineFloorTitle, openMineMap, travelMineFloor,
 } from '../game/core/mining';
 
 const FLOOR_STYLES = [
@@ -47,6 +47,7 @@ export function MineMapModal() {
             const floor = i + 1;
             const style = FLOOR_STYLES[i];
             const progress = mineFloorProgress(floor);
+            const batch = mineBatchStatus(floor);
             const needsProgress = floor > unlocked;
             const requiredLevel = mineFloorRequiredLevel(floor);
             const locked = needsProgress || !canEnterMineFloor(floor);
@@ -66,6 +67,19 @@ export function MineMapModal() {
                 <div className="text-xs font-black">{FT.mineProgressLabel}: {fa(progress.cleared)}/{fa(progress.total)}</div>
                 <div className="h-2 overflow-hidden rounded-full bg-[#50342625]"><div className="h-full rounded-full bg-[#3e9b8d]" style={{ width: `${(progress.cleared / progress.total) * 100}%` }} /></div>
                 {best > 0 && <div className="text-[.68rem] font-black text-[#6b4a24]">{FT.mineBestAccuracy}: {faPct(best)}</div>}
+                {batch.unlocked && <div className="rounded-lg bg-white/55 p-1.5">
+                  <button
+                    type="button"
+                    data-mine-batch={floor}
+                    className="btn y press min-h-[48px] w-full !whitespace-normal !px-2 !py-1 text-xs font-black"
+                    disabled={batch.remaining === 0 || batch.affordable === 0}
+                    onClick={() => completeMineBatch(floor)}
+                  >
+                    <Ic n="bolt" s={1.3} />
+                    {batch.remaining === 0 ? FT.mineBatchDone : batch.affordable === 0 ? FT.mineBatchNone : `${FT.mineBatchBtn} · ${fa(batch.affordable)}/${fa(batch.remaining)} ${FT.mineVeinsShort}`}
+                  </button>
+                  {batch.remaining > 0 && <div className="mt-1 text-[.66rem] font-bold leading-4 text-[#564537]">{FT.mineBatchHint}</div>}
+                </div>}
                 {!locked && <button data-mine-travel={floor} className={`btn press mt-auto min-h-[48px] text-xs font-black ${here ? '' : 'g'}`} disabled={here} onClick={() => { if (travelMineFloor(floor)) close(); }}>{here ? FT.mineCurrentFloor : FT.mineTravelFloor}</button>}
               </section>
             );
@@ -76,7 +90,7 @@ export function MineMapModal() {
           <span>•</span>
           <span>{FT.minePerfectLabel}: {fa(S.stats.minePerfect ?? 0)}</span>
         </div>
-        <div className="flex items-start gap-2 rounded-xl border border-[#c69c4d] bg-[#fff2c9] px-3 py-2 text-xs font-bold leading-5"><Ic n="hammer" s={1.7} /><span>{FT.mineWeakPointHint}</span></div>
+        <div className="flex items-start gap-2 rounded-xl border border-[#c69c4d] bg-[#fff2c9] px-3 py-2 text-xs font-bold leading-5"><Ic n="hammer" s={1.7} /><span>{FT.mineWeakPointHint} {FT.mineBatchUnlock}</span></div>
       </div>
     </ModalShell>
   );

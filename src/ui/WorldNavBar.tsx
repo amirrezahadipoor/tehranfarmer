@@ -1,6 +1,6 @@
 import { cmd } from '../game/engine';
 import { CFG } from '../game/settings';
-import { UI, notify } from '../game/state';
+import { S, UI, notify } from '../game/state';
 import { sfx } from '../game/sound';
 import { ESTATE_UI } from '../strings/estateStoryText';
 import { FT } from '../strings/frontierText';
@@ -21,10 +21,11 @@ export function WorldNavBar() {
     { id: 'apiary', ic: 'honey', label: UT.goApiary, cls: 'p' },
     { id: 'forest', ic: 'forest', label: FT.navForest, cls: 'g' },
   ] as const;
+  const desktopPlaces = S.tut?.active ? places.filter((pl) => pl.id === 'farm' || pl.id === 'town') : places;
   return (
     <>
       <div className="paper pointer-events-auto hidden flex-wrap items-center justify-center gap-0.5 p-0.5 min-[901px]:flex xl:gap-1 xl:p-1" data-world-nav="desktop">
-        {places.map((pl) => {
+        {desktopPlaces.map((pl) => {
           const active = cur === pl.id;
           return (
             <button

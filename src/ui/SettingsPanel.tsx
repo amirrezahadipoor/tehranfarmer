@@ -89,6 +89,7 @@ export function SettingsPanel() {
           {([
             ['musicVolume', UT.setMusicVolume],
             ['sfxVolume', UT.setSfxVolume],
+            ['voiceVolume', UT.setVoiceVolume],
           ] as const).map(([key, label]) => (
             <label key={key} className="min-w-0 rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1 text-xs font-black">
               <span className="flex flex-wrap items-center justify-between gap-2"><span>{label}</span><span dir="ltr">{fa(CFG[key])}{UT.u46}</span></span>

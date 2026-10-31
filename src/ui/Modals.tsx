@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ACHS, ACH_OUTFIT_REWARDS, CROPS, CROP, FEED_PRICE, FINGER_PRICE, GOOD, GOODS, HIVE_MAX,
-  FERT_PRICE, HONEY_CAP_PER_HIVE, MACHINES, MACHINE_LIST, MK_FA, POND_GROW_DAYS, POND_MAX, STAM_CAP,
+  FERT_PRICE, HONEY_CAP_PER_HIVE, MACHINES, MACHINE_LIST, machineModelName, POND_GROW_DAYS, POND_MAX, STAM_CAP,
   DAY_RATE, fa, faDec, faPct, machineMkLv,
   type MachineId,
 } from '../game/data';
@@ -222,6 +222,7 @@ function SeedShop() {
 
 function Market() {
   const [showAll, setShowAll] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const rows = GOODS.filter((g) => g.id !== 'feed' && g.id !== 'fingerling');
   const visibleRows = showAll ? rows : rows.filter((g) => srcHave(g.id) > 0);
   useEffect(() => {
@@ -267,36 +268,41 @@ function Market() {
           ))}
         </div>
       </div>
-      <div className="paper mb-2 flex items-start gap-2 px-2.5 py-1.5 text-xs font-extrabold leading-relaxed" data-market-demand-guide="1">
-        <Ic n="ledger" s={1.45} />
-        <span>{UT.marketDemandPrefix}{demandDrop}{UT.marketDemandSuffix}</span>
-      </div>
       <button data-market-sell-all="1" className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { if (sellAll() > 0) tutOnSale(); }}>
         <Ic n="cart" s={2.4} /><span className="ft text-xl">{UT.u85}</span><Coin v={total} s={1.8} cls="text-xl" />
       </button>
-      <div className="paper mb-2 flex flex-wrap items-center gap-1.5 px-2.5 py-1 text-xs font-extrabold" data-market-hot="1">
-        <Ic n="star" s={1.3} />
-        <span className="text-[#6c3d16]">{WX.hotMarketLabel}</span>
-        {hotGoods.map((hg) => (
-          <span key={hg.id} className="inline-flex items-center gap-1 rounded-full border border-[#c88d32] bg-[#fff6d6] px-2 py-0.5 text-[.7rem] font-black text-[#4a2b13]">
-            <Ic n={hg.id} s={1.1} />
-            <span>{hg.fa}</span>
-            <Trend r={goodRatio(hg.id)} />
-          </span>
-        ))}
-      </div>
-      <div className="mb-2 flex justify-center">
+      <div className="mb-2 grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2">
+        <button type="button" data-market-guide-toggle="1" aria-expanded={showGuide} aria-controls="market-advanced-guide" className="btn b press !min-h-[48px] !px-3 !py-1 text-xs font-black" onClick={() => setShowGuide((v) => !v)}>
+          <Ic n="ledger" s={1.25} />{showGuide ? UT.marketGuideHide : UT.marketGuideShow}
+        </button>
         <button type="button" data-market-show-all="1" aria-pressed={showAll} className="btn b press !min-h-[48px] !px-3 !py-1 text-xs font-black" onClick={() => setShowAll((v) => !v)}>
           {showAll ? UT.marketOnlyOwned : UT.marketShowAll}
         </button>
       </div>
+      {showGuide && <div id="market-advanced-guide" data-market-guide="1" className="mb-2 flex flex-col gap-2">
+        <div className="paper flex items-start gap-2 px-2.5 py-1.5 text-xs font-extrabold leading-relaxed" data-market-demand-guide="1">
+          <Ic n="ledger" s={1.45} />
+          <span><b>{UT.marketGuideTitle}: </b>{UT.marketDemandPrefix}{demandDrop}{UT.marketDemandSuffix}</span>
+        </div>
+        <div className="paper flex flex-wrap items-center gap-1.5 px-2.5 py-1 text-xs font-extrabold" data-market-hot="1">
+          <Ic n="star" s={1.3} />
+          <span className="text-[#6c3d16]">{WX.hotMarketLabel}</span>
+          {hotGoods.map((hg) => (
+            <span key={hg.id} className="inline-flex items-center gap-1 rounded-full border border-[#c88d32] bg-[#fff6d6] px-2 py-0.5 text-[.7rem] font-black text-[#4a2b13]">
+              <Ic n={hg.id} s={1.1} />
+              <span>{hg.fa}</span>
+              <Trend r={goodRatio(hg.id)} />
+            </span>
+          ))}
+        </div>
+      </div>}
       {visibleRows.length === 0 && <div className="paper mb-2 p-3 text-center text-xs font-black" role="status">{UT.marketNoGoods}</div>}
       <div className={grid}>
         {visibleRows.map((g) => {
           const q = srcHave(g.id);
           const offSeason = !!CROP[g.id] && !CROP[g.id].seasons.includes(season());
           return (
-            <div key={g.id} className={'paper flex flex-col items-center gap-1 p-2 ' + (q ? '' : 'opacity-60')}>
+            <div key={g.id} data-market-card={g.id} className={'paper flex flex-col items-center gap-1 p-2 ' + (q ? '' : 'opacity-60')}>
               <div className="relative">
                 <Ic n={g.id} s={4.2} />
                 <span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-white px-1.5 text-sm font-black">{fa(q)}</span>
@@ -304,12 +310,12 @@ function Market() {
               <div className="text-sm font-extrabold leading-none">{g.fa}</div>
               {offSeason && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[.66rem] font-black text-amber-900">{UT.outSeasonBonus}</span>}
               <div className="flex min-w-0 flex-wrap items-center justify-center gap-1"><Coin v={goodPrice(g.id)} s={1.4} cls="text-base" /><Trend r={goodRatio(g.id)} /></div>
-              <div className="flex flex-wrap items-center justify-center gap-x-1.5 text-[.68rem] font-black opacity-75" data-market-next-unit={g.id}>
+              {showGuide && <div className="flex flex-wrap items-center justify-center gap-x-1.5 text-[.68rem] font-black opacity-75" data-market-next-unit={g.id}>
                 <span className="inline-flex items-center gap-1">{UT.marketNextUnit}<Coin v={goodPriceAfterSale(g.id)} s={1} /></span>
                 <span data-market-demand-preview={g.id}>
                   {UT.marketDemandLabel} <bdi dir="ltr">{faPct((S.dem[g.id] ?? 1) * 100)} → {faPct(demandAfterSale(g.id) * 100)}</bdi>
                 </span>
-              </div>
+              </div>}
               <div className="flex w-full flex-wrap gap-1">
                 <button data-sell-one={g.id} aria-label={`${g.fa} — ${UT.u77} — ${saleValueSel(g.id, 1)}`} className={'btn y press min-w-0 flex-1 !px-1 text-[.75rem] ' + (S.tut?.active && S.tut.step === 4 && g.id === 'wheat' && q > 0 ? 'ring-4 ring-amber-300 ' : '')} disabled={q < 1} onClick={() => { if (sellGood(g.id, 1) > 0) tutOnSale(); }}><span className="font-black">{UT.u77}</span><Coin v={saleValueSel(g.id, 1)} s={1.1} /></button>
                 <button data-sell-stack={g.id} aria-label={`${g.fa} — ${UT.sellAllStack} — ${saleValueSel(g.id, q)}`} className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, q) > 0) tutOnSale(); }}><span className="font-black">{UT.sellAllStack}</span><Coin v={saleValueSel(g.id, q)} s={1.1} /></button>
@@ -318,7 +324,7 @@ function Market() {
           );
         })}
       </div>
-      <div className="paper mt-2 flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-extrabold" data-market-shock={shock.id}>
+      {showGuide && <div className="paper mt-2 flex flex-wrap items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-extrabold" data-market-shock={shock.id}>
         <div>
           <span className="text-amber-900">{CFG.locale === 'en' ? shock.titleEn : shock.titleFa}: </span>
           <span className="opacity-85">{CFG.locale === 'en' ? shock.descEn : shock.descFa}</span>
@@ -327,8 +333,8 @@ function Market() {
         <button className="btn y press !px-2.5 !py-0.5 text-[.72rem] font-black" onClick={() => { UI.modal = 'atlas'; notify(); }}>
           <Ic n="crown" s={1.25} /> {FT.tabDecrees}
         </button>
-      </div>
-      <div className="paper mt-2 flex flex-col gap-2 p-2" data-market-contract="1">
+      </div>}
+      {(active || showGuide) && <div className="paper mt-2 flex flex-col gap-2 p-2" data-market-contract="1">
         {!active ? (
           <div className="grid gap-1.5 sm:grid-cols-3">
             {boardOffers.map((of) => (
@@ -354,7 +360,7 @@ function Market() {
             </button>
           </div>
         )}
-      </div>
+      </div>}
     </Modal>
   );
 }
@@ -409,7 +415,7 @@ function Workshop() {
               <div className="flex items-center gap-0.5">
                 {[1, 2, 3].map((k) => <Ic key={k} n="star" s={1.2} cls={k <= mk ? '' : 'grayscale opacity-40'} />)}
               </div>
-              <div className="text-center text-[.72rem] font-extrabold leading-tight">{mk > 0 ? MK_FA[mk] : m.desc}</div>
+              <div className="text-center text-[.72rem] font-extrabold leading-tight">{mk > 0 ? machineModelName(mk) : m.desc}</div>
               <div className="text-center text-[.66rem] font-bold opacity-75 leading-tight">{MACHINE_PERKS[id]()}</div>
               {b ? <BuildingBadge kind="machine" keyName={id} /> : mk >= 3 ? (
                 <div className="flex items-center gap-1 text-xs font-black text-green-700"><Ic n="check" s={1.8} />{UT.u91}</div>

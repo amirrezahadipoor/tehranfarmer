@@ -301,6 +301,53 @@ test('production locale metadata and Continue restore the saved scene without a 
   expect(errors).toEqual([]);
 });
 
+test('production live locale switch updates season and seed names in both directions', async ({ page }) => {
+  await startFresh(page);
+  const switchLocale = async (closeName: RegExp) => {
+    await page.locator('[data-open-settings="1"]').tap();
+    await page.locator('[data-settings-group="display"] summary').tap();
+    await page.locator('[data-settings-panel="1"] [data-lang-toggle="1"]').tap();
+    await page.getByRole('button', { name: closeName }).tap();
+  };
+  await switchLocale(/Close Modal/i);
+  await expect(page.locator('.hud-season-label')).toContainText('Spring');
+  await page.locator('[data-tool="plant"]').tap();
+  await expect(page.locator('[data-seed-tray="1"]')).toContainText('Wheat');
+  await expect(page.locator('[data-seed-tray="1"]')).toContainText('Carrot');
+
+  await switchLocale(/بستن پنجره/);
+  await expect(page.locator('.hud-season-label')).toContainText('بهار');
+  await expect(page.locator('[data-seed-tray="1"]')).toContainText('گندم');
+  await expect(page.locator('[data-seed-tray="1"]')).toContainText('هویج');
+});
+
+test('production morning report owns focus above a pinned scene mirror', async ({ page }) => {
+  await startFresh(page);
+  const toggle = page.locator('[data-scene-a11y-toggle="1"]');
+  await toggle.focus();
+  await toggle.press('Enter');
+  await expect(page.locator('[data-scene-a11y="1"]')).toHaveAttribute('data-pinned', '1');
+  await activateSceneTarget(page, 'home');
+  await page.locator('[data-home-sleep="1"]').tap();
+  const confirm = page.getByRole('button', { name: 'تأیید', exact: true });
+  if (await confirm.isVisible().catch(() => false)) await confirm.tap();
+  const report = page.locator('[data-morning-report="1"]');
+  await expect(report).toBeVisible();
+  await expect(page.locator('[data-scene-a11y="1"]')).toHaveCount(0);
+  const close = page.locator('[data-morning-close="1"]');
+  await expect(close).toBeFocused();
+  await close.press('Enter');
+  await expect(report).toHaveCount(0);
+  await expect(page.locator('#game-canvas')).toBeFocused();
+});
+
+test('production fresh-session camera hint dismisses without a reload', async ({ page }) => {
+  await startFresh(page);
+  const hint = page.locator('[data-portrait-hint="1"]');
+  await expect(hint).toBeVisible();
+  await expect(hint).toHaveCount(0, { timeout: 7000 });
+});
+
 test('production audio toggle pauses and resumes the actual media element immediately', async ({ page }) => {
   await page.addInitScript(() => {
     const target = window as unknown as { __productionMedia: HTMLMediaElement[] };

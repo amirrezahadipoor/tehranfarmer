@@ -227,12 +227,12 @@ export const sfx = {
   dig() { haptic('light'); playSample('dig', { vol: 0.64, jitter: 0.045, fallbackHz: 140, fallbackDur: 0.15 }); },
   water() { playSample('water', { vol: 0.56, jitter: 0.04, fallbackHz: 520, fallbackDur: 0.22 }); },
   pop() { haptic('light'); playSample('pop', { vol: 0.62, jitter: 0.045, fallbackHz: 587, fallbackDur: 0.11 }); },
-  err() { haptic('heavy'); playSample('err', { vol: 0.5, fallbackHz: 196, fallbackDur: 0.15 }); },
+  err() { haptic('heavy'); playSample('err', { vol: 0.5, jitter: 0.018, fallbackHz: 196, fallbackDur: 0.15 }); },
   tap() { playSample('tap', { vol: 0.42, jitter: 0.025, fallbackHz: 460, fallbackDur: 0.05 }); },
   step() { playSample('step', { vol: 0.24, jitter: 0.06, fallbackHz: 180, fallbackDur: 0.05 }); },
   cluck() { playSample('cluck', { vol: 0.36, jitter: 0.05, fallbackHz: 520, fallbackDur: 0.1 }); },
   boop() { playSample('boop', { vol: 0.54, jitter: 0.02, fallbackHz: 392, fallbackDur: 0.16 }); },
-  fanfare() { haptic('medium'); playSample('fanfare', { vol: 0.66, fallbackHz: 523, fallbackDur: 0.32 }); },
+  fanfare() { haptic('medium'); playSample('fanfare', { vol: 0.66, jitter: 0.015, fallbackHz: 523, fallbackDur: 0.32 }); },
   splash() { playSample('splash', { vol: 0.58, jitter: 0.035, fallbackHz: 310, fallbackDur: 0.22 }); },
   nibble() { haptic('light'); playSample('nibble', { vol: 0.48, jitter: 0.03, fallbackHz: 587, fallbackDur: 0.1 }); },
   paper() { haptic('light'); playSample('paper', { vol: 0.54, jitter: 0.03, fallbackHz: 420, fallbackDur: 0.12 }); },
@@ -240,12 +240,34 @@ export const sfx = {
     const notes = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33];
     const f = notes[Math.min(notes.length - 1, Math.max(0, streak - 1))];
     haptic(streak >= 5 ? 'medium' : 'light');
-    playSample('guitar', { vol: 0.54, rate: f / 261.6256, fallbackHz: f, fallbackDur: 0.18 });
+    playSample('guitar', { vol: 0.54, rate: f / 261.6256, jitter: 0.012, fallbackHz: f, fallbackDur: 0.18 });
     if (streak >= 3) {
       playSample('guitar', { vol: 0.34, rate: (f * 1.5) / 261.6256, delay: 0.05, fallbackHz: f * 1.5, fallbackDur: 0.18 });
     }
   },
 };
+
+export interface SceneAmbienceSpec {
+  id: SampleId;
+  vol: number;
+  rate: number;
+  jitter: number;
+  fallbackHz: number;
+  fallbackDur: number;
+}
+
+/** Sparse, quiet ambient one-shots reuse decoded assets; no permanent loop or new download. */
+export function sceneAmbienceSpec(scene: string, hour: number): SceneAmbienceSpec | null {
+  if (scene === 'river') return { id: 'water', vol: 0.075, rate: 0.72, jitter: 0.12, fallbackHz: 360, fallbackDur: 0.28 };
+  if (scene === 'cave') return { id: 'dig', vol: 0.065, rate: 0.62, jitter: 0.1, fallbackHz: 110, fallbackDur: 0.24 };
+  if (hour >= NIGHT_START_H || hour < NIGHT_END_H) return { id: 'pad', vol: 0.055, rate: 0.8, jitter: 0.08, fallbackHz: 220, fallbackDur: 0.4 };
+  return null;
+}
+
+export function playSceneAmbience(scene: string, hour: number): boolean {
+  const spec = sceneAmbienceSpec(scene, hour);
+  return spec ? playSample(spec.id, spec) : false;
+}
 
 // ===== موسیقی هر فصل — آثار رایگان CC0 از OpenGameArt =====
 // فصل ۱: Peaceful Forest (Samza) · فصل ۲: Countryside (TAD) · فصل ۳: Feel-good ambient w/ beat (annandistance)

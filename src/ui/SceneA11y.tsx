@@ -5,6 +5,7 @@ import { UI, notify } from '../game/state';
 import { CFG } from '../game/settings';
 import { sfx } from '../game/sound';
 import { SCENE_A11Y_TEXT } from '../strings/sceneA11yText';
+import { isMorningReportVisible } from '../game/morning';
 
 /** A structural alternative to pointer-only canvas play, visible on keyboard focus. */
 export function SceneA11y() {
@@ -22,6 +23,9 @@ export function SceneA11y() {
     notify();
   };
 
+  // The morning card owns focus temporarily; never leave a pinned mirror above it.
+  if (isMorningReportVisible()) return null;
+
   return (
     <section
       className="scene-a11y"
@@ -33,8 +37,12 @@ export function SceneA11y() {
         type="button"
         data-scene-a11y-toggle="1"
         className="btn y press w-full"
-        aria-expanded={pinned}
-        onClick={() => setPinned((value) => !value)}
+      aria-expanded={pinned}
+      onClick={() => setPinned((value) => {
+        const next = !value;
+        if (!next) globalThis.setTimeout(() => document.getElementById('game-canvas')?.focus({ preventScroll: true }), 0);
+        return next;
+      })}
       >
         {pinned ? t.closePanel : t.pinPanel}
       </button>

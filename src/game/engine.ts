@@ -10,7 +10,7 @@ import {
 } from './state';
 import { createSceneTapRouter } from './engineInput';
 import { castPrecisionNow, fishCast } from './worldVisuals';
-import { ambient, resumeAudioFromBackground, sfx, snd, suspendAudioForBackground } from './sound';
+import { ambient, playSceneAmbience, resumeAudioFromBackground, sfx, snd, suspendAudioForBackground } from './sound';
 import { rnd } from './rng';
 import { detectProfile } from '../ui/layout';
 import { CFG, isReducedMotion } from './settings';
@@ -27,7 +27,7 @@ import { checkSeamlessEdgePortal } from './core/frontier';
 import { isShopId, openShop } from './shops';
 import { stopPlantingQueueWithoutSeed } from './plantingQueue';
 import { tutOnPlotCompleted } from './tutorial';
-import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap, type RenderQualityCap } from './renderQuality';
+import { frameIsSlow, frameIsStable, lowerQualityCap, qualityCeiling, raiseQualityCap, shouldAdaptRenderQuality, type RenderQualityCap } from './renderQuality';
 import { queueWellAndResume, strikeFrontierRock } from './engineTasks';
 import { placeActorsForScene, placeWorkerAtPost, routeRiverWalkWaypoints, stepLiveAnimal, stepLiveBuilder, syncLiveAnimals } from './farmLive';
 import { sceneSummary } from './a11y';
@@ -88,17 +88,19 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
   jahangir.face = -1;
   const animals = new Map<number, AR>();
   const fx: Fx[] = [];
-  let t = 0, last = performance.now(), raf = 0, notifyT = 0, saveT = 0, musicT = 1.5;
+  let t = 0, last = performance.now(), raf = 0, notifyT = 0, saveT = 0, musicT = 1.5, ambienceT = 6;
   let trans: null | { t: number; to: SceneKey; from: SceneKey; done: boolean } = null;
   let lastScene: SceneKey = UI.scene, dragLast = -1, dragging = false;
   let knownWorkers = S.workers;
-  let camX = 640, panStartX = 0, panCamStart = 640, panMoved = 0, panActive = false;
+  let camX = 640, panStartX = 0, panCamStart = 640, panMoved = 0, panActive = false, cameraPanLearned = false;
   let cameraFocus: { x: number; until: number } | null = null;
   bindWorldActors({ farmer, jahangir, npcs, builder });
   const renderView = createSceneRenderer(canvas, ctx, farmer, workers, builder, BSITE, jahangir, npcs, animals, fx);
   function syncViewport(dt = 1) {
     if (cw / ch < 0.76) {
-      sc = Math.min(ch / H, Math.max(cw / W, cw / 650));
+      // Tablets keep a wider working view than phones instead of receiving
+      // the same aggressive 650px portrait crop.
+      sc = Math.min(ch / H, Math.max(cw / W, cw / (cw >= 700 ? 850 : 650)));
       ty = Math.round((ch - H * sc) * 0.44);
       if (cinema.active) {
         tx = (cw - W * sc) / 2;
@@ -405,7 +407,14 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       if (panActive) {
         const dx = e.clientX - panStartX;
         panMoved = Math.max(panMoved, Math.abs(dx));
-        if (panMoved > 28) { camX = panCamStart - dx / sc; syncViewport(1); }
+        if (panMoved > 28) {
+          camX = panCamStart - dx / sc;
+          syncViewport(1);
+          if (!cameraPanLearned) {
+            cameraPanLearned = true;
+            window.dispatchEvent(new Event('mazrae:camera-pan'));
+          }
+        }
         return;
       }
       if (!isFarmScene(UI.scene)) return;
@@ -485,6 +494,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     const busy = !!trans;
     if (cinema.active || cinema.letterbox > 0.005) {
       musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour, S.story?.chapter ?? 1); }
+      ambienceT -= dt; if (ambienceT <= 0) { ambienceT = CFG.lowPower ? 16 : 10; if (!cinema.active && !UI.modal && UI.started) playSceneAmbience(UI.scene, S.hour); }
       stepCinemaStage(dt);
     }
     // استخدام یا خرید سند فقط پستِ همان کارگر را هماهنگ می‌کند؛ کارگران دیگر در مسیرشان می‌مانند.
@@ -505,6 +515,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     if (!frozen) {
       if (!busy) tickLiveClock(dt * UI.speed);
       musicT -= dt; if (musicT <= 0) { musicT = 2.8; ambient.note(season(), S.hour, S.story?.chapter ?? 1); }
+      ambienceT -= dt; if (ambienceT <= 0) { ambienceT = CFG.lowPower ? 16 : 10; if (!cinema.active && !UI.modal && UI.started) playSceneAmbience(UI.scene, S.hour); }
       updateBuilder(dt);
       // سپر ضد گیرکردن نجار حین ورود/خروج جادهٔ دهکده
       if (bph === 'walk' || bph === 'exit') {
@@ -605,7 +616,7 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
     render();
     framesRendered++;
 
-    if (!stepDriven && !frozen) {
+    if (shouldAdaptRenderQuality(stepDriven, frozen, cinema.active)) {
       if (lastQualityAt > 0) {
         const elapsed = now - lastQualityAt;
         if (elapsed > 0 && elapsed < 250) {

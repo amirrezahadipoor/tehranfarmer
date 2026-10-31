@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ACHS, ACH_OUTFIT_REWARDS, GOOD, SEASONS, fa } from '../game/data';
+import { ACHS, ACH_OUTFIT_REWARDS, GOOD, seasonName, fa } from '../game/data';
 import {
   DECOR_ITEMS, OUTFIT_THEMES, SKILL_DEFS, S, UI, buyCourtyardDecor, farmLevel, hasDecor, hasSkill,
   isOutfitUnlocked, notify, setHomesteadNames, setPlayerOutfit, skillPointsAvailable,
@@ -292,8 +292,8 @@ export function FarmhouseModal() {
       {tab === 'calendar' && (
         <div className="paper p-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="ft text-lg text-[#5a3518]">{SEASONS[curSeason]} — {WX.calendarTitle}</div>
-            <div className="text-xs font-extrabold">{WX.calToday}: {SEASONS[curSeason]} — <span dir="ltr">{fa(dayInSeason)}/{fa(7)}</span></div>
+            <div className="ft text-lg text-[#5a3518]">{seasonName(curSeason)} — {WX.calendarTitle}</div>
+            <div className="text-xs font-extrabold">{WX.calToday}: {seasonName(curSeason)} — <span dir="ltr">{fa(dayInSeason)}/{fa(7)}</span></div>
           </div>
           <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
             {Array.from({ length: 28 }, (_, idx) => {
@@ -311,7 +311,7 @@ export function FarmhouseModal() {
                     + (isToday ? 'bg-[#ffd93b] ring-2 ring-[#503426]' : isFest ? 'bg-pink-100' : isDue ? 'bg-amber-100' : 'bg-white/75')
                   }
                 >
-                  <div className="text-[.58rem] font-bold opacity-65">{SEASONS[cellSeason]}</div>
+                  <div className="text-[.58rem] font-bold opacity-65">{seasonName(cellSeason)}</div>
                   <div>{fa(cellDayInSeason)}</div>
                   {isToday && <div className="text-[.62rem] text-[#503426]">{WX.calToday}</div>}
                   {!isToday && isFest && <Ic n="star" s={1.0} cls="mx-auto" />}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ANIMALS, CROPS, DAY_RATE, GOOD, SEASONS, type AnimalKind } from '../game/data';
+import { ANIMALS, CROPS, DAY_RATE, GOOD, seasonName, type AnimalKind } from '../game/data';
 import { bestEstateForCrop, estateSpecialtyMult } from '../game/estates';
 import { ESTATE_UI } from '../strings/estateStoryText';
 import { ARTISAN_RECIPES, FISH_SPECIES, S, UI, artisanRewardCoins, goodPrice, notify, penCap } from '../game/state';
@@ -61,7 +61,7 @@ export function AlmanacModal() {
                     <div>
                       <div className="text-sm font-black">{c.fa}</div>
                       <div className="text-[.68rem] font-bold opacity-75">
-                        {c.seasons.map((s) => SEASONS[s]).join(' · ')}
+                        {c.seasons.map((s) => seasonName(s)).join(' · ')}
                       </div>
                     </div>
                   </div>
@@ -127,7 +127,7 @@ export function AlmanacModal() {
                     <div>
                       <div className="text-sm font-black">{f.name}</div>
                       <div className="text-[.68rem] font-bold opacity-75">
-                        {f.seasons.map((s) => SEASONS[s]).join(' · ')}
+                        {f.seasons.map((s) => seasonName(s)).join(' · ')}
                       </div>
                     </div>
                   </div>

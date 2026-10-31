@@ -20,6 +20,8 @@ import { CHAR_NAMES, CINEMA_UI, EN_LINES, OBJECTIVES } from '../strings/cinemaLo
 import { SCENE_CHOICES, applyDialogueChoice, canGiftVillagerToday, findBestGiftInBag, giftVillager, type SocialNpcId } from '../story/socialVillagers';
 import { WX } from '../strings/worldExpansionText';
 import type { SceneScript } from '../story/cinemaTypes';
+import { Portrait } from './portraits';
+import { plotsForFarm } from '../game/state';
 const CPS = 42;
 
 export const isBeatingNode = (id: string) => id.startsWith('visit-due-missed');
@@ -43,6 +45,9 @@ export function BeatStage({ variant }: { variant: 0 | 1 | 2 }) {
 }
 
 function FinaleTableau() {
+  const [greeted, setGreeted] = useState(0);
+  const celebrated = greeted > 0;
+  const [montage, setMontage] = useState(false);
   const stats = [
     { icon: 'sun', value: fa(S.day), label: UT.finaleDays, key: 'days' },
     { icon: 'medal', value: fa(farmLevel()), label: UT.finaleLevel, key: 'level' },
@@ -55,10 +60,39 @@ function FinaleTableau() {
     { icon: 'fish', value: fa(S.stats.fish ?? 0), label: UT.finaleFish, key: 'fish' },
     { icon: 'cave', value: fa(S.stats.mineNodes ?? 0), label: UT.finaleMines, key: 'mines' },
   ];
+  const cheers = [
+    { who: 'grandma' as const, text: UT.finaleCheerGrandma },
+    { who: 'sara' as const, text: UT.finaleCheerSara },
+    { who: 'jahangir' as const, text: UT.finaleCheerJahangir },
+  ];
+  const estates = ownedFarms().map((id) => {
+    const plots = plotsForFarm(id);
+    return {
+      id,
+      icon: id === 'farm' ? 'house' : id === 'north' ? 'greenhouse' : 'valley',
+      name: id === 'farm' ? WX.gateFarm : id === 'north' ? WX.gateNorth : WX.gateValley,
+      planted: plots.filter((p) => p.st === 2 && !p.dead).length,
+      ripe: plots.filter((p) => p.ripe && !p.dead).length,
+      total: plots.length,
+    };
+  });
+  const celebrate = () => {
+    if (greeted >= cheers.length) return;
+    const next = greeted + 1;
+    setGreeted(next);
+    if (next === 1 || next === cheers.length) sfx.fanfare(); else sfx.tap();
+  };
   return (
-    <div data-finale-tableau="1" className="finale-tableau pointer-events-none fixed inset-0 z-[5] flex items-center justify-center overflow-hidden px-3 py-20" role="status" aria-label={UT.finaleLegacyTitle}>
+    <div data-finale-tableau="1" className="finale-tableau pointer-events-none fixed inset-0 z-[5] flex items-center justify-center overflow-hidden px-3 py-20" role="region" aria-label={UT.finaleLegacyTitle}>
       <div className="finale-tableau-rays" aria-hidden="true" />
-      <div className="finale-legacy-card paper relative max-h-full w-[min(92vw,42rem)] px-4 py-4 text-center shadow-2xl sm:px-7 sm:py-5">
+      <div
+        className="finale-legacy-card scroll paper pointer-events-auto relative max-h-full w-[min(92vw,42rem)] overflow-y-auto px-4 py-4 text-center shadow-2xl sm:px-7 sm:py-5"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {celebrated && <div className="pointer-events-none absolute inset-x-3 top-2 flex justify-between text-[#d9a441]" aria-hidden="true">
+          {[0, 1, 2, 3, 4].map((n) => <Ic key={n} n="star" s={1.1 + (n % 2) * 0.35} cls="bob" />)}
+        </div>}
         <div className="finale-estates mb-1 flex items-end justify-center gap-3" aria-label={UT.museumEstateSeal}>
           <Ic n="house" s={3.1} cls="finale-estate" />
           <Ic n="greenhouse" s={3.8} cls="finale-estate" />
@@ -67,22 +101,51 @@ function FinaleTableau() {
         <Ic n="trophy" s={4.2} cls="finale-trophy mx-auto" />
         <div className="ft mt-1 text-2xl text-[#4b2b18] sm:text-3xl">{UT.finaleLegacyTitle}</div>
         <div className="finale-legacy-copy mx-auto mt-1 max-w-xl text-xs font-extrabold leading-relaxed opacity-80 sm:text-sm">{UT.finaleLegacyText}</div>
-        <div className="finale-stats mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
-          {stats.map((item) => (
-            <div key={item.key} data-finale-stat={item.key} className="finale-stat rounded-xl border-2 border-[#c89b53] bg-[#fff4d8]/85 px-1.5 py-2">
-              <Ic n={item.icon} s={1.8} cls="mx-auto mb-0.5" />
-              <div className="ft break-words text-lg leading-none text-[#5a3518] sm:text-xl">{item.value}</div>
-              <div className="finale-stat-label mt-1 text-[.65rem] font-black leading-tight opacity-75 sm:text-xs">{item.label}</div>
-            </div>
-          ))}
+        {montage ? (
+          <div data-finale-montage="1" className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+            {estates.map((estate) => (
+              <section key={estate.id} data-finale-estate={estate.id} className="rounded-xl border-2 border-[#c89b53] bg-[#fff4d8]/90 p-1.5 sm:p-2.5">
+                <Ic n={estate.icon} s={2.5} cls="mx-auto" />
+                <h3 className="ft mt-1 text-base leading-tight text-[#5a3518] sm:text-lg">{estate.name}</h3>
+                <div className="mt-1 text-[.68rem] font-black leading-5 sm:text-xs">{UT.finalePlanted}: {fa(estate.planted)}/{fa(estate.total)}</div>
+                <div className="mt-0.5 text-[.68rem] font-black leading-5 text-emerald-800 sm:text-xs">{UT.finaleRipe}: {fa(estate.ripe)}</div>
+              </section>
+            ))}
+          </div>
+        ) : <>
+          <div className="finale-stats mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+            {stats.map((item) => (
+              <div key={item.key} data-finale-stat={item.key} className="finale-stat rounded-xl border-2 border-[#c89b53] bg-[#fff4d8]/85 px-1.5 py-2">
+                <Ic n={item.icon} s={1.8} cls="mx-auto mb-0.5" />
+                <div className="ft break-words text-lg leading-none text-[#5a3518] sm:text-xl">{item.value}</div>
+                <div className="finale-stat-label mt-1 text-[.65rem] font-black leading-tight opacity-75 sm:text-xs">{item.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="finale-side-stats mt-2 grid grid-cols-2 gap-2 text-xs font-black text-[#5a3518]">
+            {sideStats.map((item) => (
+              <div key={item.key} data-finale-stat={item.key} className="flex items-center justify-center gap-1.5">
+                <Ic n={item.icon} s={1.35} /><span>{item.label}: {item.value}</span>
+              </div>
+            ))}
+          </div>
+        </>}
+        {celebrated && <div data-finale-villager={cheers[greeted - 1].who} data-finale-greeting-progress={greeted} className="mt-2 flex items-center gap-2 rounded-xl border-2 border-[#d8a64f] bg-[#fff2c9] p-2 text-start" aria-live="polite">
+          <Portrait id={cheers[greeted - 1].who} size={3.2} />
+          <span className="text-xs font-extrabold leading-6">{cheers[greeted - 1].text}</span>
+        </div>}
+        <div className="mt-2 grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2">
+          <button type="button" data-finale-celebrate="1" disabled={greeted >= cheers.length} className="btn g press !min-h-[48px] !whitespace-normal !px-2 !py-1 text-xs font-black" onClick={celebrate}>
+            <Ic n="star" s={1.4} />{greeted >= cheers.length ? UT.finaleCelebrationDone : celebrated ? UT.finaleVillagerBtn : UT.finaleCelebrateBtn}
+          </button>
+          <button type="button" data-finale-montage-toggle="1" aria-pressed={montage} className="btn b press !min-h-[48px] !whitespace-normal !px-2 !py-1 text-xs font-black" onClick={() => { setMontage((v) => !v); sfx.tap(); }}>
+            <Ic n="land" s={1.4} />{montage ? UT.finaleStatsBtn : UT.finaleMontageBtn}
+          </button>
         </div>
-        <div className="finale-side-stats mt-2 grid grid-cols-2 gap-2 text-xs font-black text-[#5a3518]">
-          {sideStats.map((item) => (
-            <div key={item.key} data-finale-stat={item.key} className="flex items-center justify-center gap-1.5">
-              <Ic n={item.icon} s={1.35} /><span>{item.label}: {item.value}</span>
-            </div>
-          ))}
+        <div className="mt-2 rounded-lg bg-[#503426]/10 px-2 py-1.5 text-[.7rem] font-extrabold leading-5" data-finale-next-goal="1">
+          <b>{UT.finaleNextGoalTitle}: </b>{UT.finaleNextGoalText}
         </div>
+        <span className="sr-only" role="status">{celebrated ? UT.finaleCelebrationStatus : ''}</span>
       </div>
     </div>
   );
@@ -438,9 +501,12 @@ export function Cutscene() {
           </header>
           <div className="scroll min-h-0 flex-1 space-y-2 py-3 pl-1" tabIndex={0} data-modal-scroll="1">
             {lines.map((line) => (
-              <article key={line.key} className="rounded-xl border-2 border-[#dfc28b] bg-[#fff9e9]/75 p-2.5">
-                <div className="text-xs font-black text-[#8a5a2e]">{CHAR_NAMES[locale][line.who]}</div>
-                <p className="mt-0.5 text-sm font-extrabold leading-7 text-[#3d251a]">{line.text}</p>
+              <article key={line.key} data-prologue-speaker={line.who} className="flex items-start gap-2 rounded-xl border-2 border-[#dfc28b] bg-[#fff9e9]/75 p-2.5">
+                <div className="mt-0.5 overflow-hidden rounded-full border-2 border-[#c89b53] bg-[#f3e6c4]"><Portrait id={line.who} size={2.8} /></div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-black text-[#8a5a2e]">{CHAR_NAMES[locale][line.who]}</div>
+                  <p className="mt-0.5 text-sm font-extrabold leading-7 text-[#3d251a]">{line.text}</p>
+                </div>
               </article>
             ))}
           </div>

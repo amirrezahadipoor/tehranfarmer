@@ -69,6 +69,26 @@ export function mineFloorProgress(floor = ensureFrontier().caveFloor) {
   return { cleared, total: activeMineNodes(floor).length, required: MINE_LIFT_REQUIREMENT, liftOpen: !!f.stairsFound[`cave:${floor}`] || f.maxCaveFloor > floor };
 }
 
+/** Crew automation is earned by mastering the previous floor, never by a free reward injection. */
+export function mineBatchStatus(floor = ensureFrontier().caveFloor) {
+  const previous = floor > 1 ? mineFloorProgress(floor - 1) : null;
+  const unlocked = floor > 1 && canEnterMineFloor(floor) && previous?.cleared === previous?.total;
+  const remainingNodes = activeMineNodes(floor).filter((spot) => !isMineNodeHarvested(spot.idx, floor));
+  let stamina = 0, affordable = 0;
+  for (const spot of remainingNodes) {
+    if (stamina + spot.stam > S.stamina) continue;
+    stamina += spot.stam;
+    affordable++;
+  }
+  return {
+    unlocked,
+    remaining: remainingNodes.length,
+    affordable,
+    stamina,
+    totalStamina: remainingNodes.reduce((sum, spot) => sum + spot.stam, 0),
+  };
+}
+
 /** هدف مرحلهٔ جاری مینی‌گیم؛ deterministic است و هنگام render جهانی را تغییر نمی‌دهد. */
 export function mineWeakPoint(floor: number, idx: number, stage: number) {
   const center = 18 + ((idx * 23 + floor * 17 + stage * 31 + (S.day - 1) * 7) % 64);
@@ -187,6 +207,26 @@ export function completeMineNode(floor: number, idx: number, accuracies: number[
   saveGame();
   notify();
   return { good, qty, accuracy, perfect, liftUnlocked };
+}
+
+/** Extract as many remaining veins as the current stamina really affords. */
+export function completeMineBatch(floor = ensureFrontier().caveFloor) {
+  const status = mineBatchStatus(floor);
+  if (!status.unlocked || status.affordable < 1) return null;
+  const staminaBefore = S.stamina;
+  let count = 0;
+  for (const spot of activeMineNodes(floor)) {
+    if (isMineNodeHarvested(spot.idx, floor) || S.stamina < spot.stam) continue;
+    const result = completeMineNode(floor, spot.idx, Array.from({ length: spot.strikes }, () => 0.45));
+    if (result) count++;
+  }
+  const stamina = staminaBefore - S.stamina;
+  if (count > 0) {
+    toast('cave', FT.mineBatchResult(count, stamina));
+    saveGame();
+    notify();
+  }
+  return { count, stamina };
 }
 
 export function finishMineEncounter(accuracies: number[], token?: number) {

@@ -47,6 +47,18 @@ describe('locale document metadata', () => {
     expect(attrs.dir).toBe('rtl');
   });
 
+  it('clamps persisted dialogue volume and defaults older settings safely', () => {
+    values.set(SETTINGS_KEY, JSON.stringify({ voiceVolume: 400 }));
+    loadSettings();
+    expect(CFG.voiceVolume).toBe(100);
+    values.set(SETTINGS_KEY, JSON.stringify({ voiceVolume: -10 }));
+    loadSettings();
+    expect(CFG.voiceVolume).toBe(0);
+    values.set(SETTINGS_KEY, JSON.stringify({ music: true }));
+    loadSettings();
+    expect(CFG.voiceVolume).toBe(100);
+  });
+
   it('keeps the DOM helper safe for direct application', () => {
     CFG.locale = 'en';
     applySettingsToDom();

@@ -1,6 +1,6 @@
 // ===== انبار مزرعه + کولهٔ پشتی بازیکن + پاتیل و آسیاب فرآوری روستایی =====
 import { useState } from 'react';
-import { CROPS, GOOD, GOODS, SEASONS, fa } from '../game/data';
+import { CROPS, GOOD, GOODS, seasonName, fa } from '../game/data';
 import {
   ARTISAN_RECIPES, S, UI, artisanMaxBatches, artisanRewardCoins, craftArtisan, goodPrice, invCap, invCount,
   notify, packCap, packCount, saveGame, toast, transferPackToBarn,
@@ -48,7 +48,7 @@ function ItemDetails({ selection }: { selection: string | null }) {
         <Ic n={'seed:' + crop.id} s={2} />
         <span className="font-black">{UT.seedBagPrefix}{crop.fa} × {fa(S.seeds[crop.id])}</span>
         <span>{UT.invGrowthDays}: {faDec(seedDurationDays(crop))}</span>
-        <span>{UT.invSeasons}: {crop.seasons.map((s) => SEASONS[s]).join(' · ')}</span>
+        <span>{UT.invSeasons}: {crop.seasons.map((s) => seasonName(s)).join(' · ')}</span>
         <span className="flex items-center gap-1"><Coin v={crop.seed} s={1} />{GT.g59}</span>
         <span className="w-full opacity-75">{inventoryJoke('seed')}</span>
       </div>

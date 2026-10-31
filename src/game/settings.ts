@@ -4,6 +4,7 @@ export interface UserSettings {
   music: boolean;
   musicVolume: number;
   sfxVolume: number;
+  voiceVolume: number;
   lowPower: boolean;
   haptics: boolean;
   fontScale: 1 | 1.1 | 1.2;
@@ -22,6 +23,7 @@ const DEFAULTS: UserSettings = {
   music: true,
   musicVolume: 100,
   sfxVolume: 100,
+  voiceVolume: 100,
   lowPower: false,
   haptics: false,
   fontScale: 1,
@@ -63,6 +65,7 @@ export function loadSettings(): UserSettings {
     if (![1, 1.5, 2].includes(CFG.actionSpeed)) CFG.actionSpeed = 1;
     CFG.musicVolume = Number.isFinite(Number(CFG.musicVolume)) ? Math.max(0, Math.min(100, Number(CFG.musicVolume))) : 100;
     CFG.sfxVolume = Number.isFinite(Number(CFG.sfxVolume)) ? Math.max(0, Math.min(100, Number(CFG.sfxVolume))) : 100;
+    CFG.voiceVolume = Number.isFinite(Number(CFG.voiceVolume)) ? Math.max(0, Math.min(100, Number(CFG.voiceVolume))) : 100;
     CFG.lowPower = CFG.lowPower === true;
     applySettingsToDom();
   } catch (e) { setLastError(`settings-load-failed:${String((e as Error)?.message ?? e)}`, 'storage'); }

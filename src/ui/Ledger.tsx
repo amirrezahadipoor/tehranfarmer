@@ -102,7 +102,7 @@ export function Ledger() {
               <Chip l={UT.u47} v={money(minPay())} />
               <Chip l={UT.u48} v={money(interestOf())} />
               <Chip l={UT.u38} v={fa(due) + UT.u39} />
-              <Chip l={UT.u49} v={money(totalRemaining())} />
+              <Chip l={UT.u49} v={`${money(totalRemaining())} ${UT.coinUnit}`} />
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-2 text-xs font-bold opacity-80">
               <span>{note.why}</span>

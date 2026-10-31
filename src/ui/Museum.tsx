@@ -1,5 +1,5 @@
 // ===== موزهٔ میراث مزرعه، تندیس طلایی جهانگیر و تالار رازهای کهن دره =====
-import { S, ownedFarms, visitMuseum } from '../game/state';
+import { S, farmLevel, ownedFarms, visitMuseum } from '../game/state';
 import { MUSEUM_GIFT_COINS } from '../game/data';
 import { SECRETS, TRUE_ENDING_MIN_SECRETS, checkSecretTriggers, discoveredSecretCount } from '../story/secrets';
 import { fa } from '../strings/fa';
@@ -10,6 +10,8 @@ import { UT } from '../strings/uiText';
 export function Museum() {
   const open = S.story.postgame;
   const foundCount = discoveredSecretCount();
+  const level = farmLevel();
+  const nextLevel = level < 20 ? 20 : level < 30 ? 30 : null;
   return (
     <Modal title={open ? UT.museumTitle : UT.museumTitlePre} icon="trophy" onClose={close} coins={<Coin v={S.coins} />}>
       {!open ? (
@@ -40,6 +42,14 @@ export function Museum() {
                   <div className="text-[.65rem] font-black leading-tight opacity-70">{exhibit.label}</div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div data-postgame-goal="1" data-postgame-target={nextLevel ?? 'mastery'} className="paper flex w-full max-w-md items-start gap-2 border-2 border-[#c89b53] p-2.5 text-start">
+            <Ic n="star" s={1.8} cls="mt-0.5 shrink-0" />
+            <div className="text-xs font-extrabold leading-6">
+              <div className="text-[#6c3d16]">{UT.museumNextGoalTitle}</div>
+              <div>{nextLevel ? `${UT.museumLevelTarget} ${fa(nextLevel)}` : `${UT.museumMasteryTarget} · ${fa(foundCount)}/${fa(SECRETS.length)}`}</div>
             </div>
           </div>
 
