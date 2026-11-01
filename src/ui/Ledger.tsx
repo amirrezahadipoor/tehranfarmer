@@ -118,7 +118,7 @@ export function Ledger() {
           {/* پرداخت */}
           <div className="paper p-2.5">
             <div className="mb-1.5 flex items-center gap-2"><Ic n="coin" s={1.9} /><span className="ft text-lg sm:text-xl">{UT.u50}</span></div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-[8px]">
               {[0.25, 0.5].map((r) => (
                 <button key={r} className="btn y press !px-2" onClick={() => payDebt(d.remaining * r)}>
                   <span className="text-sm font-black">{fa(r * 100)}{UT.u46}</span>
@@ -127,7 +127,7 @@ export function Ledger() {
               <button className="btn b press !px-2" onClick={() => payDebt(minPay())}><span className="text-sm font-black">{UT.u47}</span></button>
               <button className="btn g press !px-2" onClick={() => payDebt(d.remaining)}><span className="text-sm font-black">{UT.u51}</span></button>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="mt-[8px] flex flex-wrap items-center gap-[8px]">
               <input
                 value={custom}
                 onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, ''))}
@@ -167,7 +167,7 @@ export function Ledger() {
               <div className="mb-1 flex items-center gap-2"><Ic n="stash" s={2} /><span className="ft text-xl">{UT.u61}</span></div>
               <Bar v={cap ? d.stash / cap : 0} col="#d6b8ff" />
               <div className="mt-1 flex justify-between text-xs font-black"><span dir="ltr">{money(d.stash)} / {money(cap)}</span><span>{UT.u62}</span></div>
-              <div className="mt-2 flex gap-1">
+              <div className="mt-2 flex gap-[8px]">
                 <button className="btn y press !px-2" onClick={() => stashDeposit(Math.floor(S.coins - floorCoins()))}><span className="text-sm font-black">{UT.u63}</span></button>
                 <button className="btn b press !px-2" onClick={() => stashWithdraw(d.stash)}><span className="text-sm font-black">{UT.stashTake}</span></button>
               </div>
