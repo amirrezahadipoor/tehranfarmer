@@ -3,7 +3,8 @@
 // ۱) مسدودساز سراسری click با پنجرهٔ ۴۲۰ میلی‌ثانیه روی window باعث خورده‌شدن ضربه‌های پیاپی کاربر و کلیک‌های درون لیست‌های اسکرولی می‌شد.
 // ۲) اجرای هم‌زمان TouchEvent بدون preventDefault در کنار PointerEvent روی <canvas> باعث صدور pointercancel ناگهانی در میانهٔ لمس می‌شد.
 // اکنون:
-// - روی همهٔ دکمه‌ها هیچ click بومی مرورگر مسدود نمی‌شود؛ فقط اگر لغزش جزئی شست باعث حذف click بومی توسط WebView شد، پس از بررسی عدم وقوع click بومی، click دقیق همان دکمه بازیابی می‌شود.
+// - روی همهٔ دکمه‌ها هیچ click بومی مرورگر مسدود نمی‌شود؛ فقط اگر WebView خودش click نساخته باشد، کلیکِ همان
+//   دکمه بی‌درنگ و با مختصات انگشت بازیابی می‌شود و نگهبانِ ضدتکرار دقیقاً تا ضربهٔ بعدی کاربر زنده می‌ماند.
 // - روی <canvas> همهٔ لمس‌های واقعی سیستم‌عامل (e.isTrusted) منحصراً از مسیر واحد PointerEvent با touch-action: none عبور می‌کنند و مسیر TouchEvent صرفاً برای رویدادهای مصنوعی تست‌های خودکار (!e.isTrusted) فعال می‌شود.
 
 export interface CanvasPoint {
@@ -93,25 +94,51 @@ export function installGlobalTouchBridge(): void {
     (e) => {
       const rec = cleanupPointer(e.pointerId);
       if (!rec) return;
+      rec.el.removeEventListener('click', rec.onClick, { capture: true });
       const endMove = Math.max(rec.maxMove, Math.hypot(e.clientX - rec.sx, e.clientY - rec.sy));
       const inScroll = !!rec.el.closest('.scroll, .scroll-x');
       const limit = inScroll ? 14 : 28;
-      // اگر به هر دلیل (ضربهٔ پیاپی سریع، scale در حالت active یا لغزش شست ۰ تا ۲۸px) WebView رویداد click بومی را نساخت،
-      // پس از ۵۵ms به صورت اتمی و بدون تولید کلیک تکراری همان دکمه را دقیق فعال می‌کند
-      setTimeout(() => {
-        rec.el.removeEventListener('click', rec.onClick, { capture: true });
-        if (rec.clicked || rec.scrolled || endMove > limit) return;
-        if (!rec.el.isConnected || (rec.el as HTMLButtonElement).disabled) return;
-        const guard = (ce: MouseEvent) => {
-          if (ce.isTrusted && Math.hypot(ce.clientX - rec.sx, ce.clientY - rec.sy) < 32) {
-            ce.stopPropagation();
-            ce.preventDefault();
-          }
-        };
-        window.addEventListener('click', guard, { capture: true });
-        setTimeout(() => window.removeEventListener('click', guard, { capture: true }), 150);
-        rec.el.click();
-      }, 55);
+      if (rec.clicked || rec.scrolled || endMove > limit) return;
+      if (!rec.el.isConnected || (rec.el as HTMLButtonElement).disabled) return;
+      // کنترل‌های بومی فرم خودشان drag، باز کردن لیست و تمرکز را روی mousedown انجام می‌دهند؛
+      // جعل کلیک برایشان فقط وضعیت را خراب می‌کند، پس دست نمی‌زنیم.
+      if (rec.el.matches('select, input, textarea')) return;
+      // اگر WebView رویداد click بومی را نساخته (ضربهٔ پیاپی سریع، scale در حالت active، لغزش جزئی شست)،
+      // همان دکمه بی‌درنگ و با مختصات واقعی انگشت فعال می‌شود. تأخیر ۵۵ms قبلی روی گوشی اندازه‌گیری‌شده
+      // خودش تا ۱۶۳ms کش می‌آمد (تایمر در صف جا می‌ماند) و دکمه را نیم‌ثانیه‌ای بی‌پاسخ نشان می‌داد.
+      const nearFinger = (ce: MouseEvent) => Math.hypot(ce.clientX - rec.sx, ce.clientY - rec.sy) <= 32;
+      let armed = true;
+      let timer = 0;
+      const tail: [string, (ce: Event) => void][] = [
+        ['click', (event) => {
+          const ce = event as MouseEvent;
+          // کلیک بومی دیررس (روی امولاتور ۱۲ تا ۱۶۳ms بعد از pointerup) باید بلعیده شود، وگرنه یک
+          // ضربه دو بار اجرا می‌شود؛ اما نگهبان پنجره‌ایِ ۱۵۰ms قبلی ضربهٔ بعدیِ خود کاربر را هم دور
+          // می‌انداخت، پس این نگهبان به‌محض آمدن pointerdown بعدی (یا همان کلیک بومی) خود را جمع می‌کند.
+          if (!ce.isTrusted || !nearFinger(ce)) return;
+          ce.stopPropagation();
+          ce.preventDefault();
+          disarm();
+        }],
+        ['mousedown', (event) => {
+          const ce = event as MouseEvent;
+          // ضربه مصرف شده؛ اگر mousedown بومی اجازهٔ پیش‌فرض بگیرد، تمرکز را به هر چیزی که بعد از
+          // رندرِ جدید زیر انگشت مانده منتقل می‌کند و تلهٔ تمرکزِ دیالوگِ تازه را می‌شکند.
+          if (!ce.isTrusted || !nearFinger(ce)) return;
+          ce.preventDefault();
+        }],
+      ];
+      const disarm = () => {
+        if (!armed) return;
+        armed = false;
+        for (const [type, fn] of tail) window.removeEventListener(type, fn, { capture: true });
+        window.removeEventListener('pointerdown', disarm, { capture: true });
+        window.clearTimeout(timer);
+      };
+      for (const [type, fn] of tail) window.addEventListener(type, fn, { capture: true });
+      window.addEventListener('pointerdown', disarm, { capture: true });
+      timer = window.setTimeout(disarm, 500);
+      rec.el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: rec.sx, clientY: rec.sy }));
     },
     { capture: true, passive: true },
   );
