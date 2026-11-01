@@ -12,7 +12,9 @@ const config: CapacitorConfig = {
   plugins: {
     SystemBars: {
       insetsHandling: 'disable',
-      hidden: true,
+      // MainActivity owns system-bar visibility. Hiding the navigation bar here
+      // triggers Android's touch-blocking first-run immersive confirmation.
+      hidden: false,
     },
     StatusBar: {
       overlaysWebView: true,

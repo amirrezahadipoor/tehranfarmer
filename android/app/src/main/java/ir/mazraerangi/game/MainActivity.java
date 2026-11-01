@@ -1,6 +1,5 @@
 package ir.mazraerangi.game;
 
-import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -42,10 +41,8 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE) {
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-        }
 
+        // sensorLandscape is declared in the manifest so the splash never starts in portrait.
         getWindow().getDecorView().setBackgroundColor(BG_SKY);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -56,7 +53,6 @@ public class MainActivity extends BridgeActivity {
         }
 
         bindCutoutSafeAreaInsets();
-        applyImmersiveFullscreen();
         configureActiveWebView();
     }
 
@@ -84,7 +80,9 @@ public class MainActivity extends BridgeActivity {
             if (isFinishing() || isDestroyed()) {
                 return insets;
             }
-            Insets safe = insets.getInsets(
+            // Keep CSS safe areas stable when transient bars change visibility; visible-only
+            // insets otherwise move the loading card and controls during startup.
+            Insets safe = insets.getInsetsIgnoringVisibility(
                 WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.systemBars()
             );
             float density = getResources().getDisplayMetrics().density;
@@ -115,7 +113,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
-        applyImmersiveFullscreen();
+        applyGameSystemBars();
         configureActiveWebView();
     }
 
@@ -123,30 +121,32 @@ public class MainActivity extends BridgeActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
-            applyImmersiveFullscreen();
+            applyGameSystemBars();
             configureActiveWebView();
         }
     }
 
-    private void applyImmersiveFullscreen() {
+    private void applyGameSystemBars() {
         View decor = getWindow().getDecorView();
         decor.setBackgroundColor(BG_SKY);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController ctrl = getWindow().getInsetsController();
             if (ctrl != null) {
-                ctrl.hide(android.view.WindowInsets.Type.statusBars()
-                    | android.view.WindowInsets.Type.navigationBars());
                 ctrl.setSystemBarsBehavior(
                     WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 );
+                // Android shows a modal, first-run "Viewing full screen" confirmation
+                // whenever the navigation bar is hidden. It intercepts every WebView
+                // touch, including Start. Keep the navigation bar visible and hide only
+                // the status bar; the game remains edge-to-edge with stable safe areas.
+                ctrl.show(android.view.WindowInsets.Type.navigationBars());
+                ctrl.hide(android.view.WindowInsets.Type.statusBars());
             }
         } else {
             decor.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     | View.SYSTEM_UI_FLAG_FULLSCREEN
             );
         }
