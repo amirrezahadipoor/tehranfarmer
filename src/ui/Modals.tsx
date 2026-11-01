@@ -122,7 +122,7 @@ function SeedShop() {
       : CROPS;
   return (
     <Modal title={UT.u75} icon="seedshop" onClose={close} coins={<Wallet />}>
-      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+      <div className="mb-2 flex flex-wrap items-center gap-[8px]">
         <button
           data-seed-filter="available"
           aria-pressed={seedFilter === 'available'}
@@ -178,7 +178,7 @@ function SeedShop() {
                     </span>
                   </div>
                   <Trend r={p / c.seed} />
-                  <div className="flex w-full flex-wrap gap-1">
+                  <div className="flex w-full flex-wrap gap-[8px]">
                     <BuyBtn n={UT.u77} price={p} onClick={() => buySeed(c.id, 1)} />
                     <BuyBtn n={UT.u78} price={seedPackPrice(c.id, 5)} onClick={() => buySeed(c.id, 5)} />
                     <BuyBtn n={UT.pack25} price={seedPackPrice(c.id, 25)} onClick={() => buySeed(c.id, 25)} />
@@ -191,7 +191,7 @@ function SeedShop() {
         <div className="paper flex flex-col items-center gap-1 p-2">
           <div className="relative"><Ic n="fert" s={4.6} /><span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.fert)}</span></div>
           <div className="text-sm font-extrabold">{UT.u31}</div>
-          <div className="flex w-full flex-wrap gap-1">
+          <div className="flex w-full flex-wrap gap-[8px]">
             <BuyBtn n={UT.u77} price={FERT_PRICE} onClick={() => buyFert(1)} />
             <BuyBtn n={UT.u78} price={FERT_PRICE * 5} onClick={() => buyFert(5)} />
             <BuyBtn n={UT.pack25} price={FERT_PRICE * 25} onClick={() => buyFert(25)} />
@@ -200,7 +200,7 @@ function SeedShop() {
         <div className="paper flex flex-col items-center gap-1 p-2">
           <div className="relative"><Ic n="feed" s={4.6} /><span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.inv.feed ?? 0)}</span></div>
           <div className="text-sm font-extrabold">{UT.u79}</div>
-          <div className="flex w-full flex-wrap gap-1">
+          <div className="flex w-full flex-wrap gap-[8px]">
             <BuyBtn n={UT.u78} price={FEED_PRICE * 5} onClick={() => buyFeed(5)} />
             <BuyBtn n={UT.u80} price={FEED_PRICE * 10} onClick={() => buyFeed(10)} />
             <BuyBtn n={UT.pack50} price={FEED_PRICE * 50} onClick={() => buyFeed(50)} />
@@ -210,7 +210,7 @@ function SeedShop() {
           <div className="relative"><Ic n="fingerling" s={4.6} /><span className="absolute -left-2 -top-1 rounded-full border-2 border-[#503426] bg-[#8fd35a] px-1.5 text-sm font-black">{fa(S.inv.fingerling ?? 0)}</span></div>
           <div className="text-sm font-extrabold">{UT.u81}</div>
           <div className="text-[.7rem] font-bold opacity-70">{UT.u82}</div>
-          <div className="flex w-full flex-wrap gap-1">
+          <div className="flex w-full flex-wrap gap-[8px]">
             <BuyBtn n={UT.u77} price={FINGER_PRICE} onClick={() => buyFingerling(1)} />
             <BuyBtn n={UT.u78} price={FINGER_PRICE * 5} onClick={() => buyFingerling(5)} />
           </div>
@@ -252,7 +252,7 @@ function Market() {
   return (
     <Modal title={UT.u84} icon="market" onClose={close} coins={<Wallet />}>
       {/* انتخاب منبع فروش: کولهٔ پشتی یا انبار یا هر دو */}
-      <div className="mb-2 flex items-center gap-1.5" data-market-sellfrom="1">
+      <div className="mb-[8px] flex items-center gap-1.5" data-market-sellfrom="1">
         <span className="whitespace-nowrap text-xs font-black opacity-75">{UT.uSellFrom}</span>
         <div className="flex flex-1 gap-[8px]">
           {(['pack', 'barn', 'both'] as const).map((k) => (
@@ -268,7 +268,7 @@ function Market() {
           ))}
         </div>
       </div>
-      <button data-market-sell-all="1" className="btn g press mb-2 w-full !py-1.5" disabled={total <= 0} onClick={() => { if (sellAll() > 0) tutOnSale(); }}>
+      <button data-market-sell-all="1" className="btn g press mb-[8px] w-full !py-1.5" disabled={total <= 0} onClick={() => { if (sellAll() > 0) tutOnSale(); }}>
         <Ic n="cart" s={2.4} /><span className="ft text-xl">{UT.u85}</span><Coin v={total} s={1.8} cls="text-xl" />
       </button>
       <div className="mb-2 grid grid-cols-1 gap-[8px] min-[420px]:grid-cols-2">
@@ -316,7 +316,7 @@ function Market() {
                   {UT.marketDemandLabel} <bdi dir="ltr">{faPct((S.dem[g.id] ?? 1) * 100)} → {faPct(demandAfterSale(g.id) * 100)}</bdi>
                 </span>
               </div>}
-              <div className="flex w-full flex-wrap gap-1">
+              <div className="flex w-full flex-wrap gap-[8px]">
                 <button data-sell-one={g.id} aria-label={`${g.fa} — ${UT.u77} — ${saleValueSel(g.id, 1)}`} className={'btn y press min-w-0 flex-1 !px-1 text-[.75rem] ' + (S.tut?.active && S.tut.step === 4 && g.id === 'wheat' && q > 0 ? 'ring-4 ring-amber-300 ' : '')} disabled={q < 1} onClick={() => { if (sellGood(g.id, 1) > 0) tutOnSale(); }}><span className="font-black">{UT.u77}</span><Coin v={saleValueSel(g.id, 1)} s={1.1} /></button>
                 <button data-sell-stack={g.id} aria-label={`${g.fa} — ${UT.sellAllStack} — ${saleValueSel(g.id, q)}`} className="btn g press min-w-0 flex-1 !px-1 text-[.75rem]" disabled={q < 1} onClick={() => { if (sellGood(g.id, q) > 0) tutOnSale(); }}><span className="font-black">{UT.sellAllStack}</span><Coin v={saleValueSel(g.id, q)} s={1.1} /></button>
               </div>

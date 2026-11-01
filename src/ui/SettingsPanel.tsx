@@ -27,7 +27,7 @@ function SettingsGroup({ id, title, initialOpen = false, children }: { id: strin
       <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-black leading-5">
         <span>{title}</span><span aria-hidden="true" className="ft text-lg">{open ? '−' : '+'}</span>
       </summary>
-      <div className="min-w-0 border-t border-[#d8c498] p-2">{children}</div>
+      <div className="min-w-0 border-t border-[#d8c498] p-2 pt-[8px]">{children}</div>
     </details>
   );
 }
@@ -79,7 +79,7 @@ export function SettingsPanel() {
   return (
     <div className="mx-auto mt-2 flex w-full max-w-lg min-w-0 flex-col gap-2" data-settings-panel="1">
       <SettingsGroup id="audio" title={UT.setGroupAudio} initialOpen>
-        <div className="flex flex-wrap justify-center gap-1.5">
+        <div className="flex flex-wrap justify-center gap-[8px]">
           {toggle('sound', UT.u136)}
           {toggle('music', UT.setMusic)}
           {toggle('haptics', UT.setHaptics)}
@@ -126,12 +126,12 @@ export function SettingsPanel() {
       </SettingsGroup>
 
       <SettingsGroup id="display" title={UT.setGroupDisplay}>
-        <div className="flex flex-wrap justify-center gap-1.5">
+        <div className="flex flex-wrap justify-center gap-[8px]">
           {toggle('reduceMotion', UT.setMotion)}
           {toggle('colorblind', UT.setColorblind)}
         </div>
         <div data-action-speed-control="1" className="mt-2 rounded-lg border border-[#b89668] bg-[#fff6df] px-2 py-1.5 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
+          <div className="flex flex-wrap items-center justify-center gap-[8px] text-xs font-black">
             <span>{UT.setActionSpeed}:</span>
             {actionSpeeds.map((speed) => (
               <button key={speed} type="button" data-action-speed={speed} aria-pressed={CFG.actionSpeed === speed} aria-label={`${UT.setActionSpeed} ${faDec(speed)}×`} className={'btn press !min-h-[48px] !px-3 !py-0.5 text-xs ' + (CFG.actionSpeed === speed ? 'y' : 'b')} onClick={() => { updateSetting('actionSpeed', speed); sfx.tap(); notify(); }}><span dir="ltr">{faDec(speed)}×</span></button>
@@ -139,7 +139,7 @@ export function SettingsPanel() {
           </div>
           <p className="mt-1 text-[.72rem] font-bold leading-5 text-[#67513d]">{UT.setActionSpeedHint}</p>
         </div>
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-[8px] text-xs font-black">
           <span>{UT.setFont}:</span>
           {scales.map((sc) => (
             <button
@@ -167,8 +167,8 @@ export function SettingsPanel() {
       </SettingsGroup>
 
       <SettingsGroup id="save" title={UT.setGroupSave}>
-        <div className="flex flex-wrap justify-center gap-1.5">{toggle('shortBeat', UT.alwaysShort)}</div>
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs font-black">
+        <div className="flex flex-wrap justify-center gap-[8px]">{toggle('shortBeat', UT.alwaysShort)}</div>
+        <div className="mt-[8px] flex flex-wrap items-center justify-center gap-[8px] text-xs font-black">
           <button type="button" aria-label={UT.exportSave} className="btn g press !min-h-[48px] !px-3 !py-1 text-xs font-black" onClick={handleExport}>
             <span>{UT.exportSave}</span>
           </button>
@@ -219,7 +219,7 @@ export function SettingsPanel() {
             <span>{UT.errLogTitle}</span>
             <span className="ft">{fa(getErrorLog().length)}</span>
           </div>
-          <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-[8px]">
             <button
               type="button"
               className="btn b press !min-h-[48px] !px-2.5 !py-0.5 text-xs font-black"
@@ -243,7 +243,7 @@ export function SettingsPanel() {
             </button>
           </div>
         </div>
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-[8px]">
           <button
             type="button"
             aria-label={UT.setReset}

@@ -127,7 +127,7 @@ export function InventoryModal() {
           <i style={{ width: `${Math.min(100, (packCount() / packCap()) * 100)}%`, background: packCount() >= packCap() ? '#ff7a6a' : '#8fd35a' }} />
         </div>
         {packGoods.length > 0 && (
-          <div className="mt-1.5 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
+          <div className="mt-1.5 grid grid-cols-3 gap-[8px] sm:grid-cols-5 lg:grid-cols-6">
             {packGoods.map((g) => <Cell key={'p' + g.id} itemKey={`pack|good|${g.id}`} ic={g.id} q={S.pack[g.id]} name={GOOD[g.id].fa} selected={selected === `pack|good|${g.id}`} onSelect={select} />)}
           </div>
         )}
@@ -142,7 +142,7 @@ export function InventoryModal() {
         <span className="ft text-lg" dir="ltr">{fa(invCount())}/{fa(invCap())}</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
+      <div className="grid grid-cols-3 gap-[8px] sm:grid-cols-5 lg:grid-cols-6">
         {goods.map((g) => <Cell key={g.id} itemKey={`barn|good|${g.id}`} ic={g.id} q={S.inv[g.id]} name={GOOD[g.id].fa} selected={selected === `barn|good|${g.id}`} onSelect={select} />)}
         {seeds.map((c) => <Cell key={'s' + c.id} itemKey={`barn|seed|${c.id}`} ic={'seed:' + c.id} q={S.seeds[c.id]} name={UT.seedBagPrefix + c.fa} selected={selected === `barn|seed|${c.id}`} onSelect={select} />)}
         {S.fert > 0 && <Cell itemKey="barn|fert|" ic="fert" q={S.fert} name={UT.u31} selected={selected === 'barn|fert|'} onSelect={select} />}
@@ -159,7 +159,7 @@ export function InventoryModal() {
         <div className="text-xs font-bold opacity-75">{UT.artisanSecSub}</div>
       </div>
 
-      <div className={UI.portrait ? 'grid grid-cols-2 gap-2 pb-2' : grid} data-artisan-kitchen="1">
+      <div className={UI.portrait ? 'grid grid-cols-2 gap-[8px] pb-2' : grid} data-artisan-kitchen="1">
         {ARTISAN_RECIPES.map((rec) => {
           const maxB = artisanMaxBatches(rec);
           const reward = artisanRewardCoins(rec);
@@ -183,7 +183,7 @@ export function InventoryModal() {
                 })}
                 {reward > 0 && <Coin v={reward} s={1.2} cls="text-xs" />}
               </div>
-              <div className="flex w-full gap-1">
+              <div className="flex w-full gap-[8px]">
                 <button type="button" className="btn y press flex-1 !px-1 !py-1 text-xs font-black" disabled={maxB < 1} onClick={() => craftArtisan(rec.id, 1)}>{UT.craftOne}</button>
                 <button type="button" className="btn g press flex-1 !px-1 !py-1 text-xs font-black" disabled={maxB < 2} onClick={() => craftArtisan(rec.id, maxB)}>{UT.craftAll}</button>
               </div>
