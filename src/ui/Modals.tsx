@@ -44,6 +44,7 @@ import { exitNativeApp } from '../game/androidNav';
 import { maybeStartPrologue } from '../story/engine';
 import { ShopExperience } from './ShopExperience';
 import { nearestScrollDelta } from './scrollNearest';
+import { assessContractPlanting } from './contractRisk';
 
 
 
@@ -337,16 +338,26 @@ function Market() {
       {(active || showGuide) && <div className="paper mt-2 flex flex-col gap-2 p-2" data-market-contract="1">
         {!active ? (
           <div className="grid gap-1.5 sm:grid-cols-3">
-            {boardOffers.map((of) => (
-              <div key={of.slot} className="flex flex-col justify-between gap-1 rounded-xl border border-[#d6c08a] bg-white/80 p-2 text-xs font-extrabold">
-                <div>
-                  <div className="text-[.68rem] font-black text-emerald-800">{of.tierLabel}</div>
-                  <div>{fa(of.qty)} {of.fa}</div>
-                  <div className="opacity-75">{UT.contractReward}{fa(of.reward)}</div>
+            {boardOffers.map((of) => {
+              const dueDay = S.day + of.days;
+              const planting = assessContractPlanting(of.good, dueDay);
+              return (
+                <div key={of.slot} className="flex flex-col justify-between gap-1 rounded-xl border border-[#d6c08a] bg-white/80 p-2 text-xs font-extrabold">
+                  <div>
+                    <div className="text-[.68rem] font-black text-emerald-800">{of.tierLabel}</div>
+                    <div>{fa(of.qty)} {of.fa}</div>
+                    <div className="opacity-75">{UT.contractReward}{fa(of.reward)}</div>
+                    <div className="opacity-75">{UT.contractDue}{fa(dueDay)}</div>
+                  </div>
+                  {planting?.openFieldLate && (
+                    <div role="note" className="mt-1 rounded-lg border border-amber-300 bg-amber-100 px-2 py-1 text-[.72rem] font-black leading-5 text-amber-950">
+                      {planting.greenhouseRescue ? UT.contractOpenFieldLateGh : UT.contractOpenFieldLate}
+                    </div>
+                  )}
+                  <BuyBtn n={UT.contractSign} price={of.deposit} onClick={() => { signBoardContract(of.slot); }} />
                 </div>
-                <BuyBtn n={UT.contractSign} price={of.deposit} onClick={() => { signBoardContract(of.slot); }} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2">

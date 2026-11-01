@@ -213,6 +213,8 @@ export const UT_EN = {
   contractDeposit: 'Deposit: ',
   contractReward: 'Payout: ',
   contractDue: 'Due Day ',
+  contractOpenFieldLate: 'Open-field planting is too late for this crop’s season and the due day, even with ideal care.',
+  contractOpenFieldLateGh: 'Open-field planting is too late for this crop’s season and the due day; greenhouse rescue is possible, but capacity and timing remain risky.',
   museumTitle: 'Homestead Heritage Museum',
   museumLocked: 'Unlocks after paying off all six deeds and completing the main story.',
   museumPlaque: 'For restoring Grandpa’s farm — "Gentle" is retired for good.',
