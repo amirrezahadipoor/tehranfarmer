@@ -517,7 +517,7 @@ export function Cutscene() {
           {prologueChoices ? (
             <div className="mt-1 shrink-0" aria-label={UT.prologueStart}>
               <div className="mb-1 flex items-center justify-center gap-1 text-xs font-black opacity-75"><Ic n="check" s={1.25} />{UT.prologueStart}</div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-[8px] sm:grid-cols-2">
                 {prologueChoices.map((choice, index) => (
                   <button
                     key={index}
