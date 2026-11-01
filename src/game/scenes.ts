@@ -180,57 +180,113 @@ export function signpost(c: Ctx, x: number, y: number, dir: 1 | -1, icon: string
   put(c, iconPart(icon), x + dir * 2, y - 80, 1.15);
 }
 
-export function farmBG(season: number): HTMLCanvasElement {
-  const { cv, c } = newBG();
-  mountains(c, season);
-  ground(c, season, 196);
-  // جاده شهر و شبکهٔ راه‌های پیوستهٔ لبه‌به‌لبهٔ مزرعه (بدون هیچ انتهای بریده یا هم‌پوشانی با کرت‌ها و نوار ابزار)
-  const r = rng(77);
-  const roadCol = season === 3 ? '#e9e2d4' : '#dcbe86';
-  // گذرگاه پیرامونی بیرون از کرت‌ها (هرگز زیر کرت‌ها یا روی دام‌ها نمی‌افتد)
-  dirtRoad(c, [[187, 252], [304, 256], [394, 256], [394, 608], [1152, 590], [1152, 232], [1044, 210]], 24, roadCol, 10);
-  // ۵ جادهٔ خروجی لبه‌به‌لبه تا مرز واقعی بوم (-420..1700 × -160..920)
-  dirtRoad(c, [[1152, 336], [1340, 328], [1700, 322]], 40, roadCol, 8);    // شرق -> شهر
-  dirtRoad(c, [[1152, 482], [1340, 488], [1700, 496]], 32, roadCol, 13);   // جنوب‌شرق -> باغ‌درهٔ آفتاب
-  dirtRoad(c, [[-420, 610], [96, 610], [394, 608]], 30, roadCol, 9);        // غرب -> رودخانه
-  dirtRoad(c, [[304, 609], [304, 740], [304, 920]], 28, roadCol, 11);       // جنوب -> زنبورستان (دقیقاً در فضای باز بین نوار ناوبری و نوار ابزار!)
-  dirtRoad(c, [[798, 198], [802, 172], [804, 152]], 26, roadCol, 12);      // گردنهٔ شمالی -> دشت شمالی (کاملاً جدا از تابلوی چپ و HUD راست!)
-  drawMountainPassArch(c, 804, 156);
-  drawMachineryPad(c, 434, 202, 200, 16);
-  drawFarmlandBed(c, FIELD_X, FIELD_Y, 8, 5, PLOT_DX, PLOT_DY, season);
-  // درختان پشت (کاملاً بیرون از خانه، چاه، چارتاقی، دروازهٔ شمالی و انبار!)
-  const trees: [number, number, number][] = [[-52, 226, 0.95], [316, 198, 0.72], [872, 198, 0.72], [1252, 214, 0.95], [1390, 240, 1.1], [-120, 270, 1.2], [1500, 330, 1.2], [-300, 420, 1.3], [1620, 520, 1.3], [-180, 650, 1.2], [1480, 700, 1.2]];
-  trees.sort((a, b) => a[1] - b[1]);
-  for (const [x, y, s] of trees) tree(c, x, y, s, season);
-  barn(c, season);
-  house(c, season);
-  well(c);
-  signpost(c, 1216, 344, 1, 'cart');     // تابلوی جادهٔ شهر (کاملاً پایین‌تر از سیلوی انبار!)
-  signpost(c, 696, 232, 1, 'north');     // تابلوی دشت شمالی پایین‌تر از خوشهٔ فصل و ساعت و کاملاً بالای کرت‌ها.
-  signpost(c, 1212, 464, 1, 'valley');   // تابلوی جادهٔ باغ‌درهٔ آفتاب (فاصلهٔ کامل با شهر و ستاره‌های مترسک!)
-  signpost(c, 60, 628, -1, 'fish');      // تابلوی جادهٔ رودخانه (۱۰۰٪ بالای نوار ناوبری پایین و جدا از جمع‌کن!)
-  signpost(c, 316, 628, 1, 'hive');      // تابلوی جادهٔ زنبورستان (۱۰۰٪ بالای نوار ناوبری و زیر دامداری!)
-  if (season !== 3) {
-    const cols = ['#ff7aa8', '#ffd93b', '#fff', '#ff8b4a', '#b48aff'];
-    for (let i = 0; i < 46; i++) {
-      const x = -OX + r() * BW, y = 230 + r() * 560;
-      const inField = x > 395 && x < 1230 && y > 205 && y < 650, inPen = x > 20 && x < 370 && y > 320 && y < 660, onRoad = x > 1180 && y > 290 && y < 380;
-      const nearHouse = x > 60 && x < 330 && y < 290;
-      if (inField || inPen || onRoad || nearHouse || (x > 920 && x < 1210 && y < 225)) continue;
-      if ((x > 150 && x < 1260 && y > 628 && y < 686) || (x > 380 && x < 428 && y > 300 && y < 660) || (x > 88 && x < 130 && y > 540 && y < 678)) continue; // روی راه گل نمی‌روید
-      flower(c, x, y, cols[i % cols.length]);
-    }
-  }
-  paperGrain(c, 3500, 11);
-  return cv;
-}
-
-export function paperGrain(c: Ctx, n: number, seed: number) {
+/**
+ * `from` lets the caller draw the tail of the same dot sequence, so a slow device can spread the work over
+ * several frames without changing a single pixel (the rng stream is rewound by consuming exactly the same
+ * five values per skipped dot).
+ */
+export function paperGrain(c: Ctx, n: number, seed: number, from = 0) {
   const r = rng(seed);
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < from * 5; i++) r();
+  for (let i = from; i < n; i++) {
     c.fillStyle = r() > 0.5 ? 'rgba(255,255,255,.12)' : 'rgba(80,50,20,.06)';
     c.fillRect(-OX + r() * BW, 192 + r() * (BH - OY - 192), 2 + r() * 2, 2 + r() * 2);
   }
+}
+
+export type DrawSlice = (c: Ctx) => void;
+
+/**
+ * The farm backdrop as an ordered list of resumable slices.
+ *
+ * `prewarmScene()` used to call `farmBG()` as one synchronous block. On Android WebView that froze the
+ * main thread for seconds (measured 5.0s / 9.9s long tasks in the CI emulator harness), which dropped every
+ * tap landing in that window and collapsed the loading -> Start choreography into a single burst.
+ * The slices keep the original draw order (one local rng, consumed in the same sequence), so the raster is
+ * identical to `farmBG()`.
+ */
+export function farmDrawSlices(season: number): DrawSlice[] {
+  const r = rng(77);
+  const roadCol = season === 3 ? '#e9e2d4' : '#dcbe86';
+  // گذرگاه پیرامونی بیرون از کرت‌ها (هرگز زیر کرت‌ها یا روی دام‌ها نمی‌افتد) + ۵ جادهٔ خروجی لبه‌به‌لبه
+  const roads: [[number, number][], number, number][] = [
+    [[[187, 252], [304, 256], [394, 256], [394, 608], [1152, 590], [1152, 232], [1044, 210]], 24, 10],
+    [[[1152, 336], [1340, 328], [1700, 322]], 40, 8],       // شرق -> شهر
+    [[[1152, 482], [1340, 488], [1700, 496]], 32, 13],      // جنوب‌شرق -> باغ‌درهٔ آفتاب
+    [[[-420, 610], [96, 610], [394, 608]], 30, 9],          // غرب -> رودخانه
+    [[[304, 609], [304, 740], [304, 920]], 28, 11],         // جنوب -> زنبورستان (دقیقاً در فضای باز بین نوار ناوبری و نوار ابزار!)
+    [[[798, 198], [802, 172], [804, 152]], 26, 12],         // گردنهٔ شمالی -> دشت شمالی (کاملاً جدا از تابلوی چپ و HUD راست!)
+  ];
+  // درختان پشت (کاملاً بیرون از خانه، چاه، چارتاقی، دروازهٔ شمالی و انبار!)
+  const trees: [number, number, number][] = [[-52, 226, 0.95], [316, 198, 0.72], [872, 198, 0.72], [1252, 214, 0.95], [1390, 240, 1.1], [-120, 270, 1.2], [1500, 330, 1.2], [-300, 420, 1.3], [1620, 520, 1.3], [-180, 650, 1.2], [1480, 700, 1.2]];
+  trees.sort((a, b) => a[1] - b[1]);
+  // هر ۵ تابلو پیش از گل‌ها؛ ترتیب دقیقاً همان ترتیب قبلی است
+  const signs: [number, number, 1 | -1, string][] = [
+    [1216, 344, 1, 'cart'],   // تابلوی جادهٔ شهر (کاملاً پایین‌تر از سیلوی انبار!)
+    [696, 232, 1, 'north'],   // تابلوی دشت شمالی پایین‌تر از خوشهٔ فصل و ساعت و کاملاً بالای کرت‌ها.
+    [1212, 464, 1, 'valley'], // تابلوی جادهٔ باغ‌درهٔ آفتاب (فاصلهٔ کامل با شهر و ستاره‌های مترسک!)
+    [60, 628, -1, 'fish'],    // تابلوی جادهٔ رودخانه (۱۰۰٪ بالای نوار ناوبری پایین و جدا از جمع‌کن!)
+    [316, 628, 1, 'hive'],    // تابلوی جادهٔ زنبورستان (۱۰۰٪ بالای نوار ناوبری و زیر دامداری!)
+  ];
+  const GRAIN_CHUNK = 900;
+  const slices: DrawSlice[] = [
+    (c) => { mountains(c, season); },
+    (c) => { ground(c, season, 196); },
+  ];
+  for (const [pts, w, seed] of roads) slices.push((c) => { dirtRoad(c, pts, w, roadCol, seed); });
+  slices.push(
+    (c) => { drawMountainPassArch(c, 804, 156); drawMachineryPad(c, 434, 202, 200, 16); },
+    (c) => { drawFarmlandBed(c, FIELD_X, FIELD_Y, 8, 5, PLOT_DX, PLOT_DY, season); },
+  );
+  for (const [x, y, s] of trees) slices.push((c) => { tree(c, x, y, s, season); });
+  slices.push(
+    (c) => { barn(c, season); },
+    (c) => { house(c, season); },
+    (c) => { well(c); },
+  );
+  for (const [x, y, dir, icon] of signs) slices.push((c) => { signpost(c, x, y, dir, icon); });
+  if (season !== 3) {
+    slices.push((c) => {
+      const cols = ['#ff7aa8', '#ffd93b', '#fff', '#ff8b4a', '#b48aff'];
+      for (let i = 0; i < 46; i++) {
+        const x = -OX + r() * BW, y = 230 + r() * 560;
+        const inField = x > 395 && x < 1230 && y > 205 && y < 650, inPen = x > 20 && x < 370 && y > 320 && y < 660, onRoad = x > 1180 && y > 290 && y < 380;
+        const nearHouse = x > 60 && x < 330 && y < 290;
+        if (inField || inPen || onRoad || nearHouse || (x > 920 && x < 1210 && y < 225)) continue;
+        if ((x > 150 && x < 1260 && y > 628 && y < 686) || (x > 380 && x < 428 && y > 300 && y < 660) || (x > 88 && x < 130 && y > 540 && y < 678)) continue; // روی راه گل نمی‌روید
+        flower(c, x, y, cols[i % cols.length]);
+      }
+    });
+  }
+  for (let from = 0; from < 3500; from += GRAIN_CHUNK) {
+    slices.push((c) => { paperGrain(c, Math.min(from + GRAIN_CHUNK, 3500), 11, from); });
+  }
+  return slices;
+}
+
+export interface SlicedBuild { canvas: HTMLCanvasElement; ctx: Ctx; slices: DrawSlice[] }
+
+/** Farm backdrop as a resumable build; `finishSlicedBuild()` publishes it into the scene cache. */
+export function beginSlicedBuild(scene: SceneKey, sn: number): SlicedBuild | null {
+  if (scene !== 'farm') return null;
+  const { cv, c } = newBG();
+  return { canvas: cv, ctx: c, slices: farmDrawSlices(sn) };
+}
+
+export function hasSceneSource(scene: SceneKey, sn: number): boolean {
+  clearSceneCacheForSeason(sn);
+  return Boolean(sceneCache[sceneCacheKey(scene)]);
+}
+
+export function storeSceneSource(scene: SceneKey, sn: number, cv: HTMLCanvasElement): void {
+  clearSceneCacheForSeason(sn);
+  sceneCache[sceneCacheKey(scene)] = cv;
+}
+
+export function farmBG(season: number): HTMLCanvasElement {
+  const { cv, c } = newBG();
+  for (const slice of farmDrawSlices(season)) slice(c);
+  return cv;
 }
 
 // ===== راه خاکی دست‌کش — مسیرها باید خوانا باشند =====
@@ -484,6 +540,11 @@ function clearSceneCacheForSeason(sn: number) {
   cachedSeason = sn;
 }
 
+function sceneCacheKey(scene: SceneKey): string {
+  const f = ensureFrontier();
+  return scene === 'cave' ? `cave:${f.caveFloor}` : scene === 'forest' ? `forest:${f.forestLayer}` : scene;
+}
+
 function buildRawScene(scene: SceneKey, sn: number): HTMLCanvasElement {
   const f = ensureFrontier();
   if (scene === 'farm') return farmBG(sn);
@@ -497,19 +558,52 @@ function buildRawScene(scene: SceneKey, sn: number): HTMLCanvasElement {
 }
 
 export function getSceneSource(scene: SceneKey, sn: number): CanvasImageSource {
-  clearSceneCacheForSeason(sn);
-  const f = ensureFrontier();
-  const key = scene === 'cave' ? `cave:${f.caveFloor}` : scene === 'forest' ? `forest:${f.forestLayer}` : scene;
-  let cv = sceneCache[key];
-  if (!cv) {
-    cv = buildRawScene(scene, sn);
-    sceneCache[key] = cv;
+  if (!hasSceneSource(scene, sn)) {
+    // The farm backdrop is drawn in resumable slices (see farmDrawSlices). The cache only ever sees a
+    // finished canvas, so a half-built background can never reach a frame.
+    const build = beginSlicedBuild(scene, sn);
+    if (build) {
+      for (const slice of build.slices) slice(build.ctx);
+      storeSceneSource(scene, sn, build.canvas);
+      return build.canvas;
+    }
+    storeSceneSource(scene, sn, buildRawScene(scene, sn));
   }
-  return cv;
+  return sceneCache[sceneCacheKey(scene)];
 }
 
-export async function prewarmScene(scene: SceneKey, sn: number): Promise<void> {
-  getSceneSource(scene, sn);
-  return Promise.resolve();
+/**
+ * Build one scene on the caller's schedule. `onSlice` reports (done, total) so the loading screen can show
+ * real progress instead of parking on one label for seconds, and every chunk is separated by a macrotask
+ * yield, which is what keeps taps and animation frames alive on a slow device.
+ */
+export async function prewarmSceneChunked(
+  scene: SceneKey,
+  sn: number,
+  onSlice?: (done: number, total: number) => void,
+  budgetMs = 12,
+): Promise<void> {
+  if (hasSceneSource(scene, sn)) return;
+  const build = beginSlicedBuild(scene, sn);
+  if (!build) {
+    getSceneSource(scene, sn);
+    onSlice?.(1, 1);
+    return;
+  }
+  let sinceYield = performance.now();
+  for (let i = 0; i < build.slices.length; i++) {
+    build.slices[i](build.ctx);
+    onSlice?.(i + 1, build.slices.length);
+    if (performance.now() - sinceYield >= budgetMs) {
+      await new Promise<void>((resolve) => { setTimeout(resolve, 0); });
+      sinceYield = performance.now();
+    }
+  }
+  storeSceneSource(scene, sn, build.canvas);
+}
+
+/** Every caller that can await should use this: a sliced scene is built in chunks, the rest in one go. */
+export function prewarmScene(scene: SceneKey, sn: number): Promise<void> {
+  return prewarmSceneChunked(scene, sn);
 }
 

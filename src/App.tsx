@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { cmd, startEngine } from './game/engine';
 import { S, UI, hasSave, loadGame, notify, resetGame as resetGameFn, saveGame, useGame } from './game/state';
 import { Hud } from './ui/Hud';
@@ -312,10 +312,13 @@ export default function App() {
     };
   }, [autoFastBoot]);
 
+  // unmount لودینگ را خودِ BootLoader و در پایان واقعی ترنزیشن اعلام می‌کند؛ تایمر مستقل
+  // روی نخ شلوغِ اندروید در همان فریم اجرا می‌شد و انیمیشن محو شدن به یک پرش تبدیل می‌شد.
+  const finishBootFade = useCallback(() => setBootReady(true), []);
+
   useEffect(() => {
     if (!bootPrepared || !ref.current) return;
     let active = true;
-    let fadeTimer = 0;
     const stop = startEngine(ref.current);
     const stopBack = installAndroidBackHandler();
     // startEngine اولین منظره را هم‌زمان رسم می‌کند؛ یک rAF فرصت می‌دهد canvas و
@@ -323,9 +326,6 @@ export default function App() {
     const firstFrame = window.requestAnimationFrame(() => {
       if (!active) return;
       setBootFading(true);
-      fadeTimer = window.setTimeout(() => {
-        if (active) setBootReady(true);
-      }, autoFastBoot ? 0 : 180);
     });
     // ابزارهای دیباگ رانتایم فقط در بیلد داخلی/تستی — شرط خام روی define تا در بیلد نهایی کلاً حذف شود
     if (__DEV_TOOLS__) {
@@ -366,7 +366,6 @@ export default function App() {
     return () => {
       active = false;
       window.cancelAnimationFrame(firstFrame);
-      window.clearTimeout(fadeTimer);
       stop();
       stopBack();
       window.removeEventListener('pagehide', onHide);
@@ -427,7 +426,15 @@ export default function App() {
           <SceneDebugMenu />
         </Suspense>
       )}
-      {!bootReady && <BootLoader pct={bootProg.pct} label={bootProg.label} fadingOut={bootFading} />}
+      {!bootReady && (
+        <BootLoader
+          pct={bootProg.pct}
+          label={bootProg.label}
+          fadingOut={bootFading}
+          instant={autoFastBoot}
+          onFadeEnd={finishBootFade}
+        />
+      )}
       {bootPrepared && !UI.started && <Start />}
       {portraitGateVisible && (
         <div ref={portraitGateRef} tabIndex={-1} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[#2b1a10]/92 px-6 text-center" role="dialog" aria-modal="true" aria-label={UT.u186}>

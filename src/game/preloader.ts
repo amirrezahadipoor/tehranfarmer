@@ -7,7 +7,7 @@ import { cropPart, flushPendingBitmaps, iconPart, soilPart } from './art';
 import { iconURL } from './artIcons';
 import { CROPS, GOODS } from './data';
 import { hydrateNativeStorage } from './nativeStorage';
-import { prewarmScene } from './scenes';
+import { prewarmScene, prewarmSceneChunked } from './scenes';
 import { loadSettings } from './settings';
 import { hasSave, loadGame, season } from './state';
 import { UT } from '../strings/uiText';
@@ -83,8 +83,10 @@ export function isBootAlreadyWarm(): boolean {
 function scheduleDeferredPrewarm(sn: number) {
   const work = async () => {
     for (const scene of ['town', 'river', 'apiary'] as const) {
+      // صحنه‌ها یکی‌یکی و با فاصله: دو بلاک پشت‌سرهم روی گوشی ضعیف دقیقاً همان‌جا می‌افتد که
+      // بازیکن شروع به لمس می‌کند.
       try { await prewarmScene(scene, sn); } catch { /* */ }
-      await waitMs(24);
+      await waitMs(90);
     }
     try {
       for (const c of CROPS.slice(3, 8)) {
@@ -127,11 +129,13 @@ export async function runGenuinePreload(onProgress: (p: BootProgress) => void): 
 
   const sn = season();
 
-  // گام ۲: ترسیم کامل بوم مزرعهٔ اصلی در حافظه
+  // گام ۲: ترسیم کامل بوم مزرعهٔ اصلی در حافظه — برش‌برش، تا نخ اصلی هرگز چند ثانیه بلوکه نشود.
   onProgress({ pct: 38, label: UT.bootStepFarm });
   await waitMs(20);
   try {
-    await prewarmScene('farm', sn);
+    await prewarmSceneChunked('farm', sn, (done, total) => {
+      onProgress({ pct: 38 + Math.round((done / Math.max(1, total)) * 14), label: UT.bootStepFarm });
+    });
   } catch { /* */ }
   onProgress({ pct: 52, label: UT.bootStepFarm });
   await waitMs(stepGap);

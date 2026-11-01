@@ -1,11 +1,22 @@
+import { useEffect, useRef } from 'react';
 import { UT } from '../strings/uiText';
 import { faPct } from '../strings/fa';
 import { Ic } from './parts';
+
+/** Fade length of the whole overlay; the unmount waits for this transition, never for a timer alone. */
+export const BOOT_FADE_MS = 180;
 
 interface BootLoaderProps {
   pct: number;
   label: string;
   fadingOut: boolean;
+  /** Automated runs (webdriver) drop the overlay without animating it. */
+  instant?: boolean;
+  /**
+   * Called when the fade has *actually* ended. The old App-side `setTimeout(180)` fired in the same frame as
+   * the fade started whenever the main thread was busy, so the loading screen snapped off in ~25ms.
+   */
+  onFadeEnd?: () => void;
 }
 
 const FLOWERS: readonly [number, number, string][] = [
@@ -14,11 +25,41 @@ const FLOWERS: readonly [number, number, string][] = [
   [865, 625, '#ffd93b'], [1015, 650, '#ff8fab'], [1155, 616, '#fffdf6'],
 ];
 
-export function BootLoader({ pct, label, fadingOut }: BootLoaderProps) {
+export function BootLoader({ pct, label, fadingOut, instant = false, onFadeEnd }: BootLoaderProps) {
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!fadingOut || !onFadeEnd) return;
+    const el = rootRef.current;
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      onFadeEnd();
+    };
+    const styles = el ? window.getComputedStyle(el) : null;
+    if (!el || instant || !styles || styles.transitionProperty === 'none' || styles.transitionDuration === '0s') {
+      finish();
+      return;
+    }
+    const onEnd = (ev: TransitionEvent) => {
+      if (ev.target === el && (ev.propertyName === 'opacity' || ev.propertyName === 'all')) finish();
+    };
+    el.addEventListener('transitionend', onEnd);
+    el.addEventListener('transitioncancel', onEnd);
+    // Safety net for a WebView that never delivers the event; three times the fade plus scheduling slack.
+    const guard = window.setTimeout(finish, BOOT_FADE_MS * 3 + 250);
+    return () => {
+      el.removeEventListener('transitionend', onEnd);
+      el.removeEventListener('transitioncancel', onEnd);
+      window.clearTimeout(guard);
+    };
+  }, [fadingOut, instant, onFadeEnd]);
 
   return (
     <div
+      ref={rootRef}
       role="status"
       aria-live="polite"
       data-testid="boot-loader"
@@ -26,7 +67,9 @@ export function BootLoader({ pct, label, fadingOut }: BootLoaderProps) {
       style={{
         background: 'linear-gradient(180deg, #58b8f0 0%, #9be0ff 48%, #c9f2a8 76%, #74bf44 100%)',
         opacity: fadingOut ? 0 : 1,
-        transition: 'opacity .18s ease-out',
+        transition: instant ? 'none' : `opacity ${BOOT_FADE_MS}ms ease-out`,
+        // محو شدن فقط بصری است؛ از همان لحظه‌ای که لودینگ شروع به محو شدن می‌کند نباید
+        // هیچ لمسی روی آن بنشیند، وگرنه اولین ضربهٔ کاربر پشت یک روکش نامرئی گم می‌شود.
         pointerEvents: fadingOut ? 'none' : 'auto',
       }}
     >
