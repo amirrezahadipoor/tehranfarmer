@@ -283,33 +283,29 @@ export default function App() {
     !window.location?.search?.includes('boot=1');
   // حتی در automated run هم موتور تا پایان prewarm شروع نمی‌شود؛ رندر زودهنگامِ
   // canvas هم‌زمان با مقداردهی مرورگر یک long task چندصدمیلی‌ثانیه‌ای می‌ساخت.
+  const [bootPrepared, setBootPrepared] = useState(() => isBootAlreadyWarm());
   const [bootReady, setBootReady] = useState(() => isBootAlreadyWarm());
   const [bootFading, setBootFading] = useState(false);
   const [bootProg, setBootProg] = useState(() => ({ pct: 12, label: UT.bootStepSave }));
 
   useEffect(() => {
     let alive = true;
+    let finished = false;
     const finishBoot = () => {
-      if (!alive) return;
+      if (!alive || finished) return;
+      finished = true;
+      window.clearTimeout(watchdog);
       notify();
-      setBootFading(true);
-      window.setTimeout(() => {
-        if (alive) setBootReady(true);
-      }, autoFastBoot ? 0 : 180);
+      // لودینگ هنوز کاملاً محو نمی‌شود: canvas و Start ابتدا پشت آن ساخته می‌شوند.
+      setBootPrepared(true);
     };
     // نگهبان ایمنی مطلق: حتی اگر مرورگر یا پلاگین بومی متوقف شود، لودینگ هرگز قفل نمی‌ماند
     const watchdog = window.setTimeout(finishBoot, 3500);
     runGenuinePreload((p) => {
       if (alive) setBootProg(p);
     })
-      .then(() => {
-        window.clearTimeout(watchdog);
-        finishBoot();
-      })
-      .catch(() => {
-        window.clearTimeout(watchdog);
-        finishBoot();
-      });
+      .then(finishBoot)
+      .catch(finishBoot);
     return () => {
       alive = false;
       window.clearTimeout(watchdog);
@@ -317,9 +313,20 @@ export default function App() {
   }, [autoFastBoot]);
 
   useEffect(() => {
-    if (!bootReady || !ref.current) return;
+    if (!bootPrepared || !ref.current) return;
+    let active = true;
+    let fadeTimer = 0;
     const stop = startEngine(ref.current);
     const stopBack = installAndroidBackHandler();
+    // startEngine اولین منظره را هم‌زمان رسم می‌کند؛ یک rAF فرصت می‌دهد canvas و
+    // Start پشت لودینگِ هنوز مات کامپوزیت شوند، سپس محو کردن بدون فریم آبی آغاز می‌شود.
+    const firstFrame = window.requestAnimationFrame(() => {
+      if (!active) return;
+      setBootFading(true);
+      fadeTimer = window.setTimeout(() => {
+        if (active) setBootReady(true);
+      }, autoFastBoot ? 0 : 180);
+    });
     // ابزارهای دیباگ رانتایم فقط در بیلد داخلی/تستی — شرط خام روی define تا در بیلد نهایی کلاً حذف شود
     if (__DEV_TOOLS__) {
       (window as unknown as { __gameApi?: unknown }).__gameApi = {
@@ -356,8 +363,16 @@ export default function App() {
     };
     window.addEventListener('pagehide', onHide);
     document.addEventListener('visibilitychange', onVis);
-    return () => { stop(); stopBack(); window.removeEventListener('pagehide', onHide); document.removeEventListener('visibilitychange', onVis); };
-  }, [bootReady]);
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(firstFrame);
+      window.clearTimeout(fadeTimer);
+      stop();
+      stopBack();
+      window.removeEventListener('pagehide', onHide);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [bootPrepared, autoFastBoot]);
 
   const inCinema = Boolean(pendingNode()) || cinema.active;
   const portraitIsAcknowledged = portraitAcknowledged();
@@ -383,7 +398,7 @@ export default function App() {
     <div className="fixed inset-0" dir={CFG.locale === 'en' ? 'ltr' : 'rtl'}>
       <div className="contents" inert={bgInert}>
         {UI.started && !inCinema && <SceneA11y />}
-        {bootReady && (
+        {bootPrepared && (
           <canvas
             id="game-canvas"
             ref={ref}
@@ -413,7 +428,7 @@ export default function App() {
         </Suspense>
       )}
       {!bootReady && <BootLoader pct={bootProg.pct} label={bootProg.label} fadingOut={bootFading} />}
-      {bootReady && !UI.started && <Start />}
+      {bootPrepared && !UI.started && <Start />}
       {portraitGateVisible && (
         <div ref={portraitGateRef} tabIndex={-1} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[#2b1a10]/92 px-6 text-center" role="dialog" aria-modal="true" aria-label={UT.u186}>
           <svg viewBox="0 0 120 120" className="h-24 w-24 rotate-90" aria-hidden="true">
