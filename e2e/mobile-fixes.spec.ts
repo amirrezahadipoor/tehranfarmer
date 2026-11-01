@@ -26,6 +26,31 @@ async function dev(page: Page, scene: string, modal: string | null) {
   }, { scene, modal });
 }
 
+test('loading never exposes an empty frame before Start', async ({ page }) => {
+  await page.addInitScript(() => {
+    const gaps: Array<{ opacity: number; canvas: boolean }> = [];
+    let loaderSeen = false;
+    Object.defineProperty(window, '__bootGapFrames', { configurable: true, value: gaps });
+    const watch = () => {
+      const loader = document.querySelector('[data-testid="boot-loader"]');
+      const start = document.querySelector('[data-testid="start-screen"]');
+      if (loader) loaderSeen = true;
+      if (loaderSeen && !start) {
+        const opacity = loader ? Number(getComputedStyle(loader).opacity) : 0;
+        if (opacity < 0.98) gaps.push({ opacity, canvas: !!document.querySelector('canvas') });
+      }
+      if (!start) requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+  await page.goto('/?boot=1');
+  await expect(page.locator('[data-testid="start-screen"]')).toBeVisible({ timeout: 20000 });
+  expect(await page.evaluate(() => (window as unknown as { __bootGapFrames: unknown[] }).__bootGapFrames)).toEqual([]);
+  const canvas = page.locator('#game-canvas');
+  await expect(canvas).toBeVisible();
+  await expect(canvas).toHaveAttribute('data-render-dpr', /\d/);
+});
+
 test('mobile choice, fishing, seed filter, DPR and scene targets stay usable', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
